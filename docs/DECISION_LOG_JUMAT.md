@@ -79,7 +79,7 @@ Notes
 # QR Attendance
 
 - [ ] IN-SCOPE
-- [ ] OUT-OF-SCOPE
+- [x] OUT-OF-SCOPE
 
 Notes
 
@@ -88,7 +88,7 @@ Notes
 # Holiday Calendar
 
 - [ ] IN-SCOPE
-- [ ] OUT-OF-SCOPE
+- [x] OUT-OF-SCOPE
 
 Notes
 
@@ -267,7 +267,7 @@ Need Photo?
 Need HR Approval?
 
 - [ ] Yes
-- [ ] No
+- [x] No
 
 Backdate Allowed?
 
