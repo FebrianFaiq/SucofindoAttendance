@@ -7,7 +7,7 @@ Aplikasi pencatatan kehadiran karyawan internal SUCOFINDO berbasis Mobile (Flutt
 ## 📚 Dokumentasi Proyek
 
 * 📄 **[Product Requirements Document (PRD v0.3)](./docs/SUCOFINDO_Sistem_Absensi_PRD_v0.3.md)**
-* 📝 **[Formulir & Decision Log Fiksasi (Jumat)](./docs/DECISION_LOG_JUMAT.md)**
+* 📝 **[Formulir & Decision Log Fiksasi (Jumat)](./docs/DECISION_LOG_JUMAT_31-07-2026.md)**
 
 ---
 
