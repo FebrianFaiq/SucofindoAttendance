@@ -1,10 +1,10 @@
 # Dokumen Kebutuhan Produk (PRD)
 ## SUCOFINDO Attendance Management System
 
-**Status Dokumen:** DRAFT — Versi Lengkap (Konsolidasi v0.1 – v0.3), Menunggu Fiksasi Final Hari Jumat
-**Versi:** 0.3 (Full / Self-Contained)
+**Status Dokumen:** ✅ **APPROVED — v1.0 (FINAL)**
+**Versi:** 1.0
 
-> Dokumen ini adalah **gabungan lengkap** dari seluruh riwayat requirement (v0.1 → v0.2 → v0.3) dalam satu dokumen.
+> Dokumen ini adalah revisi final dari draft v0.3 (Full), disusun berdasarkan seluruh keputusan yang telah dikonfirmasi. Dokumen ini siap digunakan sebagai acuan resmi untuk tahap System Design & Development, dan disusun agar dapat direview oleh Software Architect, Product Manager, dan Mentor.
 
 ---
 
@@ -13,347 +13,449 @@
 | Field | Detail |
 |---|---|
 | Judul Dokumen | SUCOFINDO Attendance Management System – Product Requirements Document |
-| Tipe Dokumen | Draft PRD (Konsolidasi, Siap untuk Fiksasi) |
-| Versi | 0.3 (Full) |
-| Status | Draft — seluruh requirement dari sesi sebelumnya + tambahan HRD sudah tergabung. **Fiksasi resmi & sign-off masih menunggu rapat hari Jumat.** |
-| Disusun Oleh | ~ |
-| Direview Oleh | ~ |
-| Disetujui Oleh (Sign-off) | ~ |
+| Tipe Dokumen | PRD Final |
+| Versi | 1.0 |
+| Status | **Approved — Final** (konten requirement telah difiksasi; field administratif seperti nama penyetuju diisi manual sebelum distribusi resmi) |
+| Disusun Oleh | *[Nama Intern PKL]* |
+| Direview Oleh | *[Nama Mentor / Software Architect]* |
+| Disetujui Oleh (Sign-off) | *[Nama Project Sponsor / HRD]* |
 | Tanggal Dibuat | 29 Juli 2026 |
-| Terakhir Diperbarui | 30 Juli 2026 |
-| Kerahasiaan | ~ |
-
-> **Catatan:** ~
+| Tanggal Final | 31 Juli 2026 |
+| Kerahasiaan | Internal Use Only — SUCOFINDO |
 
 ---
 
 ## 2. Riwayat Versi
 
-| Versi | Tanggal | Penulis | Deskripsi Perubahan |
-|---|---|---|---|
-| 0.1 | 29 Juli 2026 | *[Nama Intern PKL]* | Draft awal berdasarkan requirement gathering awal. Sebagian besar item "Perlu Konfirmasi". |
-| 0.2 | 29 Juli 2026 | *[Nama Intern PKL]* | Update pasca sesi konfirmasi: login via email, WFO/WFA, foto+GPS wajib, tanpa alur cuti, catatan kerjaan saat clockout, jam kerja fleksibel dengan flag admin. |
-| 0.3 | 30 Juli 2026 | *[Nama Intern PKL]* | Tambahan requirement dari HRD: absen lembur (input manual), database via clone dari pusat, format export CSV/Excel, rekap bulanan per karyawan. |
-| **0.3 (Full)** | 30 Juli 2026 | *[Nama Intern PKL]* | **Versi konsolidasi** — seluruh isi v0.1–v0.3 digabung dalam satu dokumen self-contained, kode FR dirapikan per modul, siap dibawa ke rapat fiksasi Jumat. |
+| Versi | Tanggal | Deskripsi Perubahan |
+|---|---|---|
+| 0.1 | 29 Juli 2026 | Draft awal berdasarkan requirement gathering awal. Sebagian besar item "Perlu Konfirmasi". |
+| 0.2 | 29 Juli 2026 | Update pasca sesi konfirmasi: login via email, WFO/WFA, foto+GPS wajib, tanpa alur cuti, catatan kerjaan saat checkout, jam kerja fleksibel dengan flag admin. |
+| 0.3 | 30 Juli 2026 | Tambahan requirement HRD: absen lembur (input manual), database via clone dari pusat, format export CSV/Excel, rekap bulanan per karyawan. |
+| 0.3 (Full) | 30 Juli 2026 | Konsolidasi seluruh isi v0.1–v0.3 dalam satu dokumen, kode FR dirapikan per modul. |
+| **1.0 (Final)** | 31 Juli 2026 | **Revisi final pasca rapat fiksasi.** Penyempitan scope ke Karyawan PTT/Proyek, autentikasi dikelola Admin (tanpa self-register, wajib ganti password di login pertama), fitur Manajemen Karyawan & Penugasan Proyek, penyederhanaan konsep Flag, kelengkapan Lembur (start/end time), Dashboard dengan KPI card & filter, Export dengan filter lengkap, keputusan arsitektur (monorepo), dan Out of Scope yang lebih tegas. Status dokumen naik dari Draft menjadi **Approved v1.0**. |
 
 ---
 
 ## 3. Gambaran Umum Proyek
 
-Kami sedang mengembangkan **Attendance Management System** internal untuk mendigitalisasi dan memusatkan proses pencatatan kehadiran karyawan. Sistem ini terdiri dari:
+SUCOFINDO mengembangkan **Attendance Management System** internal khusus untuk **Karyawan PTT / Karyawan Proyek (Project Employees)**. Sistem ini **tidak ditujukan untuk seluruh karyawan SUCOFINDO** — karyawan tetap (permanent employees) sudah menggunakan sistem absensi terpisah yang disediakan oleh kantor pusat, dan tetap berada di luar cakupan sistem ini.
 
-- **Aplikasi mobile** (Flutter) — untuk karyawan
-- **Aplikasi web** (Laravel) — untuk karyawan
-- **Dashboard web administrator/HRD** (Laravel) — untuk admin dan HRD
+Sistem terdiri dari tiga komponen:
 
-Backend menggunakan Laravel dan menyediakan REST API untuk aplikasi mobile. Route aplikasi web dipisahkan dari route API.
+- **Aplikasi mobile** (Flutter) — untuk Karyawan PTT/Proyek
+- **Aplikasi web** (Laravel) — untuk Karyawan PTT/Proyek
+- **Dashboard web administrator** (Laravel) — untuk Admin/HRD
 
-> **Konteks bisnis:** Sebelumnya terdapat aplikasi absensi dari kantor pusat, namun sering mengalami error, sehingga SUCOFINDO memutuskan membangun sistem sendiri secara internal. Database sistem baru ini juga bersumber dari database pusat, namun karena koneksi langsung tidak memungkinkan, data akan **di-clone** ke database internal proyek ini.
-
-Proyek masih berada pada **tahap requirement gathering**. Sebagian keputusan sudah dikonfirmasi secara awal (ditandai "Confirmed"), namun **fiksasi resmi seluruh requirement dijadwalkan hari Jumat**. Sampai saat itu, item yang ditandai "Confirmed (Awal)" masih berpotensi berubah, sedangkan yang ditandai "Perlu Konfirmasi" benar-benar belum diputuskan dan tidak boleh diasumsikan.
+Backend menggunakan Laravel dan menyediakan REST API untuk aplikasi mobile. Seluruh komponen (backend, web admin, dan referensi API untuk mobile) dikelola dalam **arsitektur monorepo**. Data karyawan bersumber dari database pusat melalui proses **clone**, bukan koneksi real-time langsung.
 
 | Item | Detail |
 |---|---|
 | Nama Proyek | SUCOFINDO Attendance Management System |
-| Tipe Proyek | Aplikasi Enterprise Internal (pengganti aplikasi pusat, dengan data hasil clone dari pusat) |
+| Target Pengguna | Karyawan PTT / Karyawan Proyek (**bukan** karyawan tetap) |
+| Tipe Proyek | Aplikasi Enterprise Internal, arsitektur monorepo |
 | Durasi | 2 Bulan |
-| Model Delivery | Perlu Konfirmasi |
+| Arsitektur | Monorepo — Backend Laravel, Web Admin Laravel, Mobile Flutter (konsumsi REST API) |
 
 ---
 
 ## 4. Latar Belakang Bisnis
 
-Ada dua pendorong bisnis utama di balik proyek ini:
+Ada tiga pendorong bisnis utama di balik proyek ini:
 
-1. **Menggantikan aplikasi pusat yang bermasalah.** Aplikasi absensi dari kantor pusat sering mengalami error, sehingga tidak dapat diandalkan untuk pencatatan kehadiran harian.
-2. **Kebutuhan HRD memonitor jam lembur karyawan.** HRD membutuhkan visibilitas terhadap siapa yang lembur, berapa lama, dan kapan durasi lembur seorang karyawan melebihi batas wajar — murni untuk keperluan **pendataan/monitoring**, bukan alur persetujuan (tidak ada alur approval lembur yang disebutkan).
+1. **Segmentasi kebutuhan absensi berdasarkan status kepegawaian.** Karyawan tetap SUCOFINDO sudah memiliki sistem absensi resmi dari kantor pusat, sehingga tidak perlu — dan tidak dimaksudkan — untuk masuk ke dalam cakupan sistem ini. Sistem ini secara khusus dibangun untuk mengakomodasi Karyawan PTT/Proyek, yang sebelumnya tidak memiliki sistem pencatatan kehadiran yang memadai untuk kebutuhan mereka (termasuk keterkaitan dengan penugasan proyek).
+2. **Kebutuhan pengelolaan penugasan proyek.** Karyawan PTT/Proyek bekerja dalam konteks proyek tertentu yang dapat berubah dari waktu ke waktu, sehingga data kehadiran perlu terhubung dengan penugasan proyek yang berlaku, dikelola sepenuhnya oleh Admin.
+3. **Kebutuhan HRD memonitor jam lembur.** HRD membutuhkan visibilitas terhadap siapa yang lembur, berapa lama, dan kapan durasi lembur seorang karyawan melebihi ambang batas yang dikonfigurasi — murni untuk keperluan pendataan/monitoring, tanpa alur persetujuan (lembur tidak melalui proses approval).
 
-Sifat pekerjaan di lingkungan ini juga **fleksibel** — tidak ada batasan waktu masuk/keluar kerja yang ketat. Sistem baru diharapkan tetap mencatat kehadiran secara akurat (lokasi + foto), namun tanpa memaksakan jam kerja kaku, dan cukup memberikan indikator/status/warning di sisi admin untuk pola kehadiran tertentu.
-
+Sifat pekerjaan Karyawan PTT/Proyek juga **fleksibel** — tidak ada batasan waktu masuk/keluar kerja yang ketat. Sistem mencatat kehadiran secara akurat (foto + GPS) tanpa memaksakan jam kerja kaku, dan memberikan indikator sederhana ("flag") di sisi Admin untuk kondisi tertentu seperti keterlambatan.
 
 ---
 
 ## 5. Pernyataan Masalah (Problem Statement)
 
-> **Problem Statement (Konsolidasi):**
-> SUCOFINDO sebelumnya bergantung pada aplikasi absensi terpusat yang tidak stabil (sering error), sementara sifat pekerjaan yang fleksibel (tanpa jam kerja kaku) tidak terakomodasi dengan baik oleh sistem lama. Di sisi lain, HRD juga tidak memiliki cara terpusat untuk memantau jam lembur karyawan — siapa yang lembur, berapa lama, dan kapan durasi tersebut melebihi batas wajar.
->
-> Oleh karena itu dibutuhkan sistem absensi internal yang sederhana dan andal, yang mampu:
-> - Memvalidasi kehadiran secara akurat melalui foto dan GPS,
-> - Mengakomodasi jam kerja fleksibel tanpa membatasi karyawan,
-> - Mencatat lembur secara manual untuk keperluan pendataan HRD,
-> - Memberi visibilitas ke admin/HRD melalui indikator status dan alert, serta
-> - Tetap berjalan meski database pusat tidak dapat diakses langsung (melalui mekanisme clone data).
+> SUCOFINDO belum memiliki sistem absensi khusus untuk Karyawan PTT/Proyek yang mampu: (1) memvalidasi kehadiran secara akurat melalui foto dan GPS, (2) mengakomodasi jam kerja fleksibel tanpa membatasi karyawan, (3) mengaitkan data kehadiran dengan penugasan proyek yang dikelola terpusat oleh Admin, (4) mencatat lembur secara manual untuk keperluan pendataan HRD dengan alert saat melebihi ambang batas, dan (5) memberikan visibilitas real-time melalui dashboard ringkas kepada Admin/HRD — sementara karyawan tetap sudah terlayani oleh sistem terpisah dari kantor pusat.
 
 ---
 
 ## 6. Tujuan & Sasaran (Goals & Objectives)
 
-| # | Tujuan | Tipe |
-|---|---|---|
-| 1 | Menyediakan cara yang andal bagi karyawan untuk clock-in dan clock-out via mobile dan web | Confirmed |
-| 2 | Menyediakan visibilitas bagi administrator/HRD terhadap seluruh data kehadiran karyawan | Confirmed |
-| 3 | Menyediakan riwayat kehadiran terpusat bagi karyawan | Confirmed |
-| 4 | Menggantikan aplikasi pusat yang sering error dengan sistem internal yang lebih stabil | Confirmed (Awal) |
-| 5 | Memvalidasi keakuratan kehadiran melalui foto dan lokasi GPS | Confirmed (Awal) |
-| 6 | Mengakomodasi sifat kerja fleksibel tanpa membatasi jam masuk/keluar secara kaku | Confirmed (Awal) |
-| 7 | Memberikan admin/HRD kemampuan rekap dan indikator status kehadiran (mis. keterlambatan) | Confirmed (Awal) |
-| 8 | Menjaga UI/UX tetap simple dan compact, tidak meribetkan pengguna | Confirmed (Awal) — prinsip desain |
-| 9 | Menyediakan mekanisme pencatatan lembur manual (durasi + keterangan) untuk keperluan pendataan HRD | Confirmed (Awal) |
-| 10 | Memberi alert otomatis ke HRD ketika karyawan melebihi batas waktu lembur tertentu | Confirmed (Awal) — nilai batas belum ditentukan |
-| 11 | Memastikan data absensi tetap tersedia meski database pusat tidak bisa diakses langsung, melalui mekanisme clone data | Confirmed (Awal) |
+| # | Tujuan |
+|---|---|
+| 1 | Menyediakan sistem absensi khusus untuk Karyawan PTT/Proyek, terpisah dari sistem karyawan tetap |
+| 2 | Menyediakan cara yang andal bagi karyawan untuk check-in dan check-out via mobile dan web, dengan validasi foto dan GPS |
+| 3 | Mengelola akun karyawan sepenuhnya melalui Admin (tanpa self-registration), dengan keamanan wajib ganti password di login pertama |
+| 4 | Mengaitkan data kehadiran dan lembur dengan penugasan proyek karyawan yang berlaku, dikelola oleh Admin |
+| 5 | Mengakomodasi sifat kerja fleksibel tanpa membatasi jam masuk/keluar karyawan |
+| 6 | Memberikan indikator (flag) sederhana bagi Admin untuk memantau status kehadiran harian tanpa kompleksitas sistem status yang berat |
+| 7 | Menyediakan mekanisme pencatatan lembur manual untuk keperluan pendataan dan monitoring HRD, lengkap dengan alert saat melebihi ambang batas |
+| 8 | Memberikan Admin dashboard ringkas berbasis KPI dan tabel kehadiran yang dapat difilter |
+| 9 | Menyediakan kemampuan export rekap kehadiran (CSV/Excel) yang dapat difilter per karyawan, proyek, dan tanggal |
+| 10 | Menjaga UI/UX tetap simple dan compact, tidak meribetkan pengguna |
+| 11 | Memastikan data karyawan tetap tersedia melalui mekanisme clone database dari kantor pusat |
 
 ---
 
 ## 7. Ruang Lingkup Proyek
 
-### 7.1 Dalam Ruang Lingkup — Confirmed (Awal, fiksasi Jumat)
+### 7.1 Target Pengguna
+
+> **Sistem ini secara eksklusif ditujukan untuk Karyawan PTT / Karyawan Proyek.** Karyawan tetap (permanent employees) **tidak** menjadi pengguna sistem ini karena sudah memiliki sistem absensi resmi dari kantor pusat. Batasan ini berlaku untuk seluruh fitur di bawah — termasuk data yang di-clone dari database pusat, yang hanya mencakup data Karyawan PTT/Proyek yang relevan bagi sistem ini.
+
+### 7.2 Dalam Ruang Lingkup
 
 | # | Fitur | Detail |
 |---|---|---|
-| 1 | Login via Email | Autentikasi menggunakan email (bukan username), berlaku untuk Karyawan dan Admin/HRD |
-| 2 | Absensi via Web & Mobile | Karyawan dapat melakukan clock In/clock Out dari kedua kanal |
-| 3 | Pilihan Lokasi Kerja | Karyawan memilih status **WFO** atau **WFA** saat absen |
-| 4 | Verifikasi Foto | Wajib mengambil foto (selfie) saat clock-in maupun clock-out |
-| 5 | Validasi GPS | Wajib mengambil titik lokasi (GPS) saat clock-in maupun clock-out |
-| 6 | Catatan Kerjaan Harian | Kolom isian bebas untuk merangkum pekerjaan hari itu — **hanya bisa diisi saat clock Out** |
-| 7 | Jam Kerja Fleksibel | Tidak ada batasan waktu wajib untuk clock-in/clock-out |
-| 8 | Indikator/Flag di Admin | Sistem memberi tanda status/warning (contoh ilustratif: nama ditampilkan merah jika clock-in di atas jam 08:00) — **bersifat informatif, bukan pemblokiran** |
-| 9 | Rekapan Kehadiran (Admin) | Admin/HRD dapat melihat rekap kehadiran seluruh karyawan |
-| 10 | Rekap Bulanan per Karyawan | Rekap kehadiran dilihat **per bulan**, dengan detail per karyawan yang bisa dibuka |
-| 11 | Absen Lembur (Overtime Entry) | Karyawan input **manual**: durasi lembur (jam) dan keterangan pekerjaan lembur — **tidak berbasis timestamp** |
-| 12 | Alert Batas Lembur | Sistem memberi notifikasi ke HRD saat karyawan melebihi batas waktu lembur tertentu — nilai batas Perlu Konfirmasi |
-| 13 | Export Rekap | Format **CSV / Excel** |
-| 14 | Database via Clone | Data bersumber dari database pusat, disinkronkan melalui proses clone, bukan koneksi real-time langsung |
-| 15 | Prinsip Desain | UI simple dan compact, alur tidak berbelit |
+| 1 | Login via Email + Password | Autentikasi karyawan dan Admin menggunakan email, **tanpa self-registration** |
+| 2 | Akun Dikelola Admin | Akun karyawan dibuat/diimpor oleh Admin, bukan didaftarkan sendiri oleh karyawan |
+| 3 | Wajib Ganti Password di Login Pertama | Karyawan tidak dapat mengakses fitur absensi sebelum password diganti |
+| 4 | Reset & Ubah Password oleh Admin | Admin dapat mereset atau mengubah password karyawan secara manual |
+| 5 | Manajemen Karyawan | Admin dapat menambah, mengedit, menonaktifkan/menghapus data karyawan |
+| 6 | Penugasan Proyek | Admin mengelola penugasan proyek karyawan (assign & reassign); karyawan tidak memilih proyek sendiri |
+| 7 | Absensi Otomatis Mengikuti Proyek Aktif | Data check-in/check-out & lembur otomatis mengacu ke proyek aktif karyawan |
+| 8 | Absensi via Web & Mobile | Karyawan dapat Check In/Check Out dari kedua kanal |
+| 9 | Foto + GPS + WFO/WFA | Wajib pada setiap Check In dan Check Out |
+| 10 | Jam Kerja Fleksibel | Tidak ada batasan waktu wajib; keterlambatan (setelah 08:00) tidak pernah ditolak, hanya memicu flag ke Admin |
+| 11 | Catatan Kerjaan Harian | Wajib diisi karyawan saat Check Out |
+| 12 | Flag Sederhana | Indikator visual ringan di sisi Admin (bukan sistem status berbasis database yang berat) |
+| 13 | Absen Lembur Manual | Karyawan input tanggal, jam mulai, jam selesai, durasi, dan keterangan lembur |
+| 14 | Alert Ambang Batas Lembur | Sistem mengalert HRD saat akumulasi lembur karyawan melebihi ambang batas yang dikonfigurasi |
+| 15 | Dashboard Admin dengan KPI Card | Total Karyawan, Hadir Hari Ini, WFO Hari Ini, WFA Hari Ini, Belum Check In, Belum Check Out, Lembur Hari Ini |
+| 16 | Filter Dashboard & Tabel Kehadiran | Filter berdasarkan Tanggal, Karyawan, dan Proyek |
+| 17 | Tabel Kehadiran Admin | Kolom: Karyawan, Proyek, Jam Masuk, Jam Keluar, Status Kehadiran, WFO/WFA, Lembur |
+| 18 | Export Rekap | Format CSV dan Excel, rekap bulanan, dapat difilter per Karyawan, Proyek, dan Tanggal |
+| 19 | Database via Clone | Data karyawan bersumber dari clone database kantor pusat |
+| 20 | Prinsip Desain | UI simple dan compact |
 
-### 7.2 Dihapus dari Ruang Lingkup (Confirmed — TIDAK dikerjakan)
+### 7.3 Di Luar Ruang Lingkup
 
-| Fitur | Keterangan |
-|---|---|
-| Alur Perizinan / Cuti (Leave Request) | **Dikonfirmasi tidak diperlukan** untuk versi ini |
-| Alur Persetujuan Lembur (Approval) | Tidak disebutkan oleh HRD — **diasumsikan lembur hanya bersifat pendataan, tanpa approval**. **karena akan ada pengecekan secara eksplisit** |
-
-### 7.3 Masih Perlu Konfirmasi (untuk Jumat)
-
-| # | Fitur | Catatan |
-|---|---|---|
-| 1 | Lupa Password | Belum dibahas |
-| 2 | Manajemen Data Karyawan oleh Admin | Belum dibahas |
-| 3 | QR Code Attendance | Tidak disebutkan — kemungkinan tidak dipakai karena sudah pakai foto+GPS |
-| 4 | Threshold Keterlambatan | Contoh "jam 8" hanya ilustrasi, angka resmi belum fix |
-| 5 | Shift Schedule | Kemungkinan tidak relevan karena jam kerja fleksibel |
-| 6 | Holiday Management | Belum dibahas |
-| 7 | Notifikasi (channel: push/email/in-app) | Belum dibahas — termasuk untuk alert lembur HRD |
-| 8 | Audit Log | Belum dibahas |
-| 9 | Approval Lembur | Belum dikonfirmasi apakah benar-benar tidak diperlukan |
-| 10 | Batas jam lembur yang memicu alert | Belum ada angka pasti |
-| 11 | Frekuensi & mekanisme clone database dari pusat | One-time migration atau sinkronisasi berkala? |
-| 12 | Kolom/format detail export CSV/Excel | Field apa saja yang perlu ada di file export |
-| 13 | Database engine | Belum dibahas |
-| 14 | Hosting/infrastruktur | On-premise vs cloud belum ditentukan |
+Lihat Section 8.
 
 ---
 
 ## 8. Di Luar Ruang Lingkup (Out of Scope)
 
-| Item | Status |
-|---|---|
-| Alur Perizinan / Pengajuan Cuti | **Confirmed — Out of Scope** |
-| Alur Approval Lembur | Diasumsikan out of scope — **Perlu Konfirmasi** |
-| Perhitungan kompensasi/insentif lembur | Perlu Konfirmasi apakah bagian sistem ini atau sistem lain (payroll) |
-| Pemrosesan payroll | Perlu Konfirmasi |
-| Integrasi hardware biometrik (fingerprint/face scanner) | Perlu Konfirmasi |
-| Integrasi HRIS pihak ketiga | Perlu Konfirmasi |
-| Dukungan multi-company / multi-tenant | Perlu Konfirmasi |
+Item berikut **secara eksplisit dikonfirmasi tidak masuk** dalam ruang lingkup PRD v1.0:
+
+| # | Item | Keterangan |
+|---|---|---|
+| 1 | Alur Perizinan / Leave Request | Tidak dikembangkan |
+| 2 | Permission Workflow | Tidak dikembangkan |
+| 3 | Kalender Hari Libur (Holiday Calendar) | Tidak dikembangkan |
+| 4 | QR Code Attendance | Tidak dikembangkan |
+| 5 | Face Recognition | Tidak dikembangkan (validasi kehadiran cukup melalui foto manual + GPS) |
+| 6 | Advanced Analytics | Tidak dikembangkan pada versi ini |
+| 7 | Push Notification | Tidak dikembangkan; alert (mis. lembur berlebih) ditampilkan di dashboard, bukan melalui notifikasi push |
+| 8 | Alur Approval Lembur | Lembur bersifat pendataan/monitoring saja, **tanpa proses persetujuan** |
+| 9 | Absensi untuk Karyawan Tetap | Di luar cakupan — karyawan tetap menggunakan sistem terpisah dari kantor pusat |
+
+> **Catatan:** Item yang sebelumnya berstatus "Perlu Konfirmasi" pada draft v0.3 namun tidak dibahas ulang pada sesi fiksasi final (misalnya Audit Log dan Shift Schedule) **dianggap belum masuk scope v1.0** dan dipindahkan ke Section 18 (Future Enhancements), bukan dikembangkan pada rilis ini.
 
 ---
 
 ## 9. Stakeholder
 
-| Peran | Nama | Tanggung Jawab | Status |
-|---|---|---|---|
-| Project Sponsor | *[TBD]* | Pemilik bisnis, persetujuan akhir | Perlu Konfirmasi |
-| Product Owner / Mentor | *[TBD]* | Validasi requirement, prioritisasi | Perlu Konfirmasi |
-| Tim IT / Development | *[Intern PKL]* | Merancang, membangun, dan menguji sistem | Confirmed (diri sendiri) |
-| Departemen HRD | *[TBD]* | **Confirmed sebagai sumber requirement lembur & rekap** — nama kontak Perlu Konfirmasi | Sebagian Confirmed |
-| End User – Karyawan | Karyawan SUCOFINDO | Menggunakan sistem untuk absensi harian & lembur | Confirmed |
-| End User – Administrator/HRD | *[TBD departemen]* | Mengelola dan memantau data kehadiran & lembur | Perlu Konfirmasi |
-| QA / Tester | *[TBD]* | Pengujian dan validasi | Perlu Konfirmasi |
+| Peran | Nama | Tanggung Jawab |
+|---|---|---|
+| Project Sponsor | *[Perlu diisi]* | Pemilik bisnis, persetujuan akhir |
+| Product Owner / Mentor | *[Perlu diisi]* | Validasi requirement, prioritisasi |
+| Tim IT / Development | *[Intern PKL]* | Merancang, membangun, dan menguji sistem |
+| Departemen HRD | *[Perlu diisi]* | Sumber requirement lembur & monitoring; pengguna dashboard rekap |
+| End User – Karyawan | Karyawan PTT / Karyawan Proyek SUCOFINDO | Menggunakan sistem untuk absensi harian & lembur |
+| End User – Administrator | *[Perlu diisi departemen]* | Mengelola karyawan, penugasan proyek, dan memantau data kehadiran/lembur |
 
-> **Perlu Konfirmasi:** Apakah HRD menggunakan role Administrator yang sama, atau perlu role terpisah (mis. "HRD" vs "Admin Umum") dengan akses berbeda? Ada matriks RBAC yang dibutuhkan?
+> **Asumsi (lihat Section 14):** Pada versi 1.0 ini, peran **Administrator dan HRD diasumsikan menggunakan panel yang sama** (satu role "Administrator" yang mencakup fungsi manajemen karyawan/proyek maupun monitoring HRD), kecuali dinyatakan lain oleh mentor pada tahap desain teknis.
 
 ---
 
-## 10. Peran Pengguna (User Roles)
+## 10. User Roles / Persona
 
-### 10.1 Karyawan (Employee)
+### 10.1 Karyawan (Employee) — PTT / Karyawan Proyek
 
 | Atribut | Detail |
 |---|---|
-| Login | Menggunakan **email** — Confirmed |
+| Cakupan Pengguna | Hanya Karyawan PTT/Proyek — **karyawan tetap tidak menggunakan sistem ini** |
+| Pembuatan Akun | **Tidak bisa self-register.** Akun dibuat/diimpor oleh Admin |
+| Login Pertama | Wajib ganti password sebelum dapat mengakses fitur apa pun selain layar ganti password |
 | Kanal Akses | Web, Mobile |
-| Aksi Absensi Harian | clock In, clock Out — pilih **WFO/WFA**, ambil **foto**, ambil **GPS** |
-| Catatan Kerjaan | Isi kolom rangkuman pekerjaan — **hanya aktif saat clock Out** |
-| Batasan Waktu | **Tidak ada** — kerja fleksibel |
-| Input Absen Lembur | Mengisi form lembur: durasi (jam), keterangan pekerjaan — **manual, bukan timestamp** |
+| Penugasan Proyek | Ditentukan oleh Admin; karyawan **tidak memilih proyek saat absen** — sistem otomatis mengacu ke proyek aktif |
+| Aksi Absensi Harian | Check In, Check Out — pilih WFO/WFA, ambil foto, ambil GPS |
+| Catatan Kerjaan | Wajib diisi saat Check Out |
+| Batasan Waktu | Tidak ada — kerja fleksibel; keterlambatan tidak pernah ditolak |
+| Input Absen Lembur | Mengisi tanggal, jam mulai, jam selesai, durasi, keterangan — manual, bukan timestamp otomatis |
 | Riwayat | Melihat riwayat kehadiran & lembur miliknya sendiri |
-| Profil | Melihat informasi profil |
-| Fitur Menunggu Konfirmasi | Lupa Password, edit profil mandiri |
+| Profil | Melihat informasi profil (nama, email, proyek yang sedang berjalan) |
 
-### 10.2 Administrator / HRD
+### 10.2 Administrator (mencakup fungsi HRD)
 
 | Atribut | Detail |
 |---|---|
-| Kanal Akses | Web Dashboard |
-| Login | Menggunakan **email** — Confirmed |
-| Dashboard | Ringkasan kehadiran & lembur harian |
-| Lihat Seluruh Data Kehadiran | Termasuk indikator status/warning keterlambatan |
-| Monitoring Lembur | Melihat data lembur seluruh karyawan: siapa, berapa lama, keterangan |
-| Alert Lembur Berlebih | Menerima alert/notifikasi ketika karyawan melebihi batas lembur tertentu |
-| Rekapan Kehadiran | Melihat rekap **bulanan**, dengan drill-down ke detail per karyawan |
-| Export | Mengunduh rekap dalam format **CSV atau Excel** |
-| Fitur Menunggu Konfirmasi | Manajemen Data Karyawan, Audit Log, filter/search lanjutan |
+| Login | Email + password |
+| Manajemen Karyawan | Tambah, edit, nonaktifkan/hapus karyawan; reset/ubah password karyawan |
+| Manajemen Penugasan Proyek | Assign & reassign proyek karyawan; mendukung satu proyek aktif, dapat berpindah proyek, dan sesekali memiliki lebih dari satu proyek aktif sekaligus |
+| Dashboard | KPI card (Total Karyawan, Hadir Hari Ini, WFO/WFA Hari Ini, Belum Check In/Out, Lembur Hari Ini) |
+| Filter | Berdasarkan Tanggal, Karyawan, Proyek |
+| Tabel Kehadiran | Karyawan, Proyek, Jam Masuk, Jam Keluar, Status Kehadiran, WFO/WFA, Lembur |
+| Monitoring Lembur | Melihat seluruh entri lembur karyawan dan menerima alert saat melebihi ambang batas yang dikonfigurasi |
+| Export | CSV/Excel, rekap bulanan, filter per Karyawan/Proyek/Tanggal |
 
 ---
 
 ## 11. Kebutuhan Fungsional (Functional Requirements)
 
-> Kode FR pada versi ini dirapikan menggunakan penamaan modular: **FR-AUTH** (autentikasi), **FR-ATT** (absensi harian), **FR-OVT** (lembur/overtime), **FR-ADM** (admin/HRD & rekap), **FR-SYS** (sistem/infrastruktur).
+> Setiap FR dilengkapi **acceptance criteria** untuk memudahkan tim development dan QA memvalidasi implementasi. Kode FR menggunakan modul: **FR-AUTH** (autentikasi), **FR-EMP** (manajemen karyawan), **FR-PROJ** (proyek), **FR-ATT** (absensi harian), **FR-FLAG** (indikator status), **FR-OVT** (lembur), **FR-ADM** (dashboard admin), **FR-EXP** (export), **FR-SYS** (sistem/infrastruktur data).
 
-### 11.1 Confirmed (Awal — fiksasi Jumat)
+### 11.1 Autentikasi (FR-AUTH)
 
-| Kode | Fitur | Deskripsi | Peran |
-|---|---|---|---|
-| FR-AUTH-01 | Autentikasi via Email | User login menggunakan email + password, berlaku di web & mobile | Karyawan, Admin/HRD |
-| FR-ATT-01 | Pilihan Lokasi Kerja | Karyawan memilih WFO atau WFA saat absen | Karyawan |
-| FR-ATT-02 | clock In dengan Foto + GPS | Sistem mewajibkan capture foto dan titik lokasi saat clock-in | Karyawan |
-| FR-ATT-03 | clock Out dengan Foto + GPS | Sistem mewajibkan capture foto dan titik lokasi saat clock-out | Karyawan |
-| FR-ATT-04 | Catatan Kerjaan Harian | Field isian bebas untuk rangkuman kerja, hanya editable saat proses clock Out | Karyawan |
-| FR-ATT-05 | Riwayat Kehadiran | Karyawan dapat melihat riwayat kehadirannya (termasuk status WFO/WFA & catatan kerjaan) | Karyawan |
-| FR-ATT-06 | Profil Karyawan | Karyawan dapat melihat profil | Karyawan |
-| FR-OVT-01 | Input Absen Lembur | Karyawan mengisi form manual: durasi lembur (jam), keterangan pekerjaan lembur, untuk tanggal tertentu | Karyawan |
-| FR-OVT-02 | Daftar Lembur (HRD) | HRD dapat melihat daftar seluruh entri lembur karyawan | Administrator/HRD |
-| FR-OVT-03 | Alert Batas Lembur | Sistem mengirim notifikasi/alert ke HRD saat total jam lembur karyawan melebihi batas tertentu | Administrator/HRD |
-| FR-ADM-01 | Dashboard Admin/HRD | Ringkasan kehadiran & lembur untuk admin | Administrator/HRD |
-| FR-ADM-02 | Lihat Seluruh Data Kehadiran | Admin dapat melihat data kehadiran seluruh karyawan | Administrator/HRD |
-| FR-ADM-03 | Indikator Status/Warning | Sistem menandai kondisi tertentu secara visual (mis. nama merah bila clock-in melewati jam tertentu) — informasi, bukan pemblokiran | Administrator/HRD |
-| FR-ADM-04 | Rekapan Kehadiran Bulanan | Admin/HRD dapat melihat rekap kehadiran per bulan | Administrator/HRD |
-| FR-ADM-05 | Rekap Detail per Karyawan | Admin/HRD dapat membuka detail rekap satu karyawan untuk satu bulan tertentu | Administrator/HRD |
-| FR-ADM-06 | Export Rekap CSV/Excel | Admin/HRD dapat export rekap kehadiran dalam format CSV atau Excel | Administrator/HRD |
-| FR-SYS-01 | Sinkronisasi Data via Clone | Data karyawan bersumber dari clone database pusat | Sistem |
+**FR-AUTH-01 — Login Email + Password**
+Karyawan dan Admin login menggunakan email dan password terdaftar. Tidak ada opsi self-registration di mana pun dalam sistem.
+*Acceptance Criteria:*
+- Login berhasil hanya dengan kombinasi email + password yang valid.
+- Kombinasi salah menampilkan pesan error generik (tidak menyebutkan field mana yang salah).
+- Tidak tersedia tombol/link "Daftar Akun Baru" di layar manapun.
 
-### 11.2 Perlu Konfirmasi (untuk Jumat) — Belum Ditentukan: Dikembangkan atau Dibuang dari Scope
+**FR-AUTH-02 — Wajib Ganti Password di Login Pertama**
+Karyawan yang login menggunakan password awal/sementara dari Admin wajib menggantinya sebelum dapat menggunakan fitur lain.
+*Acceptance Criteria:*
+- Setelah login pertama berhasil, sistem otomatis mengarahkan ke layar "Ganti Password" dan tidak dapat dilewati.
+- Karyawan tidak dapat mengakses Check In, Check Out, Riwayat, Lembur, atau Profil sebelum password berhasil diganti.
+- Setelah password berhasil diganti, karyawan diarahkan ke Dashboard/Home.
+- Aturan kompleksitas password minimum mengikuti kebijakan yang ditentukan pada tahap desain teknis (lihat Section 19).
 
-| Kode | Fitur | Catatan | Rekomendasi Keputusan yang Perlu Diambil Jumat |
-|---|---|---|---|
-| FR-AUTH-02 | Lupa Password | Mekanisme reset password belum ditentukan | Dikembangkan / Dibuang |
-| FR-ADM-07 | Manajemen Data Karyawan | CRUD karyawan oleh admin belum ditentukan | Dikembangkan / Dibuang |
-| FR-ATT-07 | QR Code Attendance | Kemungkinan tidak dipakai karena sudah ada foto+GPS | Dikembangkan / Dibuang |
-| FR-ATT-08 | Threshold Keterlambatan Resmi | Contoh "jam 8" baru ilustrasi | Wajib diputuskan (bukan opsional) |
-| FR-ATT-09 | Shift Schedule | Kemungkinan tidak relevan karena kerja fleksibel | Dikembangkan / Dibuang |
-| FR-ADM-08 | Holiday Management | Pengelolaan kalender libur | Dikembangkan / Dibuang |
-| FR-ADM-09 | Notifikasi Sistem | Channel: push/email/in-app, termasuk untuk alert lembur | Wajib diputuskan (minimal untuk alert lembur) |
-| FR-ADM-10 | Audit Log | Cakupan aksi yang perlu dicatat | Dikembangkan / Dibuang |
-| FR-OVT-04 | Approval Lembur | Apakah entri lembur perlu di-approve HRD atau otomatis tercatat | Wajib diputuskan |
-| FR-OVT-05 | Angka Batas Lembur (Threshold Alert) | Berapa jam/hari atau jam/bulan yang memicu alert | Wajib diputuskan |
-| FR-ADM-11 | Kolom Export CSV/Excel | Field spesifik: nama, tanggal, jam masuk/keluar, WFO/WFA, lembur, dll | Wajib diputuskan |
-| FR-SYS-02 | Mekanisme Clone Database | One-time saat setup, atau sinkronisasi berkala (harian/mingguan)? Data apa saja yang di-clone? | Wajib diputuskan |
+**FR-AUTH-03 — Reset Password oleh Admin**
+Admin dapat mereset password karyawan tertentu dari halaman Manajemen Karyawan.
+*Acceptance Criteria:*
+- Reset menghasilkan password sementara baru dan menandai akun agar wajib ganti password di login berikutnya (terhubung dengan FR-AUTH-02).
+
+**FR-AUTH-04 — Ubah Password Manual oleh Admin**
+Admin dapat menetapkan password baru secara langsung untuk karyawan tertentu.
+*Acceptance Criteria:*
+- Admin dapat memasukkan nilai password baru untuk satu karyawan dari halaman detail karyawan.
+- Disarankan (praktik baik, bukan fitur Audit Log formal) agar sistem mencatat kapan dan oleh siapa perubahan password dilakukan, sebagai data teknis internal.
+
+### 11.2 Manajemen Karyawan (FR-EMP)
+
+**FR-EMP-01 — Tambah Karyawan**
+Admin dapat membuat akun karyawan baru.
+*Acceptance Criteria:*
+- Admin mengisi data minimum: Nama, Email, ID Karyawan, dan proyek awal (opsional saat pembuatan, bisa ditambahkan kemudian melalui FR-EMP-04).
+- Sistem membuat password awal/sementara dan menandai akun agar wajib ganti password (FR-AUTH-02).
+
+**FR-EMP-02 — Edit Karyawan**
+Admin dapat memperbarui data dasar karyawan (nama, email, ID karyawan, status aktif/nonaktif).
+
+**FR-EMP-03 — Nonaktifkan / Hapus Karyawan**
+Admin dapat menonaktifkan (soft-disable) atau menghapus data karyawan.
+*Acceptance Criteria:*
+- Karyawan berstatus nonaktif tidak dapat login.
+- Mekanisme pasti (nonaktif/soft-delete vs. hapus permanen/hard-delete) mengikuti keputusan teknis pada Section 19.
+
+**FR-EMP-04 — Assign Karyawan ke Proyek**
+Admin dapat menugaskan satu atau lebih karyawan ke sebuah proyek.
+*Acceptance Criteria:*
+- Admin dapat menandai proyek tertentu sebagai "aktif" untuk seorang karyawan.
+- Sistem mendukung kasus di mana karyawan memiliki lebih dari satu proyek aktif secara bersamaan (lihat catatan pada FR-PROJ-02).
+
+**FR-EMP-05 — Ubah Penugasan Proyek Karyawan**
+Admin dapat memindahkan karyawan dari satu proyek ke proyek lain.
+*Acceptance Criteria:*
+- Riwayat penugasan proyek sebelumnya tetap tersimpan dan dapat ditelusuri untuk kebutuhan pelaporan (kolom "Proyek" pada riwayat kehadiran & export tetap akurat sesuai proyek yang berlaku saat absensi terjadi).
+
+### 11.3 Penugasan Proyek (FR-PROJ)
+
+**FR-PROJ-01 — Data Master Proyek**
+Sistem menyediakan data proyek yang dapat dipilih Admin saat melakukan penugasan.
+*Acceptance Criteria:*
+- Admin dapat melihat daftar proyek yang tersedia untuk ditugaskan ke karyawan.
+- Sumber data proyek (dibuat manual oleh Admin, atau ikut di-clone dari database pusat bersama data karyawan) mengikuti keputusan teknis pada Section 19.
+
+**FR-PROJ-02 — Auto-Tagging Proyek pada Absensi & Lembur**
+Setiap Check In, Check Out, dan entri lembur otomatis ditandai dengan proyek aktif karyawan yang bersangkutan. Karyawan tidak pernah memilih proyek secara manual saat melakukan absensi.
+*Acceptance Criteria:*
+- Kolom "Proyek" pada tabel kehadiran, riwayat, dan hasil export terisi otomatis berdasarkan penugasan proyek yang berlaku.
+- **Catatan penting:** untuk kasus karyawan dengan lebih dari satu proyek aktif secara bersamaan, aturan penentuan proyek mana yang di-tag pada satu entri absensi/lembur **belum ditentukan secara eksplisit** dan dicatat sebagai asumsi terbuka pada Section 14 — perlu diklarifikasi sebelum tahap desain teknis.
+
+### 11.4 Absensi Harian (FR-ATT)
+
+**FR-ATT-01 — Check In (Mobile & Web)**
+*Acceptance Criteria:*
+- Karyawan memilih status WFO atau WFA sebagai bagian dari proses check-in.
+- Karyawan wajib mengambil foto melalui kamera perangkat.
+- Sistem wajib menangkap koordinat GPS karyawan.
+- Check-in dapat dilakukan kapan saja tanpa batasan waktu wajib.
+- Jika waktu check-in **lebih dari pukul 08:00**, record ditandai "Terlambat" untuk keperluan flag Admin (lihat FR-FLAG-01) — **submission tetap berhasil, tidak pernah ditolak**.
+- Percobaan check-in kedua di hari yang sama menampilkan notifikasi "Sudah Check In Hari Ini" tanpa membuat record baru.
+
+**FR-ATT-02 — Check Out (Mobile & Web)**
+*Acceptance Criteria:*
+- Karyawan wajib mengambil foto dan sistem wajib menangkap GPS, sama seperti Check In.
+- Kolom Catatan Kerjaan Harian **wajib diisi** — submit ditolak (validasi form, bukan penolakan bisnis) jika kolom kosong.
+- Check-out hanya dapat dilakukan jika karyawan sudah check-in pada hari tersebut dan belum check-out.
+
+**FR-ATT-03 — Riwayat Kehadiran (Employee)**
+*Acceptance Criteria:*
+- Karyawan dapat melihat riwayat kehadirannya sendiri, mencakup tanggal, jam masuk/keluar, proyek, status WFO/WFA, dan catatan kerjaan.
+
+**FR-ATT-04 — Profil Karyawan**
+*Acceptance Criteria:*
+- Karyawan dapat melihat nama, email, dan proyek yang sedang berjalan.
+- Kemampuan edit profil mandiri oleh karyawan: **Perlu Konfirmasi** (tidak dibahas pada sesi final; lihat Section 18).
+
+### 11.5 Indikator Status (FR-FLAG)
+
+**FR-FLAG-01 — Flag Kehadiran Sederhana**
+Flag berfungsi sebagai alat bantu visual bagi Admin untuk memantau kehadiran secara cepat, **bukan sistem status berbasis database yang kompleks.**
+*Acceptance Criteria:*
+- Sistem menampilkan label sederhana per karyawan per hari, minimal mencakup: "Belum Check In", "Sudah Check In", "Sudah Check Out", "WFO", "WFA", dan "Terlambat" (jika check-in setelah 08:00).
+- Flag dihitung/ditampilkan secara langsung dari data absensi yang ada (mis. dari timestamp dan status kolom sederhana), **tanpa** tabel riwayat status terpisah yang rumit.
+- Flag bersifat informatif — tidak pernah memblokir aksi karyawan.
+
+### 11.6 Lembur (FR-OVT)
+
+**FR-OVT-01 — Input Absen Lembur**
+Karyawan mengisi form lembur secara manual, terpisah dari Check In/Check Out biasa.
+*Acceptance Criteria:*
+- Field yang diisi: Tanggal, Jam Mulai, Jam Selesai, Durasi, dan Keterangan pekerjaan lembur.
+- Tidak ada validasi foto, GPS, atau timestamp otomatis untuk entri ini — murni input manual.
+- Entri lembur otomatis ditandai dengan proyek aktif karyawan (FR-PROJ-02).
+- *Catatan desain:* hubungan antara field Durasi dengan Jam Mulai/Jam Selesai (dihitung otomatis vs. diisi independen untuk kasus non-standar) agar dikonfirmasi pada tahap desain UI.
+
+**FR-OVT-02 — Daftar & Monitoring Lembur (Admin/HRD)**
+*Acceptance Criteria:*
+- Admin/HRD dapat melihat daftar seluruh entri lembur karyawan: nama, proyek, tanggal, jam mulai/selesai, durasi, keterangan.
+- **Tidak ada alur persetujuan (approval)** — entri lembur tercatat otomatis begitu karyawan submit, murni untuk keperluan pendataan/monitoring HRD.
+
+**FR-OVT-03 — Alert Ambang Batas Lembur**
+*Acceptance Criteria:*
+- Sistem menyediakan pengaturan ambang batas lembur yang dapat dikonfigurasi oleh Admin/HRD (nilai default dan periode akumulasi — harian/mingguan/bulanan — ditentukan pada tahap desain teknis, lihat Section 19).
+- Ketika akumulasi jam lembur seorang karyawan melebihi ambang batas yang dikonfigurasi, sistem menampilkan alert kepada Admin/HRD (di dashboard, sesuai batasan Section 8 yang mengecualikan push notification).
+
+### 11.7 Dashboard Admin (FR-ADM)
+
+**FR-ADM-01 — KPI Card Dashboard**
+*Acceptance Criteria:*
+Dashboard menampilkan tujuh KPI card berikut, terhitung untuk tanggal yang dipilih (default: hari ini):
+- Total Karyawan
+- Hadir Hari Ini
+- WFO Hari Ini
+- WFA Hari Ini
+- Belum Check In
+- Belum Check Out
+- Lembur Hari Ini
+
+**FR-ADM-02 — Filter Dashboard & Tabel Kehadiran**
+*Acceptance Criteria:*
+- Admin dapat memfilter data dashboard dan tabel kehadiran berdasarkan Tanggal, Karyawan, dan Proyek, baik sendiri-sendiri maupun kombinasi.
+
+**FR-ADM-03 — Tabel Kehadiran Admin**
+*Acceptance Criteria:*
+- Tabel menampilkan kolom: Karyawan, Proyek, Jam Masuk, Jam Keluar, Status Kehadiran (flag, lihat FR-FLAG-01), WFO/WFA, dan Lembur (indikator ada/tidaknya entri lembur pada hari tersebut).
+- Tabel dapat difilter sesuai FR-ADM-02.
+
+### 11.8 Export (FR-EXP)
+
+**FR-EXP-01 — Export Rekap Kehadiran**
+*Acceptance Criteria:*
+- Admin dapat mengekspor rekap kehadiran dalam format **CSV** atau **Excel**.
+- Rekap mendukung tampilan **bulanan**.
+- Export dapat difilter berdasarkan Karyawan, Proyek, dan Tanggal (rentang).
+- Kolom spesifik dalam file export mengikuti struktur tabel kehadiran (FR-ADM-03) sebagai baseline, dengan detail final ditentukan pada tahap desain teknis.
+
+### 11.9 Sistem & Data (FR-SYS)
+
+**FR-SYS-01 — Sinkronisasi Data via Clone dari Kantor Pusat**
+*Acceptance Criteria:*
+- Data karyawan (dan kemungkinan data proyek, lihat FR-PROJ-01) bersumber dari proses clone terhadap database kantor pusat.
+- Mekanisme dan frekuensi clone (one-time vs. berkala) mengikuti keputusan teknis pada Section 19.
 
 ---
 
 ## 12. Kebutuhan Non-Fungsional (Non-Functional Requirements)
 
-> Nilai/angka spesifik pada beberapa baris di bawah ini adalah **contoh usulan standar industri**, bukan keputusan resmi dari mentor/HRD. Tetap ditandai "Perlu Konfirmasi" sampai disahkan di rapat Jumat — supaya tidak keliru dianggap requirement final.
-
 | Kategori | Requirement | Status |
 |---|---|---|
-| Usability | UI/UX harus simple dan compact, alur tidak berbelit-belit | Confirmed (Awal) |
-| Reliabilitas | Sistem harus lebih stabil dibanding aplikasi pusat sebelumnya | Confirmed (Awal) — metrik pasti Perlu Konfirmasi |
-| Media Capture | Sistem harus mendukung akses kamera (foto) dan GPS di perangkat mobile & web | Confirmed (Awal) |
-| Sumber Data / Database | Data di-clone dari database pusat, bukan koneksi real-time langsung | Confirmed (Awal) — mekanisme & frekuensi Perlu Konfirmasi |
-| Format Export | CSV / Excel | Confirmed (Awal) |
-| Ukuran File Foto | *Usulan: maks. 200KB per foto agar upload cepat di jaringan lemah* | **Perlu Konfirmasi** (usulan, belum disahkan) |
-| Kompresi/Resolusi Foto | *Usulan: resolusi dikompres otomatis di sisi klien sebelum upload* | **Perlu Konfirmasi** |
-| Keamanan / Autentikasi API | *Usulan: menggunakan Laravel Sanctum (token-based)* | **Perlu Konfirmasi** (usulan teknis, belum disahkan mentor) |
-| Privasi Data | Penyimpanan foto & data lokasi karyawan harus sesuai regulasi privasi data yang berlaku | Perlu Konfirmasi (regulasi acuan, mis. UU PDP) |
-| Konsistensi Data Clone | Strategi penanganan jika terjadi selisih data antara sumber pusat dan hasil clone | Perlu Konfirmasi |
-| Database Engine | Mis. MySQL/PostgreSQL | Perlu Konfirmasi |
-| Hosting/Infrastruktur | On-premise vs cloud | Perlu Konfirmasi |
-| Performa | Target beban pengguna bersamaan (concurrent users) | Perlu Konfirmasi |
-| Ketersediaan (Uptime) | Target uptime sistem | Perlu Konfirmasi |
-| Dukungan Platform | Versi Android/iOS minimum yang didukung | Perlu Konfirmasi |
-| Dukungan Browser | Browser yang didukung untuk aplikasi web | Perlu Konfirmasi |
-| Backup & Recovery | Frekuensi backup dan rencana disaster recovery | Perlu Konfirmasi |
+| Usability | UI/UX simple dan compact, alur tidak berbelit-belit | Confirmed |
+| Arsitektur | Monorepo — Backend Laravel, Web Admin Laravel, Mobile Flutter (REST API) | Confirmed |
+| Media Capture | Sistem mendukung akses kamera (foto) dan GPS di perangkat mobile & web | Confirmed |
+| Sumber Data / Database | Data karyawan di-clone dari database kantor pusat, bukan koneksi real-time langsung | Confirmed — mekanisme & frekuensi lihat Section 19 |
+| Format Export | CSV dan Excel | Confirmed |
+| Keamanan Autentikasi | Login berbasis email + password, tanpa self-registration; wajib ganti password di login pertama | Confirmed |
+| Kontrol Akses | Karyawan tidak dapat mengakses fitur absensi sebelum ganti password (FR-AUTH-02) | Confirmed |
+| Keamanan API | Metode autentikasi API (mis. Laravel Sanctum/JWT) | Lihat Section 19 (Open Technical Decision) |
+| Penyimpanan Foto/Media | Strategi penyimpanan (lokal, object storage, dsb.) & kompresi | Lihat Section 19 |
+| Privasi Data | Penyimpanan foto & data lokasi karyawan sesuai regulasi privasi data yang berlaku | Perlu Konfirmasi lebih lanjut (regulasi acuan belum ditentukan) |
+| Database Engine | Mis. MySQL/PostgreSQL | Lihat Section 19 |
+| Hosting/Infrastruktur | On-premise vs cloud | Lihat Section 19 |
+| Performa | Target beban pengguna bersamaan (concurrent users) | Belum ditentukan — mengikuti estimasi jumlah Karyawan PTT/Proyek aktual |
+| Ketersediaan (Uptime) | Target uptime sistem | Belum ditentukan |
 
 ---
 
 ## 13. Alur Pengguna (User Flow — Format Teks)
 
-> Diagram lengkap (Mermaid flowchart) untuk seluruh alur di bawah ini tersedia terpisah di dokumen **User Flow Documentation**. Bagian ini merangkum alur dalam format teks agar PRD tetap bisa dibaca berdiri sendiri.
+### 13.1 Admin — Alur Pembuatan Akun Karyawan
 
-### 13.1 Karyawan — Alur clock In
+1. Admin login ke dashboard.
+2. Admin membuka menu Manajemen Karyawan → Tambah Karyawan.
+3. Admin mengisi Nama, Email, ID Karyawan, dan (opsional) proyek awal.
+4. Sistem membuat akun dengan password sementara dan menandainya "wajib ganti password".
+5. Admin membagikan kredensial awal ke karyawan (di luar sistem — mis. secara manual/email internal).
 
-1. Karyawan login menggunakan email dan password.
-2. Karyawan menuju layar clock In.
+### 13.2 Karyawan — Alur Login Pertama & Wajib Ganti Password
+
+1. Karyawan login menggunakan email + password sementara dari Admin.
+2. Sistem mendeteksi status "wajib ganti password" dan mengarahkan ke layar Ganti Password — tidak dapat dilewati.
+3. Karyawan memasukkan password baru.
+4. Sistem memvalidasi dan menyimpan password baru.
+5. Karyawan diarahkan ke Dashboard/Home dan dapat mengakses seluruh fitur.
+
+### 13.3 Karyawan — Alur Check In
+
+1. Karyawan login (password sudah diganti).
+2. Karyawan menuju layar Check In.
 3. Karyawan memilih status kerja: WFO atau WFA.
-4. Sistem meminta izin kamera → karyawan mengambil foto.
-5. Sistem menangkap titik lokasi GPS.
-6. Karyawan submit clock In.
-7. Sistem mencatat timestamp, status WFO/WFA, foto, dan lokasi — **tanpa validasi waktu wajib**.
-8. Jika clock-in melewati jam tertentu (contoh: jam 8), sistem menandai record untuk flag di sisi admin — bukan penolakan.
-9. Karyawan menerima konfirmasi clock In berhasil.
+4. Karyawan mengambil foto via kamera.
+5. Sistem menangkap GPS.
+6. Karyawan submit — sistem otomatis menandai proyek aktif karyawan pada record ini.
+7. Jika waktu check-in setelah 08:00, sistem menandai record sebagai "Terlambat" (flag Admin saja, tidak memengaruhi karyawan).
+8. Karyawan menerima konfirmasi Check In berhasil.
 
-### 13.2 Karyawan — Alur clock Out
+### 13.4 Karyawan — Alur Check Out
 
-1. Karyawan menuju layar clock Out.
-2. Sistem meminta izin kamera → karyawan mengambil foto.
-3. Sistem menangkap titik lokasi GPS.
-4. Kolom **Catatan Kerjaan Harian** muncul dan wajib diisi.
-5. Karyawan submit clock Out.
-6. Sistem mencatat timestamp, foto, lokasi, dan catatan kerjaan.
-7. Karyawan menerima konfirmasi clock Out berhasil.
+1. Karyawan menuju layar Check Out.
+2. Karyawan mengambil foto via kamera; sistem menangkap GPS.
+3. Kolom Catatan Kerjaan Harian muncul dan wajib diisi.
+4. Karyawan submit.
+5. Karyawan menerima konfirmasi Check Out berhasil.
 
-### 13.3 Karyawan — Alur Input Absen Lembur
+### 13.5 Karyawan — Alur Input Absen Lembur
 
-1. Karyawan membuka menu Lembur (terpisah dari clock In/clock Out biasa).
-2. Karyawan memilih tanggal lembur.
-3. Karyawan mengisi durasi lembur (jam) secara manual.
-4. Karyawan mengisi keterangan pekerjaan lembur.
-5. Karyawan submit — **tidak ada validasi timestamp/GPS/foto** untuk entri ini.
-6. *(Perlu Konfirmasi: apakah entri lembur tampil di halaman Riwayat yang sama dengan absensi biasa, atau terpisah?)*
+1. Karyawan membuka menu Lembur.
+2. Karyawan mengisi Tanggal, Jam Mulai, Jam Selesai, Durasi, dan Keterangan.
+3. Karyawan submit — tidak ada validasi foto/GPS.
+4. Sistem menyimpan entri, otomatis menandai proyek aktif karyawan.
 
-### 13.4 Karyawan — Alur Melihat Riwayat Kehadiran
+### 13.6 Admin — Alur Penugasan Proyek
 
-1. Karyawan login.
-2. Karyawan membuka menu Riwayat Kehadiran.
-3. Sistem menampilkan daftar kehadiran: tanggal, jam clock-in/out, status WFO/WFA, foto, lokasi, catatan kerjaan.
+1. Admin membuka menu Manajemen Karyawan → pilih karyawan.
+2. Admin membuka tab Penugasan Proyek.
+3. Admin memilih proyek dari data master proyek dan menandainya sebagai aktif untuk karyawan tersebut.
+4. Jika diperlukan, Admin dapat menambahkan proyek aktif kedua (kasus penugasan ganda) atau memindahkan karyawan ke proyek baru (penugasan lama otomatis tercatat sebagai riwayat).
 
-### 13.5 Administrator/HRD — Alur Rekapan & Monitoring Kehadiran
+### 13.7 Admin — Alur Dashboard & Monitoring
 
-1. Admin/HRD login ke web dashboard.
-2. Sistem menampilkan ringkasan dashboard.
-3. Admin membuka menu Rekapan Kehadiran.
-4. Sistem menampilkan data seluruh karyawan: waktu clock-in/out, status WFO/WFA, foto, lokasi, catatan kerjaan.
-5. Sistem menampilkan indikator visual (mis. nama merah) untuk kondisi tertentu seperti keterlambatan.
+1. Admin login ke dashboard.
+2. Sistem menampilkan tujuh KPI card (Total Karyawan, Hadir Hari Ini, WFO/WFA Hari Ini, Belum Check In/Out, Lembur Hari Ini).
+3. Admin dapat memfilter tampilan berdasarkan Tanggal, Karyawan, atau Proyek.
+4. Admin melihat tabel kehadiran dengan kolom Karyawan, Proyek, Jam Masuk, Jam Keluar, Status, WFO/WFA, Lembur.
+5. Jika ada karyawan yang melebihi ambang batas lembur, sistem menampilkan alert pada dashboard.
 
-### 13.6 Administrator/HRD — Alur Monitoring & Alert Lembur
+### 13.8 Admin — Alur Export Rekap
 
-1. HRD login ke dashboard.
-2. HRD membuka menu Data Lembur.
-3. Sistem menampilkan daftar entri lembur seluruh karyawan (nama, tanggal, durasi, keterangan).
-4. Sistem menghitung akumulasi jam lembur per karyawan (*periode Perlu Konfirmasi: harian/mingguan/bulanan*).
-5. Jika akumulasi melebihi batas (*nilai Perlu Konfirmasi*), sistem menampilkan alert ke HRD.
-6. HRD dapat membuka detail karyawan terkait.
-
-### 13.7 Administrator/HRD — Alur Export Rekap
-
-1. Admin/HRD membuka menu Rekapan Kehadiran.
-2. Admin/HRD memilih bulan yang ingin dilihat.
-3. Sistem menampilkan rekap seluruh karyawan untuk bulan tersebut.
-4. Admin/HRD klik satu karyawan untuk melihat detail rekap bulanan karyawan tersebut.
-5. Admin/HRD memilih Export → pilih format CSV atau Excel.
-6. Sistem menghasilkan file untuk diunduh.
+1. Admin membuka menu Rekapan Kehadiran.
+2. Admin memilih bulan, dan (opsional) filter Karyawan/Proyek.
+3. Sistem menampilkan rekap sesuai filter.
+4. Admin memilih Export → CSV atau Excel.
+5. Sistem menghasilkan file untuk diunduh.
 
 ---
 
@@ -361,108 +463,99 @@ Sifat pekerjaan di lingkungan ini juga **fleksibel** — tidak ada batasan waktu
 
 | # | Asumsi | Perlu Validasi Dari |
 |---|---|---|
-| 1 | Setiap karyawan memiliki satu akun unik yang digunakan di web maupun mobile | Product Owner / HR |
-| 2 | Peran Administrator/HRD terpisah dari Karyawan dan tidak melakukan aksi absensi harian | Product Owner |
-| 3 | Sistem menggunakan autentikasi berbasis token untuk REST API (mis. Laravel Sanctum) | Technical Lead / Mentor |
-| 4 | Database relational (mis. MySQL/PostgreSQL), sejalan dengan stack Laravel | Technical Lead |
-| 5 | "Jam tertentu" pada contoh indikator (mis. jam 8) hanya ilustrasi, bukan aturan resmi | Mentor / HR |
-| 6 | Indikator status di admin bersifat pasif (menandai saja), tidak memblokir absensi karyawan | Mentor |
-| 7 | WFO/WFA dipilih manual oleh karyawan saat absen, bukan dideteksi otomatis dari lokasi | Mentor |
-| 8 | Foto dan GPS wajib diisi untuk setiap clock-in dan clock-out (tidak opsional) | Mentor |
-| 9 | Entri lembur tidak memerlukan approval — tercatat otomatis begitu karyawan submit | HRD |
-| 10 | Entri lembur terpisah dari absensi biasa (menu berbeda), tidak menggunakan foto/GPS | HRD / Mentor |
-| 11 | Clone database dilakukan secara berkala (bukan one-time saja), agar data tetap relevan | Technical Lead |
-| 12 | Alert batas lembur dikirim ke HRD saja, bukan ke karyawan yang bersangkutan | HRD |
-| 13 | Rekap "per bulan" berarti satu tampilan mencakup tanggal 1 s.d. akhir bulan kalender | HRD |
+| 1 | Role Administrator dan HRD menggunakan satu panel yang sama pada v1.0 (belum ada pemisahan RBAC formal) | Mentor / HRD |
+| 2 | Data master Proyek dapat dibuat manual oleh Admin dan/atau ikut di-clone dari database pusat — mekanisme pastinya ditentukan di tahap desain teknis | Technical Lead |
+| 3 | Untuk karyawan dengan lebih dari satu proyek aktif secara bersamaan, aturan penentuan proyek mana yang di-tag pada satu entri absensi/lembur **belum ditentukan** — dibutuhkan klarifikasi bisnis sebelum desain teknis dimulai | Mentor / HRD |
+| 4 | Mekanisme nonaktif (soft-disable) vs hapus permanen (hard-delete) pada FR-EMP-03 mengikuti konvensi teknis standar (disable sebagai default, delete sebagai opsi tambahan) — detail final di Section 19 | Technical Lead |
+| 5 | Field Durasi pada form Lembur dapat dihitung otomatis dari Jam Mulai–Jam Selesai; validasi kasus non-standar (mis. lembur lintas hari) menyusul pada tahap desain UI | Technical Lead / Mentor |
+| 6 | Ambang batas lembur bersifat dapat dikonfigurasi (configurable), bukan nilai tetap yang di-hardcode | Technical Lead |
+| 7 | Database relational (mis. MySQL/PostgreSQL), sejalan dengan stack Laravel | Technical Lead |
+| 8 | Sistem menggunakan autentikasi berbasis token untuk REST API (mis. Laravel Sanctum) | Technical Lead |
+| 9 | Fitur edit profil mandiri oleh karyawan belum termasuk scope v1.0 (hanya tampilan read-only) kecuali dinyatakan lain | Mentor |
 
 ---
 
-## 15. Pertanyaan Terbuka / Perlu Konfirmasi (untuk Fiksasi Jumat)
+## 15. Risiko (Risks)
 
-| # | Pertanyaan | Kategori |
-|---|---|---|
-| 1 | Berapa batas jam lembur yang memicu alert ke HRD? (per hari? per minggu? per bulan?) | Business Rule |
-| 2 | Apakah entri lembur perlu approval dari HRD, atau otomatis tercatat? | Fungsional |
-| 3 | Apakah data lembur akan dipakai untuk perhitungan kompensasi/insentif, atau murni pendataan? | Business |
-| 4 | Apakah karyawan bisa mengisi/mengedit entri lembur untuk tanggal yang sudah lewat, atau hanya hari ini? | Fungsional |
-| 5 | Field apa saja yang wajib ada di file export CSV/Excel? | Fungsional |
-| 6 | Apakah rekap bulanan bisa difilter (per departemen, per WFO/WFA), atau hanya per karyawan/bulan? | Fungsional |
-| 7 | Clone database: one-time migration di awal, atau sinkronisasi berkala? Kalau berkala, seberapa sering? | Teknis |
-| 8 | Data apa saja yang di-clone dari pusat — hanya master data karyawan, atau termasuk histori absensi lama? | Teknis |
-| 9 | Siapa yang bertanggung jawab menjaga proses clone database (tim pusat atau tim internal)? | Teknis / Governance |
-| 10 | Apakah HRD adalah role yang sama dengan "Administrator", atau perlu role terpisah dengan akses berbeda? | Governance |
-| 11 | Angka pasti threshold keterlambatan (contoh jam 8)? | Business Rule |
-| 12 | Apakah warning keterlambatan hanya visual (warna nama) atau perlu label teks juga (mis. "Terlambat")? | Fungsional |
-| 13 | Apakah WFO/WFA memengaruhi validasi GPS (mis. radius kantor untuk WFO)? | Fungsional |
-| 14 | Apakah QR Code benar-benar tidak dipakai? | Fungsional |
-| 15 | Apakah fitur Lupa Password dibutuhkan? | Fungsional |
-| 16 | Apakah admin bisa kelola data karyawan (tambah/edit/nonaktif)? | Fungsional |
-| 17 | Database engine apa yang dipakai? | Teknis |
-| 18 | Hosting on-premise atau cloud? | Teknis |
-| 19 | Apakah dibutuhkan notifikasi (push/email), minimal untuk alert lembur? | Fungsional |
-| 20 | Apakah dibutuhkan audit log? | Fungsional / Compliance |
-| 21 | Siapa saja stakeholder resmi (sponsor, mentor, kontak HRD)? | Governance |
-| 22 | Kebijakan privasi untuk penyimpanan foto & data lokasi karyawan? | Compliance |
-| 23 | Berapa target jumlah pengguna (karyawan/admin)? | Non-Fungsional |
-| 24 | Apakah dibutuhkan batas ukuran/kompresi foto untuk efisiensi upload? | Non-Fungsional |
-
----
-
-## 16. Risiko (Risks)
-
-| # | Risiko | Dampak | Kemungkinan | Mitigasi (Draft) |
+| # | Risiko | Dampak | Kemungkinan | Mitigasi |
 |---|---|---|---|---|
-| 1 | Requirement yang belum jelas/lengkap dapat menyebabkan rework dalam timeline 2 bulan yang singkat | Tinggi | Sedang | Prioritaskan konfirmasi seluruh pertanyaan terbuka sebelum development dimulai |
-| 2 | Threshold warning keterlambatan (mis. jam 8) belum resmi — bisa berubah saat fiksasi dan memengaruhi desain flag | Sedang | Tinggi | Buat threshold sebagai nilai konfigurasi, bukan hardcode |
-| 3 | Data lembur diinput manual tanpa validasi timestamp → berpotensi tidak akurat/dimanipulasi | Sedang | Sedang | Diskusikan kebutuhan validasi tambahan (mis. approval HRD) saat fiksasi |
-| 4 | Proses clone database dari pusat bisa menyebabkan data tidak real-time atau selisih data | Tinggi | Sedang | Pastikan frekuensi sinkronisasi jelas; beri indikator "data terakhir diperbarui pada..." di UI |
-| 5 | Ketergantungan pada tim pusat untuk proses clone database bisa menjadi bottleneck teknis di luar kendali tim proyek | Tinggi | Sedang | Klarifikasi PIC dan SLA proses clone dari sisi pusat |
-| 6 | Scope creep dari fitur "Perlu Konfirmasi" yang ditambahkan di tengah development | Tinggi | Sedang | Bekukan scope setelah PRD v1.0 disetujui; kelola penambahan via change request |
-| 7 | Waktu terbatas (2 bulan) sebagai proyek intern mungkin tidak memungkinkan testing/hardening penuh | Sedang | Tinggi | Definisikan scope MVP secara jelas; tunda fitur non-kritikal ke Future Enhancements |
-| 8 | Isu privasi data jika foto/GPS disimpan tanpa panduan kebijakan yang jelas | Tinggi | Rendah–Sedang | Konfirmasi kebutuhan compliance sebelum implementasi penuh |
+| 1 | Ambiguitas penentuan proyek saat karyawan memiliki lebih dari satu proyek aktif dapat menyebabkan data absensi salah tag proyek | Tinggi | Sedang | Klarifikasi aturan bisnis (lihat Asumsi #3) sebelum desain teknis; pertimbangkan UI sederhana bagi karyawan untuk mengonfirmasi konteks jika multi-proyek aktif |
+| 2 | Alur wajib ganti password di login pertama berpotensi membingungkan karyawan yang kurang familiar dengan aplikasi, menyebabkan lockout/kebingungan awal | Sedang | Sedang | Sediakan instruksi jelas di layar ganti password; pastikan pesan error informatif |
+| 3 | Data lembur diinput manual tanpa validasi timestamp/GPS → berpotensi tidak akurat, namun risiko ini diterima karena tujuannya murni pendataan (bukan payroll) | Rendah–Sedang | Sedang | Cukup dimitigasi lewat sifat data yang non-payroll; tidak perlu kontrol tambahan pada v1.0 |
+| 4 | Proses clone database dari pusat bisa menyebabkan data tidak real-time atau selisih data (karyawan, proyek) | Tinggi | Sedang | Tentukan frekuensi sinkronisasi pada Section 19; tampilkan indikator "data terakhir diperbarui pada..." di UI |
+| 5 | Ketergantungan pada tim pusat untuk proses clone database dapat menjadi bottleneck teknis di luar kendali tim proyek | Tinggi | Sedang | Klarifikasi PIC dan SLA proses clone dari sisi pusat |
+| 6 | Arsitektur monorepo membutuhkan koordinasi rilis antara tim backend, web, dan mobile agar tidak saling menghambat | Sedang | Sedang | Tetapkan struktur folder & pipeline CI/CD monorepo sejak awal (lihat Section 19) |
+| 7 | Waktu terbatas (2 bulan) untuk scope yang kini lebih luas (manajemen karyawan, proyek, lembur, dashboard, export) berisiko terhadap kualitas testing | Tinggi | Sedang | Prioritaskan modul inti (Auth, Absensi, Dashboard) lebih dulu; modul pendukung (Export, Lembur) dapat menyusul jika perlu |
 
 ---
 
-## 17. Metrik Keberhasilan (Success Metrics)
+## 16. Metrik Keberhasilan (Success Metrics)
 
-| Kandidat Metrik | Deskripsi | Status |
-|---|---|---|
-| Stabilitas Sistem | Berkurangnya keluhan error dibanding aplikasi pusat sebelumnya | Confirmed (Awal) sebagai tujuan kualitatif |
-| Kelengkapan Data Absensi | % clock-in/out yang berhasil menyertakan foto + GPS | Perlu Konfirmasi (target %) |
-| Kepatuhan Pelaporan Lembur | % entri lembur yang terisi lengkap (durasi + keterangan) | Perlu Konfirmasi |
-| Akurasi Clone Database | Selisih data antara sumber pusat dan hasil clone | Perlu Konfirmasi |
-| Tingkat Adopsi Sistem | % karyawan aktif menggunakan sistem baru | Perlu Konfirmasi |
-| Ketepatan Waktu Delivery | Proyek selesai dalam timeline 2 bulan | Confirmed sebagai constraint proyek |
+| Metrik | Deskripsi |
+|---|---|
+| Stabilitas Sistem | Berkurangnya keluhan error dibanding aplikasi pusat sebelumnya |
+| Kelengkapan Data Absensi | Persentase check-in/out yang berhasil menyertakan foto + GPS |
+| Kepatuhan Pelaporan Lembur | Persentase entri lembur yang terisi lengkap (tanggal, jam, durasi, keterangan) |
+| Akurasi Clone Database | Selisih data antara sumber pusat dan hasil clone |
+| Tingkat Adopsi Sistem | Persentase Karyawan PTT/Proyek yang aktif menggunakan sistem |
+| Ketepatan Waktu Delivery | Proyek selesai dalam timeline 2 bulan |
 
 ---
 
-## 18. Timeline Tingkat Tinggi (2 Bulan)
+## 17. Timeline Tingkat Tinggi (2 Bulan)
 
 | Fase | Durasi (Perkiraan) | Aktivitas Utama |
 |---|---|---|
-| 1. Requirement Gathering & Fiksasi PRD | Minggu 1–2 (fiksasi Jumat ini) | Finalisasi seluruh item "Perlu Konfirmasi", PRD naik ke v1.0 |
-| 2. System Design | Minggu 2–3 | ERD (termasuk tabel lembur), desain API (termasuk endpoint foto/GPS), rancangan proses clone database, wireframe UI/UX |
-| 3. Development – Backend & API | Minggu 3–5 | Modul autentikasi, absensi (foto+GPS+WFO/WFA), modul lembur, alert HRD, proses clone DB |
-| 4. Development – Web & Mobile Frontend | Minggu 3–6 | Alur clock-in/out, catatan kerjaan, form lembur karyawan, dashboard admin/HRD (rekap bulanan, export CSV/Excel) |
+| 1. Setup & System Design | Minggu 1–2 | Setup struktur monorepo, ERD (karyawan, proyek, absensi, lembur), desain API, rancangan proses clone database, wireframe UI/UX |
+| 2. Development – Backend & API | Minggu 2–4 | Modul autentikasi (termasuk wajib ganti password), manajemen karyawan & proyek, absensi (foto+GPS+WFO/WFA), lembur, alert HRD |
+| 3. Development – Web Admin & Mobile Frontend | Minggu 3–6 | Dashboard KPI & filter, tabel kehadiran, form lembur, alur check-in/out karyawan (web & mobile) |
+| 4. Export & Integrasi Data | Minggu 5–6 | Export CSV/Excel, integrasi hasil clone database |
 | 5. Integrasi & Testing | Minggu 6–7 | Testing end-to-end, validasi hasil clone database, UAT |
 | 6. Deployment & Handover | Minggu 7–8 | Deployment, dokumentasi, laporan PKL |
 
-*Catatan: Timeline bersifat ilustratif dan harus divalidasi terhadap constraint proyek aktual serta ekspektasi mentor.*
+---
+
+## 18. Pengembangan Masa Depan (Future Enhancements)
+
+Item berikut dikonfirmasi **di luar scope v1.0** (lihat Section 8) dan menjadi kandidat pengembangan berikutnya:
+
+- Alur perizinan/cuti (Leave Request & Permission Workflow)
+- Kalender hari libur (Holiday Calendar)
+- QR Code attendance
+- Face Recognition untuk verifikasi kehadiran
+- Advanced Analytics
+- Push Notification (menggantikan alert dashboard-only)
+
+Item tambahan yang belum dibahas pada sesi fiksasi final dan dipertimbangkan untuk iterasi berikutnya:
+
+- Audit Log lengkap
+- Shift Schedule
+- Pemisahan role formal antara Administrator dan HRD (RBAC)
+- Edit profil mandiri oleh karyawan
+- Alur approval untuk lembur (jika kebijakan berubah di masa depan)
+- Sinkronisasi database real-time ke pusat (menggantikan clone berkala)
+- Export PDF sebagai tambahan format
 
 ---
 
-## 19. Pengembangan Masa Depan (Future Enhancements)
+## 19. Open Technical Decisions
 
-- Alur perizinan/cuti (jika suatu saat dibutuhkan kembali — saat ini eksplisit out of scope)
-- Approval workflow untuk lembur (jika ternyata dibutuhkan)
-- QR Code attendance (jika foto+GPS dirasa kurang cukup)
-- Integrasi otomatis perhitungan kompensasi lembur ke sistem payroll
-- Sinkronisasi database real-time ke pusat (menggantikan clone berkala)
-- Sistem notifikasi otomatis (push/email), termasuk untuk alert lembur
-- Audit log lengkap
-- Export PDF sebagai tambahan format (selain CSV/Excel)
-- Anti-spoofing untuk foto/GPS (liveness detection, mock-location detection)
-- Integrasi dengan platform HRIS pihak ketiga
+Item berikut adalah **keputusan teknis yang secara sengaja belum difinalisasi** pada PRD ini, dan perlu diselesaikan oleh tim engineering/Technical Lead pada tahap System Design:
+
+| # | Topik | Pertanyaan yang Perlu Dijawab |
+|---|---|---|
+| 1 | Penyimpanan Gambar (Image Storage) | Foto disimpan di mana — object storage (mis. S3-compatible), disk lokal server, atau lainnya? Kebijakan kompresi/ukuran maksimum? |
+| 2 | Deployment & Infrastruktur | Hosting on-premise atau cloud? Spesifikasi server? Strategi environment (staging/production)? |
+| 3 | Sinkronisasi Database (Clone dari Pusat) | Mekanisme clone: one-time migration atau sinkronisasi berkala? Jika berkala, seberapa sering? Data apa saja yang di-clone (karyawan saja, atau termasuk proyek/histori)? |
+| 4 | Database Engine | MySQL, PostgreSQL, atau lainnya? |
+| 5 | Autentikasi API | Laravel Sanctum, JWT, Passport, atau metode lain? |
+| 6 | Aturan Kompleksitas Password | Panjang minimum, kombinasi karakter, dan kebijakan expiry (jika ada) |
+| 7 | Ambang Batas Lembur (Nilai Default) | Berapa jam dan periode akumulasi (harian/mingguan/bulanan) sebagai nilai default sistem yang dapat dikonfigurasi (FR-OVT-03) |
+| 8 | Mekanisme Nonaktif vs Hapus Karyawan | Soft-delete (nonaktif, data tetap ada) atau hard-delete (data terhapus permanen)? |
+| 9 | Penanganan Multi-Proyek Aktif | Logika auto-tagging proyek pada absensi/lembur saat karyawan memiliki lebih dari satu proyek aktif sekaligus (lihat Asumsi #3, Risiko #1) |
+| 10 | Sumber Data Master Proyek | Dibuat manual oleh Admin di sistem ini, atau ikut di-clone dari database pusat? |
+| 11 | Struktur & Tooling Monorepo | Struktur folder (backend, web admin, referensi mobile), pipeline CI/CD untuk mengoordinasikan rilis Laravel + Flutter dalam satu repo |
+| 12 | Kolom Detail Export | Daftar kolom final pada file CSV/Excel (di luar baseline tabel kehadiran pada FR-ADM-03) |
 
 ---
 
@@ -472,69 +565,46 @@ Sifat pekerjaan di lingkungan ini juga **fleksibel** — tidak ada batasan waktu
 
 | Layer | Teknologi | Catatan |
 |---|---|---|
+| Arsitektur | Monorepo | Backend, Web Admin, dan referensi API mobile dikelola dalam satu repository |
 | Backend / API | Laravel | Menyediakan REST API yang dikonsumsi aplikasi mobile |
-| Aplikasi Web | Laravel | Route web dipisahkan dari route API |
+| Aplikasi Web Admin | Laravel | Route web dipisahkan dari route API |
 | Aplikasi Mobile | Flutter | Mengonsumsi REST API backend |
-| Database | *Perlu Konfirmasi (engine)* | **Confirmed: sumber data via clone dari database pusat** |
-| Hosting/Infrastruktur | *Perlu Konfirmasi* | On-premise vs. cloud belum ditentukan |
+| Database | *Engine: Open Technical Decision (Section 19)* | Sumber data: **clone dari database kantor pusat** (Confirmed) |
+| Hosting/Infrastruktur | *Open Technical Decision (Section 19)* | On-premise vs. cloud belum ditentukan |
 
-### 20.2 Riwayat Perubahan Kunci (Ringkasan Kumulatif)
+### 20.2 Ringkasan Perubahan Kunci v0.3 → v1.0
 
-| Area | v0.1 | v0.2 | v0.3 |
-|---|---|---|---|
-| Login | Belum ditentukan | Via Email | — |
-| Lokasi Kerja | Belum ada | WFO / WFA | — |
-| Verifikasi | Perlu Konfirmasi | Foto + GPS wajib | — |
-| Cuti/Izin | Perlu Konfirmasi | Dihapus — tidak diperlukan | — |
-| Keterlambatan | Perlu Konfirmasi | Ada indikator/flag (bukan blocking) | — |
-| Catatan Kerjaan | Belum ada | Field baru saat clock Out | — |
-| Jam Kerja | Perlu Konfirmasi | Fleksibel, tanpa batas waktu wajib | — |
-| Rekapan Admin | Perlu Konfirmasi | Confirmed — ada fitur rekapan | Rekap jadi bulanan + drill-down per karyawan |
-| Lembur | — | Masuk daftar Perlu Konfirmasi | Confirmed — input manual, tanpa timestamp/foto/GPS |
-| Alert HRD | — | — | Confirmed — alert saat lembur lewat batas |
-| Database | — | Perlu Konfirmasi | Confirmed — hasil clone dari pusat |
-| Format Export | — | Perlu Konfirmasi (Excel/PDF) | Confirmed — CSV/Excel |
+| Area | v0.3 | v1.0 (Final) |
+|---|---|---|
+| Target Pengguna | Seluruh karyawan (belum dibatasi) | **Confirmed — khusus Karyawan PTT/Proyek**, karyawan tetap di luar scope |
+| Registrasi Akun | Belum dibahas | **Confirmed — akun dibuat/diimpor Admin, tanpa self-register** |
+| Login Pertama | Belum dibahas | **Confirmed — wajib ganti password sebelum akses fitur lain** |
+| Manajemen Karyawan | Belum dibahas | **Confirmed — CRUD karyawan + reset password oleh Admin** |
+| Proyek | Belum ada konsep ini | **Confirmed — entitas terpisah dari Flag; dikelola Admin; auto-tag ke absensi/lembur** |
+| Flag | Ada indikator keterlambatan | **Diperjelas — flag sederhana (bukan sistem status berat), mencakup status check-in/out & WFO/WFA** |
+| Lembur | Durasi + keterangan | **Diperluas — tambah Jam Mulai & Jam Selesai; tegas tanpa approval** |
+| Dashboard | Rekapan umum | **Confirmed — 7 KPI card spesifik + filter Tanggal/Karyawan/Proyek + tabel kehadiran terstruktur** |
+| Export | CSV/Excel, rekap bulanan per karyawan | **Diperjelas — filter tambahan per Proyek** |
+| Arsitektur | Belum dibahas | **Confirmed — Monorepo** |
+| Out of Scope | Cuti, approval lembur | **Diperluas — tambah Holiday Calendar, QR Attendance, Face Recognition, Advanced Analytics, Push Notification** |
 
 ### 20.3 Glosarium
 
 | Istilah | Definisi |
 |---|---|
+| PTT | Karyawan Proyek/Kontrak (Pekerja Tidak Tetap) — target pengguna utama sistem ini |
 | PRD | Product Requirements Document |
 | PKL | Praktik Kerja Lapangan |
-| MVP | Minimum Viable Product |
 | REST API | Representational State Transfer Application Programming Interface |
-| RBAC | Role-Based Access Control |
 | UAT | User Acceptance Testing |
 | WFO | Work From Office |
 | WFA | Work From Anywhere |
-| Flag/Warning Indicator | Penanda visual di sisi admin untuk kondisi tertentu (mis. keterlambatan), bersifat informatif dan tidak memblokir aksi user |
-| Absen Lembur / Overtime Entry | Entri manual jam lembur karyawan, terpisah dari absensi clock In/Out biasa |
-| Clone Database | Proses menyalin data dari database pusat ke database internal proyek ini, bukan koneksi real-time langsung |
-
-### 20.4 Dokumen Referensi
-
-> **Perlu Konfirmasi:** Belum ada dokumen pendukung resmi (mis. SOP absensi/lembur dari HR, kebijakan privasi data internal, brand/UI guidelines) yang diberikan. Akan dilampirkan setelah tersedia.
+| Flag | Indikator visual sederhana di sisi Admin untuk status kehadiran harian (bukan sistem status database yang kompleks) — berbeda dari konsep **Project** |
+| Project (Proyek) | Entitas penugasan kerja aktual tempat karyawan ditempatkan, dikelola oleh Admin, dan diikat otomatis ke data absensi/lembur karyawan |
+| Monorepo | Arsitektur satu repository yang menampung seluruh komponen backend, web admin, dan referensi API mobile |
+| Clone Database | Proses menyalin data dari database kantor pusat ke database internal proyek ini, bukan koneksi real-time langsung |
 
 ---
 
-## 21. clocklist Perbaikan Menuju PRD v1.0 (Pasca Rapat Jumat)
-
-Gunakan draft v0.3 (dokumen ini) sebagai bahan rapat fiksasi hari Jumat. Setelah seluruh poin "Perlu Konfirmasi" terjawab, lakukan update berikut agar status dokumen berubah dari **Draft v0.3** menjadi **Approved v1.0**:
-
-| # | Section Terkait | Hal yang Harus Diperbarui Pasca Rapat Jumat |
-|---|---|---|
-| 1 | Section 1 & 9 | Hapus seluruh tulisan `[TBD]` atau "Perlu Konfirmasi". Isi nama resmi Mentor, Stakeholder HRD, dan Sign-off Approval. |
-| 2 | Section 7 & 11 | Pindahkan seluruh baris di tabel 11.2 ("Perlu Konfirmasi") ke tabel 11.1 ("Confirmed"), masing-masing dengan status jelas: **Dikembangkan** atau **Dibuang dari Scope**. |
-| 3 | Section 11 | Kode FR sudah dirapikan per modul (FR-ATT-xx, FR-OVT-xx, FR-ADM-xx, FR-AUTH-xx, FR-SYS-xx) di versi ini — pastikan kode tetap konsisten saat item dari 11.2 dipindahkan ke 11.1. |
-| 4 | Section 12 | Ubah status NFR dari "Perlu Konfirmasi" menjadi angka/standar terukur yang **disahkan mentor** (mis. ukuran foto maks. berapa KB, metode auth API resmi apa, database engine resmi apa) — bukan sekadar usulan seperti pada draft ini. |
-| 5 | Section 14 & 15 | Hapus tabel Asumsi dan Pertanyaan Terbuka yang sudah terjawab; sisakan hanya yang benar-benar masih relevan (jika ada) untuk iterasi berikutnya. |
-| 6 | Section 2 | Tambahkan entri baru "v1.0 — Approved" pada Riwayat Versi, termasuk tanggal dan nama penyetuju. |
-| 7 | Status Dokumen | Ubah label di bagian atas dokumen dari **"DRAFT"** menjadi **"APPROVED — v1.0"**. |
-| 8 | Section 18 | Sesuaikan timeline jika ada perubahan scope hasil keputusan Jumat (mis. jika Notifikasi/Audit Log ternyata masuk scope, tambahkan ke fase development). |
-
-> Setelah clocklist ini selesai dijalankan, dokumen dapat disebarkan sebagai **PRD v1.0 — Approved** dan menjadi acuan resmi untuk fase System Design (Section 18, Fase 2).
-
----
-
-**Akhir dari Draft PRD v0.3 (Full)**
-*Dokumen ini adalah versi konsolidasi lengkap yang menggabungkan seluruh riwayat requirement v0.1–v0.3. Item bertanda "Confirmed (Awal)" masih berpotensi disesuaikan sampai proses fiksasi resmi hari Jumat. Ikuti clocklist di Section 21 untuk menaikkan dokumen ini menjadi PRD v1.0 — Approved.*
+**Akhir dari PRD v1.0 (Final)**
+*Dokumen ini merupakan hasil revisi final dari seluruh proses requirement gathering (v0.1–v0.3) dan telah mengakomodasi seluruh keputusan yang dikonfirmasi. Item yang tersisa terbuka murni bersifat teknis (lihat Section 19) dan tidak menghambat dimulainya tahap System Design.*
