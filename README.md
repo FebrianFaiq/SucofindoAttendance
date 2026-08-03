@@ -1,6 +1,6 @@
 # 🏢 SUCOFINDO Attendance Management System
 
-Aplikasi pencatatan kehadiran karyawan internal SUCOFINDO berbasis Mobile (Flutter) dan Web (Laravel).
+Aplikasi pencatatan kehadiran karyawan internal (PTT) SUCOFINDO berbasis Mobile (Flutter) dan Web (Laravel).
 
 ---
 
