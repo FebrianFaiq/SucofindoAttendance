@@ -8,17 +8,23 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     *
+     * Tabel autentikasi tunggal untuk Admin & Karyawan (dibedakan via kolom `role`).
+     * Ref: BE Framework §4.2 — users
      */
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->rememberToken();
+            $table->string('name', 150);
+            $table->string('email', 150)->unique();
+            $table->string('password', 255); // hashed (bcrypt)
+            $table->enum('role', ['admin', 'employee'])->comment('Menentukan akses menu & policy');
+            $table->boolean('must_change_password')->default(true)->comment('FR-AUTH-02');
+            $table->boolean('is_active')->default(true)->comment('FR-EMP-03 — nonaktif = tidak bisa login');
+            $table->timestamp('last_login_at')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
