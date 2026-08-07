@@ -9,18 +9,32 @@ use Illuminate\Support\Facades\Hash;
 class AdminUserSeeder extends Seeder
 {
     /**
-     * 1 akun admin awal untuk keperluan testing/UAT.
-     * Ref: BE Framework §4.4
+     * Seed akun admin dan karyawan awal untuk keperluan testing/UAT.
      */
     public function run(): void
     {
-        User::create([
-            'name' => 'Admin SUCOFINDO',
-            'email' => 'admin@sucofindo.com',
-            'password' => Hash::make('admin123'),
-            'role' => 'admin',
-            'must_change_password' => true,
-            'is_active' => true,
-        ]);
+        // 1. Akun Admin
+        User::updateOrCreate(
+            ['email' => 'admin@sucofindo.com'],
+            [
+                'name' => 'Admin SUCOFINDO',
+                'password' => Hash::make('admin123'),
+                'role' => 'admin',
+                'must_change_password' => false,
+                'is_active' => true,
+            ]
+        );
+
+        // 2. Akun Karyawan (Employee)
+        User::updateOrCreate(
+            ['email' => 'karyawan@sucofindo.com'],
+            [
+                'name' => 'Budi Santoso (Karyawan PTT)',
+                'password' => Hash::make('karyawan123'),
+                'role' => 'employee',
+                'must_change_password' => false,
+                'is_active' => true,
+            ]
+        );
     }
 }

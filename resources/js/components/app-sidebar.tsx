@@ -1,10 +1,20 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import {
+    CalendarCheck,
+    Clock,
+    FileSpreadsheet,
+    FolderKanban,
+    History,
+    LayoutGrid,
+    LogIn,
+    LogOut,
+    User as UserIcon,
+    Users,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
-import { TeamSwitcher } from '@/components/team-switcher';
 import {
     Sidebar,
     SidebarContent,
@@ -14,35 +24,83 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
-import type { NavItem } from '@/types';
+import type { NavItem, User } from '@/types';
 
 export function AppSidebar() {
     const page = usePage();
-    const dashboardUrl = page.props.currentTeam
-        ? dashboard(page.props.currentTeam.slug)
-        : '/';
+    const user = page.props.auth?.user as User | undefined;
+    const role = user?.role ?? 'employee';
 
-    const mainNavItems: NavItem[] = [
+    // Menu Navigasi untuk Employee
+    const employeeNavItems: NavItem[] = [
         {
             title: 'Dashboard',
-            href: dashboardUrl,
+            href: '/employee/dashboard',
             icon: LayoutGrid,
+        },
+        {
+            title: 'Check In',
+            href: '/employee/check-in',
+            icon: LogIn,
+        },
+        {
+            title: 'Check Out',
+            href: '/employee/check-out',
+            icon: LogOut,
+        },
+        {
+            title: 'Lembur',
+            href: '/employee/overtime',
+            icon: Clock,
+        },
+        {
+            title: 'Riwayat Kehadiran',
+            href: '/employee/history',
+            icon: History,
+        },
+        {
+            title: 'Profil Saya',
+            href: '/employee/profile',
+            icon: UserIcon,
         },
     ];
 
-    const footerNavItems: NavItem[] = [
+    // Menu Navigasi untuk Admin
+    const adminNavItems: NavItem[] = [
         {
-            title: 'Repository',
-            href: 'https://github.com/laravel/react-starter-kit',
-            icon: FolderGit2,
+            title: 'Dashboard Admin',
+            href: '/admin/dashboard',
+            icon: LayoutGrid,
         },
         {
-            title: 'Documentation',
-            href: 'https://laravel.com/docs/starter-kits#react',
-            icon: BookOpen,
+            title: 'Manajemen Karyawan',
+            href: '/admin/employees',
+            icon: Users,
+        },
+        {
+            title: 'Manajemen Proyek',
+            href: '/admin/projects',
+            icon: FolderKanban,
+        },
+        {
+            title: 'Data Kehadiran',
+            href: '/admin/attendance',
+            icon: CalendarCheck,
+        },
+        {
+            title: 'Monitoring Lembur',
+            href: '/admin/overtime',
+            icon: Clock,
+        },
+        {
+            title: 'Rekap & Export',
+            href: '/admin/reports',
+            icon: FileSpreadsheet,
         },
     ];
+
+    const mainNavItems = role === 'admin' ? adminNavItems : employeeNavItems;
+    const dashboardUrl = role === 'admin' ? '/admin/dashboard' : '/employee/dashboard';
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -56,11 +114,6 @@ export function AppSidebar() {
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <TeamSwitcher />
-                    </SidebarMenuItem>
-                </SidebarMenu>
             </SidebarHeader>
 
             <SidebarContent>
@@ -68,7 +121,6 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

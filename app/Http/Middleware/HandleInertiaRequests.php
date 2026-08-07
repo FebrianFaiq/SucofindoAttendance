@@ -41,7 +41,16 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $user,
+                // Kode asli:
+                // 'user' => $user,
+                // Temporary Testing Fallback (Bypass Auth):
+                'user' => $user ?? [
+                    'id' => 1,
+                    'name' => 'Tester User',
+                    'email' => 'tester@sucofindo.com',
+                    'role' => 'admin', // Ubah ke 'admin' atau 'employee' untuk tes tampilan sidebar
+                    'must_change_password' => false,
+                ],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'currentTeam' => fn () => $user?->currentTeam ? $user->toUserTeam($user->currentTeam) : null,
