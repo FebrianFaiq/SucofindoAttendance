@@ -1,0 +1,73 @@
+<?php
+
+namespace App\Http\Controllers\Web;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\LoginRequest;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
+use Inertia\Response;
+
+/**
+ * Autentikasi Web Admin — session Laravel biasa (guard `web`).
+ *
+ * Web Admin TIDAK menggunakan Sanctum — cukup session + CSRF token bawaan.
+ * Ref: BE Framework §5 & §7.0
+ */
+class AuthController extends Controller
+{
+    /**
+     * Tampilkan halaman login.
+     *
+     * GET /login
+     */
+    public function create(): Response
+    {
+        return Inertia::render('auth/login', [
+            'canResetPassword' => true,
+        ]);
+    }
+
+    /**
+     * Proses login.
+     *
+     * POST /login
+     *
+     * Alur:
+     * 1. Validasi email + password (via LoginRequest, termasuk rate limiting)
+     * 2. Attempt login — gagal → pesan generik "Email atau password salah" (§9)
+     * 3. Cek is_active — jika false → logout + return error "Akun dinonaktifkan"
+     * 4. Update last_login_at
+     * 5. Regenerate session (security best practice)
+     * 6. Redirect ke /dashboard
+     */
+    public function store(LoginRequest $request): RedirectResponse
+    {
+        $request->authenticate();
+
+        $request->session()->regenerate();
+
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->update(['last_login_at' => now()]);
+
+        return redirect()->intended(route('dashboard'));
+    }
+
+    /**
+     * Proses logout.
+     *
+     * POST /logout
+     */
+    public function destroy(Request $request): RedirectResponse
+    {
+        Auth::guard('web')->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login');
+    }
+}

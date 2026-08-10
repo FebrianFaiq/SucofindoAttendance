@@ -129,7 +129,7 @@ return [
     |
     */
 
-    'views' => true,
+    'views' => false,
 
     /*
     |--------------------------------------------------------------------------
@@ -143,7 +143,8 @@ return [
     */
 
     'features' => [
-        Features::resetPasswords(),
+        // Registration dan reset password tidak diimplementasikan di v1.0
+        // Ref: BE Framework §2 — password reset ditangani manual oleh Admin
     ],
 
 ];

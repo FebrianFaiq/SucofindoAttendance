@@ -6,7 +6,6 @@ import AdminLayout from '@/layouts/admin-layout';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
 import EmployeeLayout from '@/layouts/employee-layout';
-import SettingsLayout from '@/layouts/settings/layout';
 
 const appName = import.meta.env.VITE_APP_NAME || 'SUCOFINDO Absensi';
 
@@ -22,9 +21,6 @@ createInertiaApp({
                 return EmployeeLayout;
             case name.startsWith('admin/'):
                 return AdminLayout;
-            case name.startsWith('settings/'):
-            case name.startsWith('teams/'):
-                return [AppLayout, SettingsLayout];
             default:
                 return AppLayout;
         }

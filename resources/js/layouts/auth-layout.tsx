@@ -1,8 +1,6 @@
-import AuthLayoutTemplate from '@/layouts/auth/auth-simple-layout';
+import AuthSucofindoLayout from '@/layouts/auth/auth-sucofindo-layout';
 
 export default function AuthLayout({
-    title = '',
-    description = '',
     children,
 }: {
     title?: string;
@@ -10,8 +8,8 @@ export default function AuthLayout({
     children: React.ReactNode;
 }) {
     return (
-        <AuthLayoutTemplate title={title} description={description}>
+        <AuthSucofindoLayout>
             {children}
-        </AuthLayoutTemplate>
+        </AuthSucofindoLayout>
     );
 }

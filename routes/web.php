@@ -1,22 +1,34 @@
 <?php
 
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\Teams\TeamInvitationController;
-use App\Http\Middleware\EnsureTeamMembership;
+use App\Http\Controllers\Web\AuthController;
+use App\Http\Controllers\Web\DashboardController;
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'welcome')->name('home');
+/*
+|--------------------------------------------------------------------------
+| Web Routes — Web Admin (Inertia + React)
+|--------------------------------------------------------------------------
+|
+| Rute Inertia untuk Web Admin — guard: web (session biasa).
+| Ref: BE Framework §7.0
+|
+*/
 
-require __DIR__.'/attendance.php';
-require __DIR__.'/settings.php';
+// Redirect root ke dashboard
+Route::redirect('/', '/dashboard');
 
-Route::prefix('{current_team}')
-    ->middleware(['auth', 'verified', EnsureTeamMembership::class])
-    ->group(function () {
-        Route::get('dashboard', DashboardController::class)->name('dashboard');
-    });
+// ───────────────────────────────────────────
+// Guest Routes (belum login)
+// ───────────────────────────────────────────
+Route::middleware('guest')->group(function () {
+    Route::get('login', [AuthController::class, 'create'])->name('login');
+    Route::post('login', [AuthController::class, 'store']);
+});
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('invitations/{invitation}/accept', [TeamInvitationController::class, 'accept'])->name('invitations.accept');
-    Route::delete('invitations/{invitation}', [TeamInvitationController::class, 'decline'])->name('invitations.decline');
+// ───────────────────────────────────────────
+// Authenticated + Admin Routes
+// ───────────────────────────────────────────
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::post('logout', [AuthController::class, 'destroy'])->name('logout');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });

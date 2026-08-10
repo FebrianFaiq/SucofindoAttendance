@@ -12,6 +12,20 @@
         'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
+    --font-mulish:
+        'Mulish', ui-sans-serif, system-ui, sans-serif;
+
+    /* SUCOFINDO Brand Colors */
+    --color-sucofindo-primary: #035EA9;
+    --color-sucofindo-secondary: #0781C4;
+    --color-sucofindo-blue: #139FDA;
+    --color-sucofindo-green: #00798F;
+    --color-sucofindo-green-2: #00A099;
+    --color-sucofindo-dark: #14141A;
+    --color-sucofindo-dark-2: #191C1E;
+    --color-sucofindo-dark-3: #141B2B;
+    --color-sucofindo-title: #434654;
+    --color-sucofindo-light: #F9F9FF;
 
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
@@ -139,5 +153,15 @@
 
     body {
         @apply bg-background text-foreground;
+    }
+
+    /* Memperbaiki warna background dan text saat browser melakukan autofill/autocomplete */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 30px white inset !important;
+        -webkit-text-fill-color: black !important;
+        transition: background-color 5000s ease-in-out 0s;
     }
 }
