@@ -1,5 +1,5 @@
-import { Head, Link } from '@inertiajs/react';
-import { Search, SlidersHorizontal, Plus, ChevronLeft, ChevronRight, IdCard, ClipboardList, Pen, RotateCcw, Trash2, LayoutGrid, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { Search, Plus, ChevronLeft, ChevronRight, IdCard, ClipboardList, Pen, RotateCcw, Trash2, LayoutGrid, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,28 +8,117 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import React, { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 
-const employeesMock = [
-    { id: 1, name: 'Lorem Ipsum', nik: 'xx-0000', email: 'Lorem@sucofindo.com', project: 'Project Alpha', status: 'Active' },
-    { id: 2, name: 'Lorem Ipsum', nik: 'xx-0000', email: 'Lorem@sucofindo.com', project: 'Project Beta', status: 'Inactive' },
-    { id: 3, name: 'Lorem Ipsum', nik: 'xx-0000', email: 'Lorem@sucofindo.com', project: 'Project Alpha', status: 'Active' },
-    { id: 4, name: 'Lorem Ipsum', nik: 'xx-0000', email: 'Lorem@sucofindo.com', project: 'Project Alpha', status: 'Active' },
-    { id: 5, name: 'Lorem Ipsum', nik: 'xx-0000', email: 'Lorem@sucofindo.com', project: 'Project Alpha', status: 'Active' },
-    { id: 6, name: 'Lorem Ipsum', nik: 'xx-0000', email: 'Lorem@sucofindo.com', project: 'Project Alpha', status: 'Active' },
-    { id: 7, name: 'Lorem Ipsum', nik: 'xx-0000', email: 'Lorem@sucofindo.com', project: 'Project Alpha', status: 'Active' },
-];
+interface EmployeeItem {
+    id: number;
+    user_id: number;
+    employee_code?: string;
+    nik: string;
+    phone: string | null;
+    user: {
+        id: number;
+        name: string;
+        email: string;
+        role: string;
+        is_active: boolean;
+    };
+    projects: {
+        id: number;
+        name: string;
+        code: string;
+        pivot?: {
+            status: string;
+        };
+    }[];
+}
 
-export default function EmployeesIndex() {
-    const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
+interface PaginatedData<T> {
+    data: T[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from: number | null;
+    to: number | null;
+    prev_page_url: string | null;
+    next_page_url: string | null;
+    links: {
+        url: string | null;
+        label: string;
+        active: boolean;
+    }[];
+}
+
+interface EmployeesIndexProps {
+    employees: PaginatedData<EmployeeItem>;
+    filters?: {
+        search?: string;
+    };
+}
+
+export default function EmployeesIndex({ employees, filters }: EmployeesIndexProps) {
+    const [selectedEmployee, setSelectedEmployee] = useState<EmployeeItem | null>(null);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState(filters?.search || '');
     
     // Dialog states
     const [isResetOpen, setIsResetOpen] = useState(false);
     const [isResetSuccessOpen, setIsResetSuccessOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
 
-    const openEmployeeDetails = (emp: any) => {
+    const openEmployeeDetails = (emp: EmployeeItem) => {
         setSelectedEmployee(emp);
         setIsSheetOpen(true);
+    };
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        router.get('/admin/employees', { search: searchTerm }, { preserveState: true, replace: true });
+    };
+
+    const handleResetPassword = () => {
+        if (!selectedEmployee) return;
+        setIsProcessing(true);
+        router.post(
+            `/admin/employees/${selectedEmployee.id}/reset-password`,
+            {},
+            {
+                onSuccess: () => {
+                    setIsProcessing(false);
+                    setIsResetOpen(false);
+                    setIsResetSuccessOpen(true);
+                },
+                onError: () => {
+                    setIsProcessing(false);
+                },
+            }
+        );
+    };
+
+    const handleDeleteEmployee = () => {
+        if (!selectedEmployee) return;
+        setIsProcessing(true);
+        router.delete(`/admin/employees/${selectedEmployee.id}`, {
+            onSuccess: () => {
+                setIsProcessing(false);
+                setIsDeleteOpen(false);
+                setIsSheetOpen(false);
+                setSelectedEmployee(null);
+            },
+            onError: () => {
+                setIsProcessing(false);
+            },
+        });
+    };
+
+    const getInitials = (name: string) => {
+        if (!name) return 'EM';
+        return name
+            .split(' ')
+            .map((n) => n[0])
+            .join('')
+            .substring(0, 2)
+            .toUpperCase();
     };
 
     return (
@@ -47,14 +136,16 @@ export default function EmployeesIndex() {
 
                     {/* Control Bar */}
                     <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
-                        <div className="relative w-full sm:w-[320px]">
+                        <form onSubmit={handleSearch} className="relative w-full sm:w-[320px]">
                             <Search className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-neutral-400" />
                             <Input 
-                                placeholder="Cari data" 
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder="Cari nama, NIK, email..." 
                                 className="pl-10 h-10 border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9]" 
                             />
-                        </div>
-                        <Link href="/admin/employees/create" className="flex h-10 w-full items-center gap-2 rounded-md bg-[#035EA9] px-4 font-bold text-white shadow-sm hover:bg-[#035EA9]/90 sm:w-auto">
+                        </form>
+                        <Link href="/admin/employees/create" className="flex h-10 w-full items-center gap-2 rounded-md bg-[#035EA9] px-4 font-bold text-white shadow-sm hover:bg-[#035EA9]/90 sm:w-auto justify-center">
                             <Plus className="h-5 w-5" />
                             Tambah Karyawan
                         </Link>
@@ -76,77 +167,124 @@ export default function EmployeesIndex() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-neutral-200 text-neutral-700">
-                                {employeesMock.map((emp, i) => (
-                                    <tr key={i} className="hover:bg-neutral-50/50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EEF2F6] font-bold text-[#828D99]">
-                                                    LI
-                                                </div>
-                                                <span className="font-bold text-neutral-900">{emp.name}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 font-semibold text-neutral-500">{emp.nik}</td>
-                                        <td className="px-6 py-4 font-semibold text-neutral-500">{emp.email}</td>
-                                        <td className="px-6 py-4">
-                                            <Badge variant="secondary" className="rounded-md border-none bg-[#E5F0F9] text-[#035EA9] hover:bg-[#D6E4F0] px-2.5 py-1 text-[13px] font-bold">
-                                                {emp.project}
-                                            </Badge>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            {emp.status === 'Active' ? (
-                                                <Badge className="rounded-md border-none bg-[#E0F2FE] text-[#0284C7] hover:bg-[#E0F2FE]/80 px-2.5 py-1 text-[13px] font-bold">
-                                                    Active
-                                                </Badge>
-                                            ) : (
-                                                <Badge className="rounded-md border-none bg-[#FEE2E2] text-[#DC2626] hover:bg-[#FEE2E2]/80 px-2.5 py-1 text-[13px] font-bold">
-                                                    Inactive
-                                                </Badge>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button 
-                                                onClick={() => openEmployeeDetails(emp)}
-                                                className="font-semibold text-[#035EA9] hover:underline"
-                                            >
-                                                View
-                                            </button>
+                                {employees.data.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={6} className="px-6 py-12 text-center text-neutral-500 font-medium">
+                                            Tidak ada data karyawan ditemukan.
                                         </td>
                                     </tr>
-                                ))}
+                                ) : (
+                                    employees.data.map((emp) => {
+                                        const activeProject = emp.projects?.[0]?.name ?? 'Belum Ditugaskan';
+                                        return (
+                                            <tr key={emp.id} className="hover:bg-neutral-50/50 transition-colors">
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E5F0F9] font-bold text-[#035EA9]">
+                                                            {getInitials(emp.user?.name)}
+                                                        </div>
+                                                        <span className="font-bold text-neutral-900">{emp.user?.name}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 font-semibold text-neutral-600">{emp.nik}</td>
+                                                <td className="px-6 py-4 font-semibold text-neutral-600">{emp.user?.email}</td>
+                                                <td className="px-6 py-4">
+                                                    <Badge variant="secondary" className="rounded-md border-none bg-[#E5F0F9] text-[#035EA9] hover:bg-[#D6E4F0] px-2.5 py-1 text-[13px] font-bold">
+                                                        {activeProject}
+                                                    </Badge>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {emp.user?.is_active ? (
+                                                        <Badge className="rounded-md border-none bg-[#E0F2FE] text-[#0284C7] hover:bg-[#E0F2FE]/80 px-2.5 py-1 text-[13px] font-bold">
+                                                            Active
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge className="rounded-md border-none bg-[#FEE2E2] text-[#DC2626] hover:bg-[#FEE2E2]/80 px-2.5 py-1 text-[13px] font-bold">
+                                                            Inactive
+                                                        </Badge>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <button 
+                                                        onClick={() => openEmployeeDetails(emp)}
+                                                        className="font-bold text-[#035EA9] hover:underline"
+                                                    >
+                                                        View
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
+                                )}
                             </tbody>
                         </table>
                     </div>
 
                     {/* ── Pagination Footer ─────────────────────────────── */}
                     <div className="mt-auto flex flex-col sm:flex-row items-center justify-between border-t border-neutral-200 bg-white px-6 py-4 text-sm text-neutral-500 gap-4">
-                        <span className="font-semibold text-[#64748B]">Menampilkan 1 to 3 of 45 entries</span>
+                        <span className="font-semibold text-[#64748B]">
+                            Menampilkan {employees.from ?? 0} to {employees.to ?? 0} of {employees.total} entries
+                        </span>
                         <div className="flex items-center gap-1">
-                            <button className="flex h-8 w-8 items-center justify-center rounded text-[#94A3B8] hover:bg-neutral-100 hover:text-neutral-600 transition-colors">
-                                <ChevronLeft className="h-4 w-4" />
-                            </button>
-                            <button className="flex h-8 w-8 items-center justify-center rounded bg-[#035EA9] font-bold text-white transition-colors">
-                                1
-                            </button>
-                            <button className="flex h-8 w-8 items-center justify-center rounded font-bold text-neutral-500 hover:bg-neutral-100 transition-colors">
-                                2
-                            </button>
-                            <button className="flex h-8 w-8 items-center justify-center rounded font-bold text-neutral-500 hover:bg-neutral-100 transition-colors">
-                                3
-                            </button>
-                            <span className="flex h-8 w-8 items-center justify-center text-neutral-400 font-bold">...</span>
-                            <button className="flex h-8 w-8 items-center justify-center rounded text-[#94A3B8] hover:bg-neutral-100 hover:text-neutral-600 transition-colors">
-                                <ChevronRight className="h-4 w-4" />
-                            </button>
+                            {employees.prev_page_url ? (
+                                <Link
+                                    href={employees.prev_page_url}
+                                    preserveScroll
+                                    className="flex h-8 w-8 items-center justify-center rounded text-[#94A3B8] hover:bg-neutral-100 hover:text-neutral-600 transition-colors"
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                </Link>
+                            ) : (
+                                <span className="flex h-8 w-8 items-center justify-center rounded text-neutral-300 cursor-not-allowed">
+                                    <ChevronLeft className="h-4 w-4" />
+                                </span>
+                            )}
+
+                            {employees.links
+                                .filter((link) => !link.label.includes('&laquo;') && !link.label.includes('&raquo;'))
+                                .map((link, idx) => (
+                                    link.url ? (
+                                        <Link
+                                            key={idx}
+                                            href={link.url}
+                                            preserveScroll
+                                            className={`flex h-8 w-8 items-center justify-center rounded text-xs font-bold transition-colors ${
+                                                link.active
+                                                    ? 'bg-[#035EA9] text-white'
+                                                    : 'text-neutral-600 hover:bg-neutral-100'
+                                            }`}
+                                        >
+                                            {link.label}
+                                        </Link>
+                                    ) : (
+                                        <span key={idx} className="flex h-8 w-8 items-center justify-center text-neutral-400 font-bold">
+                                            {link.label}
+                                        </span>
+                                    )
+                                ))}
+
+                            {employees.next_page_url ? (
+                                <Link
+                                    href={employees.next_page_url}
+                                    preserveScroll
+                                    className="flex h-8 w-8 items-center justify-center rounded text-[#94A3B8] hover:bg-neutral-100 hover:text-neutral-600 transition-colors"
+                                >
+                                    <ChevronRight className="h-4 w-4" />
+                                </Link>
+                            ) : (
+                                <span className="flex h-8 w-8 items-center justify-center rounded text-neutral-300 cursor-not-allowed">
+                                    <ChevronRight className="h-4 w-4" />
+                                </span>
+                            )}
                         </div>
                     </div>
                 </div>
 
                 {/* ── Employee Details Sidebar (Sheet) ──────────────── */}
                 <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-                    <SheetContent side="right" className="w-[320px] sm:w-[350px] p-0 font-mulish overflow-y-auto rounded-l-2xl">
+                    <SheetContent side="right" className="w-[340px] sm:w-[380px] p-0 font-mulish overflow-y-auto rounded-l-2xl">
                         <SheetHeader className="border-b border-neutral-200 px-8 py-4">
-                            <SheetTitle className="text-lg font-bold text-neutral-900">Employee Details</SheetTitle>
+                            <SheetTitle className="text-lg font-bold text-neutral-900">Detail Karyawan</SheetTitle>
                         </SheetHeader>
                         
                         {selectedEmployee && (
@@ -154,13 +292,15 @@ export default function EmployeesIndex() {
                                 {/* Profile Header */}
                                 <div className="flex flex-col items-center justify-center text-center">
                                     <div className="relative mb-2 h-20 w-20">
-                                        <div className="h-full w-full rounded-full bg-[#D9D9D9]"></div>
-                                        <div className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500"></div>
+                                        <div className="flex h-full w-full items-center justify-center rounded-full bg-[#E5F0F9] text-xl font-bold text-[#035EA9]">
+                                            {getInitials(selectedEmployee.user?.name)}
+                                        </div>
+                                        <div className={`absolute bottom-1 right-1 h-4 w-4 rounded-full border-2 border-white ${selectedEmployee.user?.is_active ? 'bg-emerald-500' : 'bg-red-500'}`} />
                                     </div>
-                                    <h2 className="text-lg font-bold text-neutral-900">{selectedEmployee.name}</h2>
+                                    <h2 className="text-lg font-bold text-neutral-900">{selectedEmployee.user?.name}</h2>
                                     <div className="flex items-center gap-1.5 text-neutral-500 mt-0.5">
                                         <IdCard className="h-3.5 w-3.5" />
-                                        <span className="text-xs font-semibold">{selectedEmployee.nik}</span>
+                                        <span className="text-xs font-semibold">NIK: {selectedEmployee.nik}</span>
                                     </div>
                                 </div>
 
@@ -170,25 +310,31 @@ export default function EmployeesIndex() {
                                         <div className="flex flex-col gap-1">
                                             <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">PROJEK</span>
                                             <div className="border-b-2 border-[#035EA9] pb-1.5">
-                                                <span className="text-xs font-semibold text-neutral-900">{selectedEmployee.name}</span>
+                                                <span className="text-xs font-semibold text-neutral-900">
+                                                    {selectedEmployee.projects?.[0]?.name ?? 'Belum Ditugaskan'}
+                                                </span>
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-1">
                                             <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">NIK</span>
                                             <div className="border-b-2 border-[#035EA9] pb-1.5">
-                                                <span className="text-xs font-semibold text-neutral-900">xxxxx</span>
+                                                <span className="text-xs font-semibold text-neutral-900">{selectedEmployee.nik}</span>
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-1">
                                             <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">EMAIL</span>
-                                            <div className="border-b-2 border-[#035EA9] pb-1.5">
-                                                <a href="#" className="text-xs font-semibold text-[#035EA9] hover:underline">Lorem@gmail.com</a>
+                                            <div className="border-b-2 border-[#035EA9] pb-1.5 truncate">
+                                                <a href={`mailto:${selectedEmployee.user?.email}`} className="text-xs font-semibold text-[#035EA9] hover:underline truncate block">
+                                                    {selectedEmployee.user?.email}
+                                                </a>
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-1">
-                                            <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">EMAIL</span>
+                                            <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">NO. TELEPON</span>
                                             <div className="border-b-2 border-[#035EA9] pb-1.5">
-                                                <a href="#" className="text-xs font-semibold text-[#035EA9] hover:underline">Lorem@gmail.com</a>
+                                                <span className="text-xs font-semibold text-neutral-900">
+                                                    {selectedEmployee.phone || '—'}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -206,8 +352,12 @@ export default function EmployeesIndex() {
                                             <LayoutGrid className="h-4 w-4 text-[#64748B]" />
                                         </div>
                                         <div className="flex flex-col leading-tight gap-0.5">
-                                            <span className="text-xs font-bold text-neutral-900">{selectedEmployee.name}</span>
-                                            <span className="text-[11px] font-semibold text-neutral-500">{selectedEmployee.name}</span>
+                                            <span className="text-xs font-bold text-neutral-900">
+                                                {selectedEmployee.projects?.[0]?.name ?? 'Belum ada proyek aktif'}
+                                            </span>
+                                            <span className="text-[11px] font-semibold text-neutral-500">
+                                                {selectedEmployee.projects?.[0]?.code ?? 'N/A'}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -215,25 +365,25 @@ export default function EmployeesIndex() {
                                 {/* Action Buttons */}
                                 <div className="mt-2 flex flex-col gap-3 pt-3 border-t border-neutral-200">
                                     <Link href={`/admin/employees/${selectedEmployee.id}/edit`} className="w-full">
-                                        <Button className="w-full bg-[#0B3B8B] hover:bg-[#0B3B8B]/90 h-8 text-xs text-white font-bold flex gap-2">
-                                            <Pen className="h-3 w-3" />
+                                        <Button className="w-full bg-[#0B3B8B] hover:bg-[#0B3B8B]/90 h-9 text-xs text-white font-bold flex gap-2">
+                                            <Pen className="h-3.5 w-3.5" />
                                             Edit Karyawan
                                         </Button>
                                     </Link>
                                     <Button 
                                         variant="outline" 
-                                        className="w-full border-neutral-300 h-8 text-xs font-bold text-neutral-700 flex gap-2 hover:bg-neutral-50"
+                                        className="w-full border-neutral-300 h-9 text-xs font-bold text-neutral-700 flex gap-2 hover:bg-neutral-50"
                                         onClick={() => setIsResetOpen(true)}
                                     >
-                                        <RotateCcw className="h-3 w-3" />
+                                        <RotateCcw className="h-3.5 w-3.5" />
                                         Reset Password
                                     </Button>
                                     <Button 
-                                        className="w-full bg-[#FEE2E2] hover:bg-[#FEE2E2]/80 text-[#DC2626] h-8 text-xs font-bold border-none flex gap-2"
+                                        className="w-full bg-[#FEE2E2] hover:bg-[#FEE2E2]/80 text-[#DC2626] h-9 text-xs font-bold border-none flex gap-2"
                                         onClick={() => setIsDeleteOpen(true)}
                                     >
-                                        <Trash2 className="h-3 w-3" />
-                                        Hapus Employee
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                        Hapus Karyawan
                                     </Button>
                                 </div>
                             </div>
@@ -257,13 +407,11 @@ export default function EmployeesIndex() {
                         </DialogHeader>
                         <DialogFooter className="flex flex-col sm:flex-col w-full gap-3 mt-6">
                             <Button 
+                                disabled={isProcessing}
                                 className="w-full bg-[#C81E1E] hover:bg-[#B91C1C] text-white font-bold h-11 sm:w-full"
-                                onClick={() => {
-                                    setIsResetOpen(false);
-                                    setIsResetSuccessOpen(true);
-                                }}
+                                onClick={handleResetPassword}
                             >
-                                Reset Password
+                                {isProcessing ? 'Memproses...' : 'Reset Password'}
                             </Button>
                             <DialogClose asChild>
                                 <Button variant="outline" className="w-full border-neutral-300 font-bold text-neutral-700 h-11 hover:bg-neutral-50 sm:w-full sm:mt-0">
@@ -283,7 +431,7 @@ export default function EmployeesIndex() {
                             </div>
                             <DialogTitle className="text-2xl font-bold text-[#1E293B]">Reset Berhasil!</DialogTitle>
                             <DialogDescription className="text-[15px] font-medium text-[#64748B] mt-3 leading-relaxed text-center">
-                                Kata sandi telah berhasil diatur ulang. Silahkan login kembali untuk memasukkan Password yang baru!
+                                Kata sandi telah berhasil diatur ulang menjadi <b>123</b>. Karyawan dapat login menggunakan password baru ini!
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter className="w-full mt-6 sm:justify-center">
@@ -306,15 +454,16 @@ export default function EmployeesIndex() {
                             </div>
                             <DialogTitle className="text-2xl font-bold text-[#1E293B]">Hapus Karyawan?</DialogTitle>
                             <DialogDescription className="text-[15px] font-medium text-[#64748B] mt-3 leading-relaxed text-center">
-                                Apakah Anda yakin ingin menghapus data karyawan ini? Tindakan ini tidak dapat dibatalkan.
+                                Apakah Anda yakin ingin menghapus data karyawan ini? Data karyawan dan akun akan dihapus dari sistem.
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter className="flex flex-col sm:flex-col w-full gap-3 mt-6">
                             <Button 
+                                disabled={isProcessing}
                                 className="w-full bg-[#C81E1E] hover:bg-[#B91C1C] text-white font-bold h-11 sm:w-full"
-                                onClick={() => setIsDeleteOpen(false)}
+                                onClick={handleDeleteEmployee}
                             >
-                                Hapus Karyawan
+                                {isProcessing ? 'Memproses...' : 'Hapus Karyawan'}
                             </Button>
                             <DialogClose asChild>
                                 <Button variant="outline" className="w-full border-neutral-300 font-bold text-neutral-700 h-11 hover:bg-neutral-50 sm:w-full sm:mt-0">

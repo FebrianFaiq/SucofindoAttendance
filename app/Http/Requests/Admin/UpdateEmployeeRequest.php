@@ -26,10 +26,10 @@ class UpdateEmployeeRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
-            'employee_code' => ['required', 'string', 'max:50', Rule::unique('employees', 'employee_code')->ignore($employee?->id)],
             'nik' => ['required', 'string', 'max:50', Rule::unique('employees', 'nik')->ignore($employee?->id)],
             'phone' => ['nullable', 'string', 'max:20'],
-            'is_active' => ['sometimes', 'boolean'],
+            'project_id' => ['nullable', 'exists:projects,id'],
+            'is_active' => ['nullable', 'boolean'],
         ];
     }
 

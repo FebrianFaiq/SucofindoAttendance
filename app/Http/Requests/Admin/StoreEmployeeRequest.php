@@ -22,10 +22,10 @@ class StoreEmployeeRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'employee_code' => ['required', 'string', 'max:50', 'unique:employees,employee_code'],
             'nik' => ['required', 'string', 'max:50', 'unique:employees,nik'],
             'phone' => ['nullable', 'string', 'max:20'],
             'project_id' => ['nullable', 'exists:projects,id'],
+            'is_active' => ['nullable', 'boolean'],
         ];
     }
 

@@ -16,7 +16,7 @@ class EmployeePasswordController extends Controller
     /**
      * Default password untuk reset.
      */
-    private const DEFAULT_PASSWORD = 'sucofindo123';
+    private const DEFAULT_PASSWORD = '123';
 
     /**
      * Reset password karyawan ke password default.

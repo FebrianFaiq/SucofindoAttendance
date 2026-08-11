@@ -10,6 +10,7 @@ use App\Models\EmployeeProject;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -21,21 +22,38 @@ class EmployeeController extends Controller
     /**
      * Default password untuk pegawai baru.
      */
-    private const DEFAULT_PASSWORD = 'sucofindo123';
+    private const DEFAULT_PASSWORD = '123';
 
     /**
      * Tampilkan daftar karyawan.
      * (FR-EMP)
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = $request->query('search');
+
         $employees = Employee::with(['user', 'projects' => function ($query) {
             $query->wherePivot('status', 'active');
         }])
-            ->paginate(15);
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nik', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($uq) use ($search) {
+                            $uq->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->latest('id')
+            ->paginate(10)
+            ->withQueryString();
 
         return Inertia::render('admin/employees/index', [
             'employees' => $employees,
+            'filters' => [
+                'search' => $search,
+            ],
         ]);
     }
 
@@ -45,7 +63,7 @@ class EmployeeController extends Controller
      */
     public function create(): Response
     {
-        $projects = Project::active()->get(['id', 'name', 'code']);
+        $projects = Project::active()->orderBy('name')->get(['id', 'name', 'code']);
 
         return Inertia::render('admin/employees/create', [
             'projects' => $projects,
@@ -54,13 +72,13 @@ class EmployeeController extends Controller
 
     /**
      * Simpan karyawan baru.
-     * Membuat akun dengan password default, flag must_change_password = true.
+     * Membuat akun dengan password default (123), flag must_change_password = true.
      */
     public function store(StoreEmployeeRequest $request): RedirectResponse
     {
         $validated = $request->validated();
 
-        DB::transaction(function () use ($validated, $request) {
+        DB::transaction(function () use ($validated) {
             // 1. Buat akun user dengan password default
             $user = User::create([
                 'name' => $validated['name'],
@@ -68,13 +86,13 @@ class EmployeeController extends Controller
                 'password' => Hash::make(self::DEFAULT_PASSWORD),
                 'role' => 'employee',
                 'must_change_password' => true,
-                'is_active' => true,
+                'is_active' => $validated['is_active'] ?? true,
             ]);
 
-            // 2. Buat profil karyawan
+            // 2. Buat profil karyawan (employee_code disamakan dengan NIK)
             $employee = Employee::create([
                 'user_id' => $user->id,
-                'employee_code' => $validated['employee_code'],
+                'employee_code' => $validated['nik'],
                 'nik' => $validated['nik'],
                 'phone' => $validated['phone'] ?? null,
             ]);
@@ -92,7 +110,7 @@ class EmployeeController extends Controller
         });
 
         return redirect()->route('admin.employees.index')
-            ->with('success', 'Karyawan berhasil ditambahkan. Password default: ' . self::DEFAULT_PASSWORD);
+            ->with('success', 'Data Karyawan Berhasil di Tambahkan (Password default: ' . self::DEFAULT_PASSWORD . ')');
     }
 
     /**
@@ -114,10 +132,15 @@ class EmployeeController extends Controller
      */
     public function edit(Employee $employee): Response
     {
-        $employee->load('user');
+        $employee->load(['user', 'projects' => function ($query) {
+            $query->wherePivot('status', 'active');
+        }]);
+
+        $projects = Project::active()->orderBy('name')->get(['id', 'name', 'code']);
 
         return Inertia::render('admin/employees/edit', [
             'employee' => $employee,
+            'projects' => $projects,
         ]);
     }
 
@@ -130,45 +153,80 @@ class EmployeeController extends Controller
         $validated = $request->validated();
 
         DB::transaction(function () use ($validated, $employee) {
-            // Update user data
+            // 1. Update user data (termasuk is_active untuk menonaktifkan akun)
             $employee->user->update([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'is_active' => $validated['is_active'] ?? $employee->user->is_active,
             ]);
 
-            // Update employee data
+            // 2. Update employee data
             $employee->update([
-                'employee_code' => $validated['employee_code'],
+                'employee_code' => $validated['nik'],
                 'nik' => $validated['nik'],
                 'phone' => $validated['phone'] ?? $employee->phone,
             ]);
+
+            // 3. Handle project assignment
+            $currentActiveAssignment = EmployeeProject::where('employee_id', $employee->id)
+                ->where('status', 'active')
+                ->first();
+
+            $newProjectId = $validated['project_id'] ?? null;
+
+            if ($newProjectId) {
+                if (! $currentActiveAssignment || $currentActiveAssignment->project_id != $newProjectId) {
+                    // Akhiri assignment lama jika ada
+                    if ($currentActiveAssignment) {
+                        $currentActiveAssignment->update([
+                            'status' => 'ended',
+                            'ended_at' => today(),
+                        ]);
+                    }
+
+                    // Buat assignment baru
+                    EmployeeProject::create([
+                        'employee_id' => $employee->id,
+                        'project_id' => $newProjectId,
+                        'status' => 'active',
+                        'assigned_at' => today(),
+                        'assigned_by' => Auth::id(),
+                    ]);
+                }
+            } else {
+                // Jika project_id dikosongkan, akhiri active assignment jika ada
+                if ($currentActiveAssignment) {
+                    $currentActiveAssignment->update([
+                        'status' => 'ended',
+                        'ended_at' => today(),
+                    ]);
+                }
+            }
         });
 
         return redirect()->route('admin.employees.index')
-            ->with('success', 'Data karyawan berhasil diperbarui.');
+            ->with('success', 'Perubahan Berhasil di Simpan');
     }
 
     /**
-     * Nonaktifkan karyawan (soft-disable via is_active).
+     * Hapus karyawan dan user terkait.
      * (FR-EMP-03)
      */
     public function destroy(Employee $employee): RedirectResponse
     {
         DB::transaction(function () use ($employee) {
-            // Nonaktifkan akun user
-            $employee->user->update(['is_active' => false]);
+            $user = $employee->user;
 
-            // End semua assignment aktif
-            EmployeeProject::where('employee_id', $employee->id)
-                ->where('status', 'active')
-                ->update([
-                    'status' => 'ended',
-                    'ended_at' => today(),
-                ]);
+            // Hapus record employee dan relasinya (cascade)
+            $employee->delete();
+
+            // Hapus record user
+            if ($user) {
+                $user->delete();
+            }
         });
 
         return redirect()->route('admin.employees.index')
-            ->with('success', 'Karyawan berhasil dinonaktifkan.');
+            ->with('success', 'Data karyawan berhasil dihapus.');
     }
 }

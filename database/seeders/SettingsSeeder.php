@@ -28,6 +28,11 @@ class SettingsSeeder extends Seeder
             ],
         ];
 
-        DB::table('settings')->insert($settings);
+        foreach ($settings as $setting) {
+            DB::table('settings')->updateOrInsert(
+                ['key' => $setting['key']],
+                ['value' => $setting['value'], 'updated_by' => $setting['updated_by'], 'updated_at' => $setting['updated_at']]
+            );
+        }
     }
 }
