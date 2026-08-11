@@ -46,7 +46,8 @@ Route::middleware(['auth'])->group(function () {
 // Employee Routes (Web User)
 // ───────────────────────────────────────────
 Route::prefix('employee')
-    ->middleware(['auth', EnsurePasswordChanged::class])
+    // ->middleware(['auth', EnsurePasswordChanged::class])
+    ->middleware(['auth'])
     ->group(function () {
         // Dashboard
         Route::get('dashboard', Employee\DashboardController::class)
@@ -85,7 +86,8 @@ Route::prefix('employee')
 // Admin Routes (Web Admin)
 // ───────────────────────────────────────────
 Route::prefix('admin')
-    ->middleware(['auth', EnsurePasswordChanged::class, 'role:admin'])
+    // ->middleware(['auth', EnsurePasswordChanged::class, 'role:admin'])
+    ->middleware(['auth', 'role:admin'])
     ->group(function () {
         // Dashboard
         Route::get('dashboard', Admin\DashboardController::class)

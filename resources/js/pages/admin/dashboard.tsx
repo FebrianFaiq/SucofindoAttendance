@@ -1,75 +1,472 @@
 import { Head } from '@inertiajs/react';
+import {
+    Building2,
+    CalendarCheck,
+    ChevronLeft,
+    ChevronRight,
+    Clock,
+    LogIn as LogInIcon,
+    MoreHorizontal,
+    Search,
+    UserMinus,
+    UserPlus,
+    Users,
+} from 'lucide-react';
+import {
+    Area,
+    AreaChart,
+    CartesianGrid,
+    Cell,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from 'recharts';
 
-/**
- * Dashboard Admin (FR-ADM-01, FR-ADM-02, FR-ADM-03)
- *
- * KPI Cards:
- * 1. Total Karyawan
- * 2. Hadir Hari Ini
- * 3. WFO Hari Ini
- * 4. WFA Hari Ini
- * 5. Belum Check In
- * 6. Belum Check Out
- * 7. Lembur Hari Ini
- *
- * Filter: Tanggal, Karyawan, Proyek
- * Tabel: Karyawan, Proyek, Jam Masuk, Jam Keluar, Status, WFO/WFA, Lembur
- */
-export default function AdminDashboard() {
+// ─── Static Data ────────────────────────────────────────────────────────────
+
+const today = new Date();
+const formattedDate = new Intl.DateTimeFormat('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+}).format(today);
+
+// ─── Types ─────────────────────────────────────────────────────────────────
+
+interface KPIProps {
+    totalEmployees: number;
+    checkedInToday: number;
+    wfoToday: number;
+    wfaToday: number;
+    notCheckedIn: number;
+    notCheckedOut: number;
+    overtimeToday: number;
+}
+
+interface AdminDashboardProps {
+    kpi: KPIProps;
+    attendanceTrendData: { day: string; value: number }[];
+    workModeData: { name: string; value: number; color: string }[];
+    attendanceRecords: {
+        id: number;
+        name: string;
+        employeeId: string;
+        avatar: string | null;
+        avatarColor: string;
+        project: string;
+        clockIn: string;
+        clockInLate: boolean;
+        clockOut: string;
+        status: string;
+        statusColor: string;
+        mode: string;
+        modeBorder: string;
+        notes: string | null;
+    }[];
+}
+
+// ─── Component ──────────────────────────────────────────────────────────────
+
+export default function AdminDashboard({
+    kpi,
+    attendanceTrendData,
+    workModeData,
+    attendanceRecords,
+}: AdminDashboardProps) {
+    const kpiCards = [
+        {
+            label: 'Total Karyawan',
+            value: kpi.totalEmployees.toLocaleString(),
+            icon: Users,
+            iconBg: 'bg-[#E5F0F9]',
+            iconBgHover: 'group-hover:bg-[#D6E4F0]',
+            iconColor: 'text-[#035EA9]',
+            hoverBorder: 'hover:border-l-[#035EA9]',
+        },
+        {
+            label: 'Hadir Hari Ini',
+            value: kpi.checkedInToday.toLocaleString(),
+            icon: Building2,
+            iconBg: 'bg-[#E5F0F9]',
+            iconBgHover: 'group-hover:bg-[#D6E4F0]',
+            iconColor: 'text-[#035EA9]',
+            hoverBorder: 'hover:border-l-[#035EA9]',
+        },
+        {
+            label: 'Clock Out',
+            value: kpi.notCheckedIn.toLocaleString(),
+            icon: UserMinus,
+            iconBg: 'bg-[#FEE2E2]',
+            iconBgHover: 'group-hover:bg-[#FCD3D3]',
+            iconColor: 'text-[#EF4444]',
+            hoverBorder: 'hover:border-l-[#EF4444]',
+        },
+        {
+            label: 'Clock In',
+            value: kpi.checkedInToday.toLocaleString(), // or a more specific metric if needed
+            icon: LogInIcon,
+            iconBg: 'bg-[#DCFCE7]',
+            iconBgHover: 'group-hover:bg-[#BBF7D0]',
+            iconColor: 'text-[#22C55E]',
+            hoverBorder: 'hover:border-l-[#22C55E]',
+        },
+        {
+            label: 'Lembur',
+            value: kpi.overtimeToday.toLocaleString(),
+            icon: Clock,
+            iconBg: 'bg-[#FEF9C3]',
+            iconBgHover: 'group-hover:bg-[#FEF08A]',
+            iconColor: 'text-[#EAB308]',
+            hoverBorder: 'hover:border-l-[#EAB308]',
+        },
+    ];
+
+// ─── Component ──────────────────────────────────────────────────────────────
+
+
     return (
         <>
             <Head title="Dashboard Admin" />
-            <div className="flex h-full flex-1 flex-col gap-6 p-6">
+            <div className="flex h-full flex-1 flex-col gap-6 bg-sucofindo-light p-6 font-mulish">
+                {/* ── Section Header ────────────────────────────────── */}
                 <div>
-                    <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-                        Dashboard
+                    <h1 className="text-xl font-bold text-neutral-900">
+                        Ringkasan Hari ini
                     </h1>
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                        Ringkasan kehadiran dan monitoring karyawan.
+                    <p className="mt-0.5 text-sm text-neutral-500">
+                        {formattedDate}
                     </p>
                 </div>
 
-                {/* TODO: KPI Cards */}
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    {[
-                        'Total Karyawan',
-                        'Hadir Hari Ini',
-                        'WFO Hari Ini',
-                        'WFA Hari Ini',
-                        'Belum Check In',
-                        'Belum Check Out',
-                        'Lembur Hari Ini',
-                    ].map((label) => (
+                {/* ── KPI Cards ─────────────────────────────────────── */}
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                    {kpiCards.map((card) => (
                         <div
-                            key={label}
-                            className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950"
+                            key={card.label}
+                            className={`group relative overflow-hidden rounded-xl border border-neutral-200 border-l-4 border-l-transparent bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-y-[#035EA9]/30 hover:border-r-[#035EA9]/30 hover:bg-[#F0F5FA] ${card.hoverBorder}`}
                         >
-                            <p className="text-xs font-medium text-neutral-500">{label}</p>
-                            <p className="mt-1 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-                                —
-                            </p>
+                            <div className="flex items-start justify-between relative z-10">
+                                <div>
+                                    <p className="text-xs font-medium text-neutral-500 leading-tight">
+                                        {card.label}
+                                    </p>
+                                    <p className="mt-2 text-2xl font-bold text-neutral-900">
+                                        {card.value}
+                                    </p>
+                                </div>
+                                <div
+                                    className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${card.iconBg} ${card.iconBgHover}`}
+                                >
+                                    <card.icon
+                                        className={`h-4 w-4 ${card.iconColor}`}
+                                    />
+                                </div>
+                            </div>
                         </div>
                     ))}
                 </div>
 
-                {/* TODO: Filter bar */}
-                <div className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
-                    <p className="text-sm text-neutral-400">
-                        Filter (Tanggal, Karyawan, Proyek) akan ditampilkan di sini.
-                    </p>
+                {/* ── Charts Section ────────────────────────────────── */}
+                <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+                    {/* Tren Kehadiran (Line Chart) */}
+                    <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+                        <div className="mb-4 flex items-center justify-between">
+                            <h2 className="text-sm font-semibold text-neutral-800">
+                                Tren Kehadiran (Minggu Ini)
+                            </h2>
+                            <button className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 transition-colors">
+                                <MoreHorizontal className="h-4 w-4" />
+                            </button>
+                        </div>
+                        <div className="h-[280px] w-full">
+                            <ResponsiveContainer
+                                width="100%"
+                                height="100%"
+                            >
+                                <AreaChart data={attendanceTrendData}>
+                                    <defs>
+                                        <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#035EA9" stopOpacity={0.2} />
+                                            <stop offset="95%" stopColor="#035EA9" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid
+                                        strokeDasharray="3 3"
+                                        stroke="#f0f0f0"
+                                        vertical={false}
+                                    />
+                                    <XAxis
+                                        dataKey="day"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{
+                                            fontSize: 12,
+                                            fill: '#9CA3AF',
+                                        }}
+                                        dy={10}
+                                    />
+                                    <YAxis
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{
+                                            fontSize: 12,
+                                            fill: '#9CA3AF',
+                                        }}
+                                        domain={[0, 'dataMax + 10']}
+                                        allowDecimals={false}
+                                        dx={-10}
+                                    />
+                                    <Tooltip
+                                        contentStyle={{
+                                            background: 'white',
+                                            border: '1px solid #e5e7eb',
+                                            borderRadius: '8px',
+                                            fontSize: '13px',
+                                            boxShadow:
+                                                '0 4px 6px -1px rgba(0,0,0,0.1)',
+                                        }}
+                                        formatter={(
+                                            value,
+                                        ) => [
+                                            Number(value).toLocaleString(),
+                                            'Kehadiran',
+                                        ]}
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="value"
+                                        stroke="#035EA9"
+                                        strokeWidth={2.5}
+                                        fillOpacity={1}
+                                        fill="url(#colorValue)"
+                                        activeDot={{
+                                            fill: '#035EA9',
+                                            stroke: 'white',
+                                            strokeWidth: 2,
+                                            r: 7,
+                                        }}
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    {/* Mode Kerja (Donut Chart) */}
+                    <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+                        <h2 className="mb-4 text-sm font-semibold text-neutral-800">
+                            Mode Kerja
+                        </h2>
+                        <div className="flex h-[220px] items-center justify-center">
+                            <ResponsiveContainer
+                                width="100%"
+                                height="100%"
+                            >
+                                <PieChart>
+                                    <Pie
+                                        data={workModeData}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={70}
+                                        outerRadius={95}
+                                        dataKey="value"
+                                        strokeWidth={0}
+                                    >
+                                        {workModeData.map(
+                                            (entry, index) => (
+                                                <Cell
+                                                    key={`cell-${index}`}
+                                                    fill={entry.color}
+                                                />
+                                            ),
+                                        )}
+                                    </Pie>
+                                    <Tooltip
+                                        contentStyle={{
+                                            background: 'white',
+                                            border: '1px solid #e5e7eb',
+                                            borderRadius: '8px',
+                                            fontSize: '13px',
+                                            boxShadow:
+                                                '0 4px 6px -1px rgba(0,0,0,0.1)',
+                                        }}
+                                        formatter={(
+                                            value,
+                                        ) => [`${value}%`]}
+                                    />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                        {/* Legend */}
+                        <div className="mt-4 flex items-center justify-center gap-6">
+                            {workModeData.map((item) => (
+                                <div
+                                    key={item.name}
+                                    className="flex items-center gap-2"
+                                >
+                                    <span
+                                        className="h-3 w-3 rounded-full"
+                                        style={{
+                                            backgroundColor: item.color,
+                                        }}
+                                    />
+                                    <span className="text-sm text-neutral-600">
+                                        {item.name}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
 
-                {/* TODO: Attendance table */}
-                <div className="flex-1 rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-950">
-                    <p className="text-center text-sm text-neutral-400">
-                        Tabel kehadiran admin akan ditampilkan di sini.
-                    </p>
+                {/* ── Attendance Table ──────────────────────────────── */}
+                <div className="rounded-xl border border-neutral-200 bg-white shadow-sm">
+                    {/* Table Header */}
+                    <div className="flex flex-col gap-3 border-b border-neutral-100 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+                        <h2 className="text-sm font-semibold text-neutral-800">
+                            Riwayat Aktivitas Kehadiran
+                        </h2>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                            <input
+                                type="text"
+                                placeholder="Cari Karyawan..."
+                                className="h-9 w-full rounded-lg border border-neutral-200 bg-neutral-50 pl-9 pr-4 text-sm text-neutral-700 placeholder:text-neutral-400 outline-none focus:border-sucofindo-primary focus:ring-1 focus:ring-sucofindo-primary/30 transition-colors sm:w-56"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Table */}
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                            <thead>
+                                <tr className="border-b border-neutral-100 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                                    <th className="px-6 py-3">Karyawan</th>
+                                    <th className="px-6 py-3">Projek</th>
+                                    <th className="px-6 py-3">Clock In</th>
+                                    <th className="px-6 py-3">Clock Out</th>
+                                    <th className="px-6 py-3">Status</th>
+                                    <th className="px-6 py-3">Mode</th>
+                                    <th className="px-6 py-3">Catatan</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-neutral-50">
+                                {attendanceRecords.map((record) => (
+                                    <tr
+                                        key={record.id}
+                                        className="transition-colors hover:bg-neutral-50/50"
+                                    >
+                                        {/* Karyawan */}
+                                        <td className="px-6 py-3.5">
+                                            <div className="flex items-center gap-3">
+                                                <div
+                                                    className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white ${record.avatarColor}`}
+                                                >
+                                                    {record.name
+                                                        .charAt(0)
+                                                        .toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-neutral-800">
+                                                        {record.name}
+                                                    </p>
+                                                    <p className="text-xs text-neutral-400">
+                                                        Lorem ID:{' '}
+                                                        {record.employeeId}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        {/* Projek */}
+                                        <td className="px-6 py-3.5 text-neutral-600">
+                                            {record.project}
+                                        </td>
+
+                                        {/* Clock In */}
+                                        <td className="px-6 py-3.5">
+                                            <span
+                                                className={
+                                                    record.clockInLate
+                                                        ? 'font-medium text-red-500'
+                                                        : 'text-neutral-600'
+                                                }
+                                            >
+                                                {record.clockIn}
+                                            </span>
+                                        </td>
+
+                                        {/* Clock Out */}
+                                        <td className="px-6 py-3.5 text-neutral-600">
+                                            {record.clockOut}
+                                        </td>
+
+                                        {/* Status */}
+                                        <td className="px-6 py-3.5">
+                                            <span
+                                                className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${record.statusColor}`}
+                                            >
+                                                {record.status}
+                                            </span>
+                                        </td>
+
+                                        {/* Mode */}
+                                        <td className="px-6 py-3.5">
+                                            <span
+                                                className={`inline-flex rounded-md border px-2.5 py-0.5 text-xs font-medium ${record.modeBorder}`}
+                                            >
+                                                {record.mode}
+                                            </span>
+                                        </td>
+
+                                        {/* Catatan */}
+                                        <td className="px-6 py-3.5 text-neutral-400">
+                                            {record.notes || '—'}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Pagination */}
+                    <div className="flex flex-col items-center justify-between gap-3 border-t border-neutral-100 px-6 py-4 sm:flex-row">
+                        <p className="text-xs text-neutral-500">
+                            Menampilkan {attendanceRecords.length} entri terbaru
+                        </p>
+                        <div className="flex items-center gap-1">
+                            <button className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 transition-colors">
+                                <ChevronLeft className="h-4 w-4" />
+                            </button>
+                            <button className="flex h-8 w-8 items-center justify-center rounded-lg bg-sucofindo-primary text-white text-xs font-medium">
+                                1
+                            </button>
+                            <button className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 text-xs font-medium transition-colors">
+                                2
+                            </button>
+                            <button className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 text-xs font-medium transition-colors">
+                                3
+                            </button>
+                            <span className="px-1 text-xs text-neutral-400">
+                                ...
+                            </span>
+                            <button className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 transition-colors">
+                                <ChevronRight className="h-4 w-4" />
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </>
     );
 }
 
-AdminDashboard.layout = () => ({
-    breadcrumbs: [{ title: 'Dashboard', href: '/admin/dashboard' }],
-});
+AdminDashboard.layout = {
+    breadcrumbs: [
+        { title: 'Home', href: '/admin/dashboard' },
+        { title: 'Dashboard', href: '/admin/dashboard' },
+    ],
+};

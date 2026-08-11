@@ -2,23 +2,23 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     CalendarCheck,
     Clock,
-    FileSpreadsheet,
     FolderKanban,
     History,
     LayoutGrid,
     LogIn,
     LogOut,
+    LogOut as LogOutIcon,
+    Settings,
     User as UserIcon,
     Users,
 } from 'lucide-react';
-import AppLogo from '@/components/app-logo';
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
     SidebarContent,
     SidebarFooter,
+    SidebarGroup,
     SidebarHeader,
     SidebarMenu,
     SidebarMenuButton,
@@ -65,55 +65,50 @@ export function AppSidebar() {
         },
     ];
 
-    // Menu Navigasi untuk Admin
+    // Menu Navigasi untuk Admin (sesuai desain)
     const adminNavItems: NavItem[] = [
         {
-            title: 'Dashboard Admin',
+            title: 'Dashboard',
             href: '/admin/dashboard',
             icon: LayoutGrid,
         },
         {
-            title: 'Manajemen Karyawan',
+            title: 'Karyawan',
             href: '/admin/employees',
             icon: Users,
         },
         {
-            title: 'Manajemen Proyek',
-            href: '/admin/projects',
-            icon: FolderKanban,
-        },
-        {
-            title: 'Data Kehadiran',
+            title: 'Absensi',
             href: '/admin/attendance',
             icon: CalendarCheck,
         },
         {
-            title: 'Monitoring Lembur',
+            title: 'Lembur',
             href: '/admin/overtime',
             icon: Clock,
         },
         {
-            title: 'Rekap & Export',
-            href: '/admin/reports',
-            icon: FileSpreadsheet,
+            title: 'Projek',
+            href: '/admin/projects',
+            icon: FolderKanban,
         },
     ];
+
+
 
     const mainNavItems = role === 'admin' ? adminNavItems : employeeNavItems;
     const dashboardUrl = role === 'admin' ? '/admin/dashboard' : '/employee/dashboard';
 
     return (
         <Sidebar collapsible="icon" variant="inset">
-            <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboardUrl} prefetch>
-                                <AppLogo />
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
+            <SidebarHeader className="py-3">
+                <Link href={dashboardUrl} prefetch className="flex items-center justify-start w-full">
+                    <img
+                        src="/images/logo-sucofindo.png"
+                        alt="SUCOFINDO"
+                        className="h-24 w-auto object-contain"
+                    />
+                </Link>
             </SidebarHeader>
 
             <SidebarContent>
@@ -121,6 +116,7 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
+
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

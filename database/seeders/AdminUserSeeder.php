@@ -26,7 +26,7 @@ class AdminUserSeeder extends Seeder
         );
 
         // 2. Akun Karyawan (Employee)
-        User::updateOrCreate(
+        $employeeUser = User::updateOrCreate(
             ['email' => 'karyawan@sucofindo.com'],
             [
                 'name' => 'Budi Santoso (Karyawan PTT)',
@@ -34,6 +34,15 @@ class AdminUserSeeder extends Seeder
                 'role' => 'employee',
                 'must_change_password' => false,
                 'is_active' => true,
+            ]
+        );
+
+        \App\Models\Employee::updateOrCreate(
+            ['user_id' => $employeeUser->id],
+            [
+                'employee_code' => 'EMP-001',
+                'nik' => '1234567890123456',
+                'phone' => '081234567890',
             ]
         );
     }
