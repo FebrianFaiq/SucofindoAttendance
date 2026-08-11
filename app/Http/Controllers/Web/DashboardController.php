@@ -20,8 +20,9 @@ class DashboardController extends Controller
      *
      * GET /dashboard
      */
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
-        return Inertia::render('dashboard');
+        // Redirect ke dashboard admin yang sudah dislicing
+        return redirect()->route('admin.dashboard');
     }
 }
