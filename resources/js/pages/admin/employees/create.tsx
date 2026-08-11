@@ -7,7 +7,6 @@ import { Eye, EyeOff, UserPlus, X, Check } from 'lucide-react';
 
 export default function EmployeesCreate() {
     const [isActive, setIsActive] = useState(true);
-    const [showPassword, setShowPassword] = useState(false);
     const [showSuccessToast, setShowSuccessToast] = useState(false);
 
     const handleSave = () => {
@@ -120,17 +119,11 @@ export default function EmployeesCreate() {
                                 <label className="text-[14px] font-bold text-[#1E293B]">Default Password</label>
                                 <div className="relative">
                                     <Input 
-                                        type={showPassword ? "text" : "password"}
+                                        type="text"
                                         defaultValue="123" 
-                                        className="h-11 bg-[#F8FAFC] border-neutral-200 text-[#1E293B] font-semibold focus-visible:ring-[#035EA9] pr-10"
+                                        disabled
+                                        className="h-11 bg-[#F1F5F9] border-neutral-200 text-[#64748B] font-semibold focus-visible:ring-0 opacity-100 cursor-not-allowed"
                                     />
-                                    <button 
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#64748B]"
-                                    >
-                                        {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
-                                    </button>
                                 </div>
                                 <p className="text-[13px] font-medium text-[#64748B]">
                                     Password default: 123. User dapat mengganti password setelah login pertama.
