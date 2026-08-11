@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
+use App\Models\Attendance;
+use App\Models\Overtime;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -12,11 +15,21 @@ class HistoryController extends Controller
     /**
      * Tampilkan riwayat kehadiran karyawan.
      * (FR-ATT-03)
+     *
+     * Include: tanggal, jam masuk/keluar, WFO/WFA, catatan kerjaan.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        // TODO: Pass user's attendance history
-        // Include: tanggal, jam masuk/keluar, proyek, WFO/WFA, catatan kerjaan
-        return Inertia::render('employee/history');
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $employee = $user->employee;
+
+        $attendances = Attendance::forEmployee($employee->id)
+            ->orderByDesc('check_in_at')
+            ->paginate(15);
+
+        return Inertia::render('employee/history', [
+            'attendances' => $attendances,
+        ]);
     }
 }

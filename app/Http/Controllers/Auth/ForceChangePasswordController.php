@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Auth\ForceChangePasswordRequest;
+use App\Models\PasswordChangeLog;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -22,20 +26,32 @@ class ForceChangePasswordController extends Controller
      * Proses ganti password.
      * Setelah berhasil, redirect ke dashboard sesuai role.
      */
-    public function update(Request $request)
+    public function update(ForceChangePasswordRequest $request): RedirectResponse
     {
-        // TODO: Implement password update logic
-        // 1. Validate new password
-        // 2. Update user password
-        // 3. Set must_change_password = false
-        // 4. Redirect to appropriate dashboard
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
 
-        $user = $request->user();
+        // 1. Update password
+        $user->update([
+            'password' => Hash::make($request->validated('password')),
+            'must_change_password' => false,
+        ]);
 
-        if ($user && $user->role === 'admin') {
-            return redirect()->route('admin.dashboard');
+        // 2. Catat ke audit log
+        PasswordChangeLog::create([
+            'user_id' => $user->id,
+            'changed_by' => $user->id,
+            'method' => 'self_change',
+            'created_at' => now(),
+        ]);
+
+        // 3. Redirect ke dashboard sesuai role
+        if ($user->isAdmin()) {
+            return redirect()->route('admin.dashboard')
+                ->with('success', 'Password berhasil diubah.');
         }
 
-        return redirect()->route('employee.dashboard');
+        return redirect()->route('employee.dashboard')
+            ->with('success', 'Password berhasil diubah.');
     }
 }

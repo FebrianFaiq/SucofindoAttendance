@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Employee\CheckOutRequest;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -15,21 +17,37 @@ class CheckOutController extends Controller
      */
     public function create(): Response
     {
-        // TODO: Check if already checked in and not yet checked out
-        return Inertia::render('employee/check-out');
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $employee = $user->employee;
+
+        $todayAttendance = $employee?->todayAttendance();
+
+        return Inertia::render('employee/check-out', [
+            'hasCheckedIn' => $todayAttendance !== null,
+            'alreadyCheckedOut' => $todayAttendance?->check_out_at !== null,
+            'todayAttendance' => $todayAttendance,
+        ]);
     }
 
     /**
      * Proses Check Out.
-     * Menyimpan foto, GPS, dan catatan kerjaan harian (wajib).
+     * Menyimpan catatan kerjaan harian (wajib).
      */
-    public function store(Request $request)
+    public function store(CheckOutRequest $request): RedirectResponse
     {
-        // TODO: Implement check-out logic
-        // 1. Validate: photo, gps_lat, gps_lng, work_notes (required)
-        // 2. Verify user has checked in today
-        // 3. Store check-out data
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $employee = $user->employee;
 
-        return redirect()->route('employee.dashboard');
+        $todayAttendance = $employee->todayAttendance();
+
+        $todayAttendance->update([
+            'check_out_at' => now(),
+            'work_notes' => $request->validated('work_notes'),
+        ]);
+
+        return redirect()->route('employee.dashboard')
+            ->with('success', 'Check-out berhasil dicatat.');
     }
 }

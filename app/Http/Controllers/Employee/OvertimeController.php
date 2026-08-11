@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Employee\OvertimeStoreRequest;
+use App\Models\Overtime;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -15,8 +18,17 @@ class OvertimeController extends Controller
      */
     public function index(): Response
     {
-        // TODO: Pass user's overtime records
-        return Inertia::render('employee/overtime/index');
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $employee = $user->employee;
+
+        $overtimes = Overtime::forEmployee($employee->id)
+            ->orderByDesc('date')
+            ->paginate(15);
+
+        return Inertia::render('employee/overtime/index', [
+            'overtimes' => $overtimes,
+        ]);
     }
 
     /**
@@ -30,15 +42,25 @@ class OvertimeController extends Controller
 
     /**
      * Simpan entri lembur.
-     * Field: tanggal, jam_mulai, jam_selesai, durasi, keterangan.
+     * Field: tanggal, jam_mulai, jam_selesai, keterangan.
+     * Auto-tag proyek aktif karyawan (FR-PROJ-02).
      */
-    public function store(Request $request)
+    public function store(OvertimeStoreRequest $request): RedirectResponse
     {
-        // TODO: Implement overtime store logic
-        // 1. Validate: date, start_time, end_time, duration, description
-        // 2. Auto-tag active project (FR-PROJ-02)
-        // 3. Store overtime record
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $employee = $user->employee;
 
-        return redirect()->route('employee.overtime.index');
+        Overtime::create([
+            'employee_id' => $employee->id,
+            'date' => $request->validated('date'),
+            'start_time' => $request->validated('start_time'),
+            'end_time' => $request->validated('end_time'),
+            'description' => $request->validated('description'),
+            'status' => 'pending',
+        ]);
+
+        return redirect()->route('employee.overtime.index')
+            ->with('success', 'Entri lembur berhasil disimpan.');
     }
 }

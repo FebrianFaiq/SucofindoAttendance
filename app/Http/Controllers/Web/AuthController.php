@@ -11,9 +11,10 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Autentikasi Web Admin — session Laravel biasa (guard `web`).
+ * Autentikasi Web (Admin & Employee) — session Laravel biasa (guard `web`).
  *
- * Web Admin TIDAK menggunakan Sanctum — cukup session + CSRF token bawaan.
+ * Login tunggal untuk kedua role, redirect ke dashboard sesuai role.
+ * TIDAK menggunakan Sanctum — cukup session + CSRF token bawaan.
  * Ref: BE Framework §5 & §7.0
  */
 class AuthController extends Controller
@@ -53,7 +54,11 @@ class AuthController extends Controller
         $user = Auth::user();
         $user->update(['last_login_at' => now()]);
 
-        return redirect()->intended(route('dashboard'));
+        if ($user->isAdmin()) {
+            return redirect()->intended(route('admin.dashboard'));
+        }
+
+        return redirect()->intended(route('employee.dashboard'));
     }
 
     /**
