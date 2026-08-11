@@ -35,119 +35,99 @@ const formattedDate = new Intl.DateTimeFormat('id-ID', {
     year: 'numeric',
 }).format(today);
 
-const kpiCards = [
-    {
-        label: 'Total Karyawan',
-        value: '1,245',
-        icon: Users,
-        iconBg: 'bg-[#E5F0F9]',
-        iconBgHover: 'group-hover:bg-[#D6E4F0]',
-        iconColor: 'text-[#035EA9]',
-        hoverBorder: 'hover:border-l-[#035EA9]',
-    },
-    {
-        label: 'Hadir Hari Ini',
-        value: '850',
-        icon: Building2,
-        iconBg: 'bg-[#E5F0F9]',
-        iconBgHover: 'group-hover:bg-[#D6E4F0]',
-        iconColor: 'text-[#035EA9]',
-        hoverBorder: 'hover:border-l-[#035EA9]',
-    },
-    {
-        label: 'Belum Clock In',
-        value: '125',
-        icon: UserMinus,
-        iconBg: 'bg-[#FEE2E2]',
-        iconBgHover: 'group-hover:bg-[#FCD3D3]',
-        iconColor: 'text-[#EF4444]',
-        hoverBorder: 'hover:border-l-[#EF4444]',
-    },
-    {
-        label: 'Sudah Clock In',
-        value: '18',
-        icon: LogInIcon,
-        iconBg: 'bg-[#DCFCE7]',
-        iconBgHover: 'group-hover:bg-[#BBF7D0]',
-        iconColor: 'text-[#22C55E]',
-        hoverBorder: 'hover:border-l-[#22C55E]',
-    },
-    {
-        label: 'Lembur',
-        value: '45',
-        icon: Clock,
-        iconBg: 'bg-[#FEF9C3]',
-        iconBgHover: 'group-hover:bg-[#FEF08A]',
-        iconColor: 'text-[#EAB308]',
-        hoverBorder: 'hover:border-l-[#EAB308]',
-    },
-];
+// ─── Types ─────────────────────────────────────────────────────────────────
 
-const attendanceTrendData = [
-    { day: 'Mon', value: 1170 },
-    { day: 'Tue', value: 1175 },
-    { day: 'Wed', value: 1110 },
-    { day: 'Thu', value: 1145 },
-    { day: 'Fri', value: 1100 },
-];
+interface KPIProps {
+    totalEmployees: number;
+    checkedInToday: number;
+    wfoToday: number;
+    wfaToday: number;
+    notCheckedIn: number;
+    notCheckedOut: number;
+    overtimeToday: number;
+}
 
-const workModeData = [
-    { name: 'WFO', value: 75, color: '#035EA9' }, // Primary Blue
-    { name: 'WFA', value: 25, color: '#CBD5E1' }, // Slate-300
-];
-
-const attendanceRecords = [
-    {
-        id: 1,
-        name: 'Lorem Ipsum',
-        employeeId: 'xx-0000',
-        avatar: null,
-        avatarColor: 'bg-emerald-500',
-        project: 'Lorem Ipsum',
-        clockIn: '07:55 AM',
-        clockOut: '--:--',
-        status: 'Checked In',
-        statusColor: 'text-emerald-600 bg-emerald-50',
-        mode: 'WFO',
-        modeBorder: 'border-[#035EA9] text-[#035EA9]',
-        notes: '',
-    },
-    {
-        id: 2,
-        name: 'Lorem Ipsum',
-        employeeId: 'xx-0000',
-        avatar: null,
-        avatarColor: 'bg-amber-500',
-        project: 'Lorem Ipsum',
-        clockIn: '08:15 AM',
-        clockInLate: true,
-        clockOut: '--:--',
-        status: 'Late',
-        statusColor: 'text-red-600 bg-red-50',
-        mode: 'WFA',
-        modeBorder: 'border-[#00A099] text-[#00A099]',
-        notes: '',
-    },
-    {
-        id: 3,
-        name: 'Lorem Ipsum',
-        employeeId: 'xx-0000',
-        avatar: null,
-        avatarColor: 'bg-blue-500',
-        project: 'Lorem Ipsum',
-        clockIn: '07:45 AM',
-        clockOut: '17:30 PM',
-        status: 'Checked Out',
-        statusColor: 'text-[#035EA9] bg-blue-50',
-        mode: 'WFO',
-        modeBorder: 'border-[#035EA9] text-[#035EA9]',
-        notes: '',
-    },
-];
+interface AdminDashboardProps {
+    kpi: KPIProps;
+    attendanceTrendData: { day: string; value: number }[];
+    workModeData: { name: string; value: number; color: string }[];
+    attendanceRecords: {
+        id: number;
+        name: string;
+        employeeId: string;
+        avatar: string | null;
+        avatarColor: string;
+        project: string;
+        clockIn: string;
+        clockInLate: boolean;
+        clockOut: string;
+        status: string;
+        statusColor: string;
+        mode: string;
+        modeBorder: string;
+        notes: string | null;
+    }[];
+}
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export default function AdminDashboard() {
+export default function AdminDashboard({
+    kpi,
+    attendanceTrendData,
+    workModeData,
+    attendanceRecords,
+}: AdminDashboardProps) {
+    const kpiCards = [
+        {
+            label: 'Total Karyawan',
+            value: kpi.totalEmployees.toLocaleString(),
+            icon: Users,
+            iconBg: 'bg-[#E5F0F9]',
+            iconBgHover: 'group-hover:bg-[#D6E4F0]',
+            iconColor: 'text-[#035EA9]',
+            hoverBorder: 'hover:border-l-[#035EA9]',
+        },
+        {
+            label: 'Hadir Hari Ini',
+            value: kpi.checkedInToday.toLocaleString(),
+            icon: Building2,
+            iconBg: 'bg-[#E5F0F9]',
+            iconBgHover: 'group-hover:bg-[#D6E4F0]',
+            iconColor: 'text-[#035EA9]',
+            hoverBorder: 'hover:border-l-[#035EA9]',
+        },
+        {
+            label: 'Clock Out',
+            value: kpi.notCheckedIn.toLocaleString(),
+            icon: UserMinus,
+            iconBg: 'bg-[#FEE2E2]',
+            iconBgHover: 'group-hover:bg-[#FCD3D3]',
+            iconColor: 'text-[#EF4444]',
+            hoverBorder: 'hover:border-l-[#EF4444]',
+        },
+        {
+            label: 'Clock In',
+            value: kpi.checkedInToday.toLocaleString(), // or a more specific metric if needed
+            icon: LogInIcon,
+            iconBg: 'bg-[#DCFCE7]',
+            iconBgHover: 'group-hover:bg-[#BBF7D0]',
+            iconColor: 'text-[#22C55E]',
+            hoverBorder: 'hover:border-l-[#22C55E]',
+        },
+        {
+            label: 'Lembur',
+            value: kpi.overtimeToday.toLocaleString(),
+            icon: Clock,
+            iconBg: 'bg-[#FEF9C3]',
+            iconBgHover: 'group-hover:bg-[#FEF08A]',
+            iconColor: 'text-[#EAB308]',
+            hoverBorder: 'hover:border-l-[#EAB308]',
+        },
+    ];
+
+// ─── Component ──────────────────────────────────────────────────────────────
+
+
     return (
         <>
             <Head title="Dashboard Admin" />
@@ -236,11 +216,8 @@ export default function AdminDashboard() {
                                             fontSize: 12,
                                             fill: '#9CA3AF',
                                         }}
-                                        domain={[1000, 1200]}
-                                        ticks={[
-                                            1000, 1020, 1040, 1060, 1080,
-                                            1100, 1120, 1140, 1160, 1180,
-                                        ]}
+                                        domain={[0, 'dataMax + 10']}
+                                        allowDecimals={false}
                                         dx={-10}
                                     />
                                     <Tooltip
@@ -458,7 +435,7 @@ export default function AdminDashboard() {
                     {/* Pagination */}
                     <div className="flex flex-col items-center justify-between gap-3 border-t border-neutral-100 px-6 py-4 sm:flex-row">
                         <p className="text-xs text-neutral-500">
-                            Menampilkan 1 to 3 of 1,245 entries
+                            Menampilkan {attendanceRecords.length} entri terbaru
                         </p>
                         <div className="flex items-center gap-1">
                             <button className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 transition-colors">

@@ -1,0 +1,46 @@
+<?php
+
+namespace App\Http\Requests\Employee;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+/**
+ * Validasi form input lembur (FR-OVT-01).
+ */
+class OvertimeStoreRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function rules(): array
+    {
+        return [
+            'date' => ['required', 'date', 'before_or_equal:today'],
+            'start_time' => ['required', 'date_format:H:i'],
+            'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
+            'description' => ['required', 'string', 'min:10'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'date.required' => 'Tanggal lembur wajib diisi.',
+            'date.before_or_equal' => 'Tanggal lembur tidak boleh di masa depan.',
+            'start_time.required' => 'Jam mulai lembur wajib diisi.',
+            'start_time.date_format' => 'Format jam mulai harus HH:MM.',
+            'end_time.required' => 'Jam selesai lembur wajib diisi.',
+            'end_time.after' => 'Jam selesai harus setelah jam mulai.',
+            'description.required' => 'Keterangan lembur wajib diisi.',
+            'description.min' => 'Keterangan lembur minimal 10 karakter.',
+        ];
+    }
+}

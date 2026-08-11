@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Employee\CheckInRequest;
+use App\Models\Attendance;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -15,23 +18,41 @@ class CheckInController extends Controller
      */
     public function create(): Response
     {
-        // TODO: Check if already checked in today
-        return Inertia::render('employee/check-in');
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $employee = $user->employee;
+
+        $todayAttendance = $employee?->todayAttendance();
+
+        return Inertia::render('employee/check-in', [
+            'alreadyCheckedIn' => $todayAttendance !== null,
+            'todayAttendance' => $todayAttendance,
+        ]);
     }
 
     /**
      * Proses Check In.
      * Menyimpan foto, GPS, status WFO/WFA, dan auto-tag proyek aktif.
      */
-    public function store(Request $request)
+    public function store(CheckInRequest $request): RedirectResponse
     {
-        // TODO: Implement check-in logic
-        // 1. Validate: photo, gps_lat, gps_lng, work_type (WFO/WFA)
-        // 2. Check duplicate check-in
-        // 3. Auto-tag active project (FR-PROJ-02)
-        // 4. Flag late if after 08:00 (FR-FLAG-01)
-        // 5. Store attendance record
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $employee = $user->employee;
 
-        return redirect()->route('employee.dashboard');
+        // Simpan foto bukti check-in
+        $photoPath = $request->file('photo')->store('attendance/check-in', 'public');
+
+        Attendance::create([
+            'employee_id' => $employee->id,
+            'type' => $request->validated('type'),
+            'check_in_at' => now(),
+            'check_in_evidence' => $photoPath,
+            'check_in_latitude' => $request->validated('gps_lat'),
+            'check_in_longitude' => $request->validated('gps_lng'),
+        ]);
+
+        return redirect()->route('employee.dashboard')
+            ->with('success', 'Check-in berhasil dicatat.');
     }
 }

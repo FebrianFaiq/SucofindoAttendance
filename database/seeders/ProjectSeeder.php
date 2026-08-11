@@ -51,6 +51,11 @@ class ProjectSeeder extends Seeder
             ],
         ];
 
-        DB::table('projects')->insert($projects);
+        foreach ($projects as $project) {
+            DB::table('projects')->updateOrInsert(
+                ['code' => $project['code']],
+                $project
+            );
+        }
     }
 }

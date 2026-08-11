@@ -3,24 +3,49 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Employee;
+use App\Models\PasswordChangeLog;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class EmployeePasswordController extends Controller
 {
     /**
-     * Reset password karyawan.
+     * Default password untuk reset.
+     */
+    private const DEFAULT_PASSWORD = '123';
+
+    /**
+     * Reset password karyawan ke password default.
      * (FR-AUTH-03)
      *
-     * Menghasilkan password sementara baru dan menandai akun
+     * Password di-reset ke default dan akun ditandai
      * agar wajib ganti password di login berikutnya.
      */
-    public function reset(Request $request, string $employee)
+    public function reset(Request $request, Employee $employee): RedirectResponse
     {
-        // TODO: Implement password reset
-        // 1. Generate temporary password
-        // 2. Set must_change_password = true
-        // 3. Return with success message + temporary password
+        DB::transaction(function () use ($employee) {
+            $user = $employee->user;
 
-        return redirect()->back();
+            // 1. Reset password ke default
+            $user->update([
+                'password' => Hash::make(self::DEFAULT_PASSWORD),
+                'must_change_password' => true,
+            ]);
+
+            // 2. Catat ke audit log
+            PasswordChangeLog::create([
+                'user_id' => $user->id,
+                'changed_by' => Auth::id(),
+                'method' => 'reset',
+                'created_at' => now(),
+            ]);
+        });
+
+        return redirect()->back()
+            ->with('success', 'Password karyawan berhasil di-reset. Password default: ' . self::DEFAULT_PASSWORD);
     }
 }

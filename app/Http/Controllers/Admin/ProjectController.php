@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreProjectRequest;
+use App\Models\Project;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -15,8 +19,13 @@ class ProjectController extends Controller
      */
     public function index(): Response
     {
-        // TODO: Pass paginated project list
-        return Inertia::render('admin/projects/index');
+        $projects = Project::withCount('employees')
+            ->orderByDesc('created_at')
+            ->paginate(15);
+
+        return Inertia::render('admin/projects/index', [
+            'projects' => $projects,
+        ]);
     }
 
     /**
@@ -30,36 +39,52 @@ class ProjectController extends Controller
     /**
      * Simpan proyek baru.
      */
-    public function store(Request $request)
+    public function store(StoreProjectRequest $request): RedirectResponse
     {
-        // TODO: Implement project creation
-        return redirect()->route('admin.projects.index');
+        Project::create($request->validated());
+
+        return redirect()->route('admin.projects.index')
+            ->with('success', 'Proyek berhasil ditambahkan.');
     }
 
     /**
      * Tampilkan form edit proyek.
      */
-    public function edit(string $project): Response
+    public function edit(Project $project): Response
     {
-        // TODO: Pass project data
-        return Inertia::render('admin/projects/edit');
+        return Inertia::render('admin/projects/edit', [
+            'project' => $project,
+        ]);
     }
 
     /**
      * Update data proyek.
      */
-    public function update(Request $request, string $project)
+    public function update(Request $request, Project $project): RedirectResponse
     {
-        // TODO: Implement project update
-        return redirect()->route('admin.projects.index');
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:150'],
+            'code' => ['nullable', 'string', 'max:50', Rule::unique('projects', 'code')->ignore($project->id)],
+            'description' => ['nullable', 'string'],
+            'start_date' => ['required', 'date'],
+            'end_date' => ['required', 'date', 'after:start_date'],
+            'is_active' => ['sometimes', 'boolean'],
+        ]);
+
+        $project->update($validated);
+
+        return redirect()->route('admin.projects.index')
+            ->with('success', 'Proyek berhasil diperbarui.');
     }
 
     /**
-     * Hapus proyek.
+     * Hapus proyek (soft delete).
      */
-    public function destroy(string $project)
+    public function destroy(Project $project): RedirectResponse
     {
-        // TODO: Implement project delete
-        return redirect()->route('admin.projects.index');
+        $project->delete();
+
+        return redirect()->route('admin.projects.index')
+            ->with('success', 'Proyek berhasil dihapus.');
     }
 }

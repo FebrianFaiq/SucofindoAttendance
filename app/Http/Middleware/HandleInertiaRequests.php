@@ -39,6 +39,7 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        $employee = $user?->employee;
 
         return [
             ...parent::share($request),
@@ -49,7 +50,19 @@ class HandleInertiaRequests extends Middleware
                     'name' => $user->name,
                     'email' => $user->email,
                     'role' => $user->role,
+                    'must_change_password' => $user->must_change_password,
                 ] : null,
+                'employee' => $employee ? [
+                    'id' => $employee->id,
+                    'employee_code' => $employee->employee_code,
+                    'nik' => $employee->nik,
+                    'phone' => $employee->phone,
+                ] : null,
+                'activeProject' => $employee?->activeProject()?->only('id', 'name', 'code'),
+            ],
+            'flash' => [
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
