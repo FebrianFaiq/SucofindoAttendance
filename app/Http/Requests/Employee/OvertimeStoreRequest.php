@@ -11,7 +11,10 @@ class OvertimeStoreRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        /** @var \App\Models\User|null $user */
+        $user = $this->user();
+
+        return $user !== null && $user->canOvertime();
     }
 
     /**

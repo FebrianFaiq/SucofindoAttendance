@@ -64,11 +64,11 @@ class ReportController extends Controller
         $attendances = $query->orderByDesc('check_in_at')->get();
 
         // Generate CSV
-        $csvHeader = ['Nama', 'Kode Karyawan', 'Tanggal', 'Jam Masuk', 'Jam Keluar', 'Tipe', 'Catatan Kerja'];
+        $csvHeader = ['Nama', 'NIK', 'Tanggal', 'Jam Masuk', 'Jam Keluar', 'Tipe', 'Catatan Kerja'];
         $csvRows = $attendances->map(function ($attendance) {
             return [
                 $attendance->employee->user->name ?? '-',
-                $attendance->employee->employee_code ?? '-',
+                $attendance->employee->nik ?? '-',
                 $attendance->check_in_at?->format('Y-m-d') ?? '-',
                 $attendance->check_in_at?->format('H:i') ?? '-',
                 $attendance->check_out_at?->format('H:i') ?? '-',

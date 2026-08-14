@@ -11,8 +11,8 @@ import AppLayout from '@/layouts/app-layout';
 interface EmployeeItem {
     id: number;
     user_id: number;
-    employee_code?: string;
     nik: string;
+    division?: string | null;
     phone: string | null;
     user: {
         id: number;
@@ -183,15 +183,30 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E5F0F9] font-bold text-[#035EA9]">
                                                             {getInitials(emp.user?.name)}
                                                         </div>
-                                                        <span className="font-bold text-neutral-900">{emp.user?.name}</span>
+                                                        <div className="flex flex-col">
+                                                            <span className="font-bold text-neutral-900">{emp.user?.name}</span>
+                                                            <span className="text-[11px] font-semibold text-neutral-500">
+                                                                {emp.user?.role === 'intern' ? (
+                                                                    <span className="text-purple-600 font-bold">Mahasiswa Magang</span>
+                                                                ) : (
+                                                                    'Karyawan PTT'
+                                                                )}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 font-semibold text-neutral-600">{emp.nik}</td>
                                                 <td className="px-6 py-4 font-semibold text-neutral-600">{emp.user?.email}</td>
                                                 <td className="px-6 py-4">
-                                                    <Badge variant="secondary" className="rounded-md border-none bg-[#E5F0F9] text-[#035EA9] hover:bg-[#D6E4F0] px-2.5 py-1 text-[13px] font-bold">
-                                                        {activeProject}
-                                                    </Badge>
+                                                    {emp.user?.role === 'intern' ? (
+                                                        <Badge variant="secondary" className="rounded-md border-none bg-purple-50 text-purple-700 hover:bg-purple-100 px-2.5 py-1 text-[13px] font-bold">
+                                                            Bidang: {emp.division || '—'}
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge variant="secondary" className="rounded-md border-none bg-[#E5F0F9] text-[#035EA9] hover:bg-[#D6E4F0] px-2.5 py-1 text-[13px] font-bold">
+                                                            {activeProject}
+                                                        </Badge>
+                                                    )}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     {emp.user?.is_active ? (
@@ -302,16 +317,29 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                         <IdCard className="h-3.5 w-3.5" />
                                         <span className="text-xs font-semibold">NIK: {selectedEmployee.nik}</span>
                                     </div>
+                                    <div className="mt-1.5">
+                                        <Badge className={`text-[11px] font-bold border-none ${
+                                            selectedEmployee.user?.role === 'intern'
+                                                ? 'bg-purple-100 text-purple-700 hover:bg-purple-100'
+                                                : 'bg-[#E5F0F9] text-[#035EA9] hover:bg-[#E5F0F9]'
+                                        }`}>
+                                            {selectedEmployee.user?.role === 'intern' ? 'Mahasiswa Magang' : 'Karyawan PTT'}
+                                        </Badge>
+                                    </div>
                                 </div>
 
                                 {/* Employee Info Card */}
                                 <div className="rounded-xl border border-neutral-200 bg-white p-3.5">
                                     <div className="grid grid-cols-2 gap-y-4 gap-x-3">
                                         <div className="flex flex-col gap-1">
-                                            <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">PROJEK</span>
+                                            <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">
+                                                {selectedEmployee.user?.role === 'intern' ? 'BIDANG' : 'PROJEK'}
+                                            </span>
                                             <div className="border-b-2 border-[#035EA9] pb-1.5">
                                                 <span className="text-xs font-semibold text-neutral-900">
-                                                    {selectedEmployee.projects?.[0]?.name ?? 'Belum Ditugaskan'}
+                                                    {selectedEmployee.user?.role === 'intern'
+                                                        ? (selectedEmployee.division || '—')
+                                                        : (selectedEmployee.projects?.[0]?.name ?? 'Belum Ditugaskan')}
                                                 </span>
                                             </div>
                                         </div>

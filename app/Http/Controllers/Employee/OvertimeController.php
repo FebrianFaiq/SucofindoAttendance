@@ -20,6 +20,11 @@ class OvertimeController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
+
+        if ($user->isIntern()) {
+            abort(403, 'Mahasiswa magang tidak memiliki akses ke fitur lembur.');
+        }
+
         $employee = $user->employee;
 
         $overtimes = Overtime::forEmployee($employee->id)
@@ -37,6 +42,13 @@ class OvertimeController extends Controller
      */
     public function create(): Response
     {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        if ($user->isIntern()) {
+            abort(403, 'Mahasiswa magang tidak diizinkan mengajukan lembur.');
+        }
+
         return Inertia::render('employee/overtime/create');
     }
 

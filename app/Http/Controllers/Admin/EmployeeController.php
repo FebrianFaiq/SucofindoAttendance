@@ -79,26 +79,28 @@ class EmployeeController extends Controller
         $validated = $request->validated();
 
         DB::transaction(function () use ($validated) {
+            $role = $validated['role'] ?? 'employee';
+
             // 1. Buat akun user dengan password default
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'password' => Hash::make(self::DEFAULT_PASSWORD),
-                'role' => 'employee',
+                'role' => $role,
                 'must_change_password' => true,
                 'is_active' => $validated['is_active'] ?? true,
             ]);
 
-            // 2. Buat profil karyawan (employee_code disamakan dengan NIK)
+            // 2. Buat profil karyawan (dengan divisi jika intern)
             $employee = Employee::create([
                 'user_id' => $user->id,
-                'employee_code' => $validated['nik'],
                 'nik' => $validated['nik'],
+                'division' => $role === 'intern' ? ($validated['division'] ?? null) : null,
                 'phone' => $validated['phone'] ?? null,
             ]);
 
-            // 3. Assign ke proyek jika diberikan (FR-EMP-04)
-            if (! empty($validated['project_id'])) {
+            // 3. Assign ke proyek jika diberikan dan role adalah employee (FR-EMP-04)
+            if ($role === 'employee' && ! empty($validated['project_id'])) {
                 EmployeeProject::create([
                     'employee_id' => $employee->id,
                     'project_id' => $validated['project_id'],
@@ -153,17 +155,22 @@ class EmployeeController extends Controller
         $validated = $request->validated();
 
         DB::transaction(function () use ($validated, $employee) {
-            // 1. Update user data (termasuk is_active untuk menonaktifkan akun)
-            $employee->user->update([
+            $role = $validated['role'] ?? $employee->user->role;
+
+            // 1. Update user data (termasuk role & is_active)
+            $userData = [
                 'name' => $validated['name'],
                 'email' => $validated['email'],
+                'role' => $role,
                 'is_active' => $validated['is_active'] ?? $employee->user->is_active,
-            ]);
+            ];
+
+            $employee->user->update($userData);
 
             // 2. Update employee data
             $employee->update([
-                'employee_code' => $validated['nik'],
                 'nik' => $validated['nik'],
+                'division' => $role === 'intern' ? ($validated['division'] ?? null) : null,
                 'phone' => $validated['phone'] ?? $employee->phone,
             ]);
 
@@ -172,30 +179,38 @@ class EmployeeController extends Controller
                 ->where('status', 'active')
                 ->first();
 
-            $newProjectId = $validated['project_id'] ?? null;
-
-            if ($newProjectId) {
-                if (! $currentActiveAssignment || $currentActiveAssignment->project_id != $newProjectId) {
-                    // Akhiri assignment lama jika ada
-                    if ($currentActiveAssignment) {
-                        $currentActiveAssignment->update([
-                            'status' => 'ended',
-                            'ended_at' => today(),
-                        ]);
-                    }
-
-                    // Buat assignment baru
-                    EmployeeProject::create([
-                        'employee_id' => $employee->id,
-                        'project_id' => $newProjectId,
-                        'status' => 'active',
-                        'assigned_at' => today(),
-                        'assigned_by' => Auth::id(),
+            if ($role === 'intern') {
+                // Anak magang tidak memiliki proyek, akhiri assignment yang ada jika ada
+                if ($currentActiveAssignment) {
+                    $currentActiveAssignment->update([
+                        'status' => 'ended',
+                        'ended_at' => today(),
                     ]);
                 }
             } else {
-                // Jika project_id dikosongkan, akhiri active assignment jika ada
-                if ($currentActiveAssignment) {
+                $newProjectId = $validated['project_id'] ?? null;
+
+                if ($newProjectId) {
+                    if (! $currentActiveAssignment || $currentActiveAssignment->project_id != $newProjectId) {
+                        // Akhiri assignment lama jika ada
+                        if ($currentActiveAssignment) {
+                            $currentActiveAssignment->update([
+                                'status' => 'ended',
+                                'ended_at' => today(),
+                            ]);
+                        }
+
+                        // Buat assignment baru
+                        EmployeeProject::create([
+                            'employee_id' => $employee->id,
+                            'project_id' => $newProjectId,
+                            'status' => 'active',
+                            'assigned_at' => today(),
+                            'assigned_by' => Auth::id(),
+                        ]);
+                    }
+                } elseif ($currentActiveAssignment) {
+                    // Jika project_id dikosongkan, nonaktifkan assignment aktif
                     $currentActiveAssignment->update([
                         'status' => 'ended',
                         'ended_at' => today(),
