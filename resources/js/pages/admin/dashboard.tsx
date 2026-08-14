@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import {
     Building2,
     CalendarCheck,
@@ -38,12 +38,9 @@ const formattedDate = new Intl.DateTimeFormat('id-ID', {
 // ─── Types ─────────────────────────────────────────────────────────────────
 
 interface KPIProps {
-    totalEmployees: number;
+    totalPtt: number;
+    totalInterns: number;
     checkedInToday: number;
-    wfoToday: number;
-    wfaToday: number;
-    notCheckedIn: number;
-    notCheckedOut: number;
     overtimeToday: number;
 }
 
@@ -67,6 +64,9 @@ interface AdminDashboardProps {
         modeBorder: string;
         notes: string | null;
     }[];
+    filters?: {
+        per_page?: string | number;
+    };
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -76,43 +76,43 @@ export default function AdminDashboard({
     attendanceTrendData,
     workModeData,
     attendanceRecords,
+    filters,
 }: AdminDashboardProps) {
+    const handlePerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        router.get(
+            '/admin/dashboard',
+            { per_page: e.target.value },
+            { preserveState: true, replace: true }
+        );
+    };
+
     const kpiCards = [
         {
-            label: 'Total Karyawan',
-            value: kpi.totalEmployees.toLocaleString(),
+            label: 'Total Karyawan PTT',
+            value: kpi.totalPtt.toLocaleString(),
             icon: Users,
             iconBg: 'bg-[#E5F0F9]',
             iconBgHover: 'group-hover:bg-[#D6E4F0]',
             iconColor: 'text-[#035EA9]',
-            hoverBorder: 'hover:border-l-[#035EA9]',
+            hoverClass: 'hover:border-l-[#035EA9] hover:border-y-[#035EA9]/30 hover:border-r-[#035EA9]/30 hover:bg-[#F0F5FA]',
+        },
+        {
+            label: 'Total Magang',
+            value: kpi.totalInterns.toLocaleString(),
+            icon: Users,
+            iconBg: 'bg-[#E5F0F9]',
+            iconBgHover: 'group-hover:bg-[#D6E4F0]',
+            iconColor: 'text-[#035EA9]',
+            hoverClass: 'hover:border-l-[#035EA9] hover:border-y-[#035EA9]/30 hover:border-r-[#035EA9]/30 hover:bg-[#F0F5FA]',
         },
         {
             label: 'Hadir Hari Ini',
             value: kpi.checkedInToday.toLocaleString(),
-            icon: Building2,
-            iconBg: 'bg-[#E5F0F9]',
-            iconBgHover: 'group-hover:bg-[#D6E4F0]',
-            iconColor: 'text-[#035EA9]',
-            hoverBorder: 'hover:border-l-[#035EA9]',
-        },
-        {
-            label: 'Clock Out',
-            value: kpi.notCheckedIn.toLocaleString(),
-            icon: UserMinus,
-            iconBg: 'bg-[#FEE2E2]',
-            iconBgHover: 'group-hover:bg-[#FCD3D3]',
-            iconColor: 'text-[#EF4444]',
-            hoverBorder: 'hover:border-l-[#EF4444]',
-        },
-        {
-            label: 'Clock In',
-            value: kpi.checkedInToday.toLocaleString(), // or a more specific metric if needed
             icon: LogInIcon,
             iconBg: 'bg-[#DCFCE7]',
             iconBgHover: 'group-hover:bg-[#BBF7D0]',
             iconColor: 'text-[#22C55E]',
-            hoverBorder: 'hover:border-l-[#22C55E]',
+            hoverClass: 'hover:border-l-[#22C55E] hover:border-y-[#22C55E]/30 hover:border-r-[#22C55E]/30 hover:bg-[#F0FDF4]',
         },
         {
             label: 'Lembur',
@@ -121,7 +121,7 @@ export default function AdminDashboard({
             iconBg: 'bg-[#FEF9C3]',
             iconBgHover: 'group-hover:bg-[#FEF08A]',
             iconColor: 'text-[#EAB308]',
-            hoverBorder: 'hover:border-l-[#EAB308]',
+            hoverClass: 'hover:border-l-[#EAB308] hover:border-y-[#EAB308]/30 hover:border-r-[#EAB308]/30 hover:bg-[#FEFCE8]',
         },
     ];
 
@@ -143,11 +143,11 @@ export default function AdminDashboard({
                 </div>
 
                 {/* ── KPI Cards ─────────────────────────────────────── */}
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {kpiCards.map((card) => (
                         <div
                             key={card.label}
-                            className={`group relative overflow-hidden rounded-xl border border-neutral-200 border-l-4 border-l-transparent bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-y-[#035EA9]/30 hover:border-r-[#035EA9]/30 hover:bg-[#F0F5FA] ${card.hoverBorder}`}
+                            className={`group relative overflow-hidden rounded-xl border border-neutral-200 border-l-4 border-l-transparent bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md ${card.hoverClass}`}
                         >
                             <div className="flex items-start justify-between relative z-10">
                                 <div>
@@ -434,9 +434,22 @@ export default function AdminDashboard({
 
                     {/* Pagination */}
                     <div className="flex flex-col items-center justify-between gap-3 border-t border-neutral-100 px-6 py-4 sm:flex-row">
-                        <p className="text-xs text-neutral-500">
-                            Menampilkan {attendanceRecords.length} entri terbaru
-                        </p>
+                        <div className="flex items-center gap-3">
+                            <select
+                                value={filters?.per_page || 10}
+                                onChange={handlePerPageChange}
+                                className="h-8 rounded-md border-neutral-300 text-xs text-neutral-600 focus:ring-[#035EA9] focus:border-[#035EA9] bg-white shadow-sm"
+                            >
+                                <option value="5">5</option>
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <p className="text-xs text-neutral-500 font-medium">
+                                Menampilkan {attendanceRecords.length} entri terbaru
+                            </p>
+                        </div>
                         <div className="flex items-center gap-1">
                             <button className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 transition-colors">
                                 <ChevronLeft className="h-4 w-4" />

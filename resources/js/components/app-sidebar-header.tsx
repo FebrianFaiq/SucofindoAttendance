@@ -2,7 +2,9 @@ import { usePage } from '@inertiajs/react';
 import { Search, User } from 'lucide-react';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { UserMenuContent } from '@/components/user-menu-content';
+import type { BreadcrumbItem as BreadcrumbItemType, User as UserType } from '@/types';
 
 export function AppSidebarHeader({
     breadcrumbs = [],
@@ -23,9 +25,16 @@ export function AppSidebarHeader({
 
             {/* Right: User Avatar */}
             <div className="flex items-center">
-                <button className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 bg-neutral-100 text-neutral-500 hover:bg-neutral-200 transition-colors">
-                    <User className="h-5 w-5" />
-                </button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <button className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 bg-neutral-100 text-neutral-500 hover:bg-neutral-200 transition-colors outline-none">
+                            <User className="h-5 w-5" />
+                        </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 rounded-lg mt-1">
+                        <UserMenuContent user={auth.user as UserType} />
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </header>
     );

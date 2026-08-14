@@ -14,7 +14,7 @@ import {
     Sparkles,
 } from 'lucide-react';
 import { NavMain } from '@/components/nav-main';
-import { NavUser } from '@/components/nav-user';
+import { logout } from '@/routes';
 import {
     Sidebar,
     SidebarContent,
@@ -128,8 +128,19 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-
-                <NavUser />
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            asChild
+                            className="text-[#DC2626] hover:bg-[#FEF2F2] hover:text-[#DC2626] font-semibold text-sm"
+                        >
+                            <Link href={logout().url} method="post" as="button" className="w-full flex items-center justify-start gap-2">
+                                <LogOutIcon className="h-5 w-5" />
+                                <span>Keluar</span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
             </SidebarFooter>
         </Sidebar>
     );

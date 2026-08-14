@@ -99,6 +99,7 @@ interface AttendanceIndexProps {
         start_date?: string;
         end_date?: string;
         search?: string;
+        per_page?: string | number;
     };
 }
 
@@ -112,6 +113,7 @@ export default function AttendanceIndex({
     const [startDate, setStartDate] = useState(filters?.start_date || '');
     const [endDate, setEndDate] = useState(filters?.end_date || '');
     const [searchTerm, setSearchTerm] = useState(filters?.search || '');
+    const [perPage, setPerPage] = useState(filters?.per_page || 10);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [selectedAttendance, setSelectedAttendance] = useState<AttendanceItem | null>(null);
 
@@ -132,7 +134,16 @@ export default function AttendanceIndex({
         if (e) e.preventDefault();
         router.get(
             '/admin/attendance',
-            { start_date: startDate || undefined, end_date: endDate || undefined, search: searchTerm || undefined },
+            { start_date: startDate || undefined, end_date: endDate || undefined, search: searchTerm || undefined, per_page: perPage },
+            { preserveState: true, replace: true }
+        );
+    };
+
+    const handlePerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setPerPage(e.target.value);
+        router.get(
+            '/admin/attendance',
+            { start_date: startDate || undefined, end_date: endDate || undefined, search: searchTerm || undefined, per_page: e.target.value },
             { preserveState: true, replace: true }
         );
     };
@@ -258,11 +269,11 @@ export default function AttendanceIndex({
                 {/* ── KPI Summary Cards ──────────────────────────────── */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Hadir Hari Ini */}
-                    <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-[#035EA9]">
+                    <div className="group relative overflow-hidden rounded-2xl border border-neutral-200 border-l-4 border-l-transparent bg-white p-5 shadow-sm flex items-center gap-4 transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-l-[#035EA9] hover:border-y-[#035EA9]/30 hover:border-r-[#035EA9]/30 hover:bg-[#F0F5FA]">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-[#035EA9] transition-colors group-hover:bg-[#D6E4F0]">
                             <CalendarCheck className="h-6 w-6" />
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col relative z-10">
                             <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Hadir Hari Ini</span>
                             <div className="flex items-baseline gap-1.5 mt-0.5">
                                 <span className="text-2xl font-black text-neutral-900">{kpi.presentToday}</span>
@@ -272,36 +283,36 @@ export default function AttendanceIndex({
                     </div>
 
                     {/* Clock In */}
-                    <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                    <div className="group relative overflow-hidden rounded-2xl border border-neutral-200 border-l-4 border-l-transparent bg-white p-5 shadow-sm flex items-center gap-4 transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-l-[#22C55E] hover:border-y-[#22C55E]/30 hover:border-r-[#22C55E]/30 hover:bg-[#F0FDF4]">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 transition-colors group-hover:bg-[#BBF7D0]">
                             <LogIn className="h-6 w-6" />
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col relative z-10">
                             <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Clock In</span>
                             <span className="text-2xl font-black text-neutral-900 mt-0.5">{kpi.clockInToday} <span className="text-xs text-neutral-500 font-normal">Orang</span></span>
                         </div>
                     </div>
 
                     {/* Clock Out */}
-                    <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-[#035EA9]">
+                    <div className="group relative overflow-hidden rounded-2xl border border-neutral-200 border-l-4 border-l-transparent bg-white p-5 shadow-sm flex items-center gap-4 transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-l-[#EF4444] hover:border-y-[#EF4444]/30 hover:border-r-[#EF4444]/30 hover:bg-[#FEF2F2]">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-[#035EA9] transition-colors group-hover:bg-[#FCD3D3] group-hover:text-[#EF4444]">
                             <LogOut className="h-6 w-6" />
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col relative z-10">
                             <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Clock Out</span>
                             <span className="text-2xl font-black text-neutral-900 mt-0.5">{kpi.clockOutToday} <span className="text-xs text-neutral-500 font-normal">Orang</span></span>
                         </div>
                     </div>
 
                     {/* Status Kalender Hari Ini */}
-                    <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm flex items-center gap-4">
-                        <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${todayInfo.is_holiday || todayInfo.is_weekend
-                                ? 'bg-amber-50 text-amber-600'
-                                : 'bg-emerald-50 text-emerald-600'
+                    <div className={`group relative overflow-hidden rounded-2xl border border-neutral-200 border-l-4 border-l-transparent bg-white p-5 shadow-sm flex items-center gap-4 transition-all hover:-translate-y-0.5 hover:shadow-md ${todayInfo.is_holiday || todayInfo.is_weekend ? 'hover:border-l-[#EF4444] hover:border-y-[#EF4444]/30 hover:border-r-[#EF4444]/30 hover:bg-[#FEF2F2]' : 'hover:border-l-[#22C55E] hover:border-y-[#22C55E]/30 hover:border-r-[#22C55E]/30 hover:bg-[#F0FDF4]'}`}>
+                        <div className={`flex h-12 w-12 items-center justify-center rounded-xl transition-colors ${todayInfo.is_holiday || todayInfo.is_weekend
+                                ? 'bg-amber-50 text-amber-600 group-hover:bg-[#FCD3D3] group-hover:text-[#EF4444]'
+                                : 'bg-emerald-50 text-emerald-600 group-hover:bg-[#BBF7D0]'
                             }`}>
                             <Calendar className="h-6 w-6" />
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col relative z-10">
                             <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Status Hari Ini</span>
                             {todayInfo.is_holiday ? (
                                 <span className="text-sm font-bold text-red-600 truncate max-w-[170px]" title={todayInfo.holiday_name}>
@@ -505,10 +516,23 @@ export default function AttendanceIndex({
                     )}
 
                     {/* ── Pagination Footer ─────────────────────────────── */}
-                    <div className="mt-auto flex flex-col sm:flex-row items-center justify-between border-t border-neutral-200 bg-white px-6 py-4 text-sm text-neutral-500 gap-4">
-                        <span className="font-semibold text-[#64748B]">
-                            Menampilkan {attendances.from ?? 0} - {attendances.to ?? 0} dari {attendances.total} data
-                        </span>
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-neutral-100 px-6 py-4">
+                        <div className="flex items-center gap-3">
+                            <select
+                                value={perPage}
+                                onChange={handlePerPageChange}
+                                className="h-8 rounded-md border-neutral-300 text-xs text-neutral-600 focus:ring-[#035EA9] focus:border-[#035EA9] bg-white shadow-sm"
+                            >
+                                <option value="5">5</option>
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <p className="text-sm font-semibold text-neutral-500">
+                                Menampilkan {attendances.from || 0} - {attendances.to || 0} dari {attendances.total} data
+                            </p>
+                        </div>
                         <div className="flex items-center gap-1">
                             {attendances.prev_page_url ? (
                                 <Link

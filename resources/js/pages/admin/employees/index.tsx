@@ -52,6 +52,7 @@ interface EmployeesIndexProps {
     employees: PaginatedData<EmployeeItem>;
     filters?: {
         search?: string;
+        per_page?: string | number;
     };
 }
 
@@ -59,6 +60,7 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
     const [selectedEmployee, setSelectedEmployee] = useState<EmployeeItem | null>(null);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState(filters?.search || '');
+    const [perPage, setPerPage] = useState(filters?.per_page || 10);
 
     // Dialog states
     const [isResetOpen, setIsResetOpen] = useState(false);
@@ -71,9 +73,14 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
         setIsSheetOpen(true);
     };
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        router.get('/admin/employees', { search: searchTerm }, { preserveState: true, replace: true });
+    const handleSearch = (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        router.get('/admin/employees', { search: searchTerm, per_page: perPage }, { preserveState: true, replace: true });
+    };
+
+    const handlePerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setPerPage(e.target.value);
+        router.get('/admin/employees', { search: searchTerm, per_page: e.target.value }, { preserveState: true, replace: true });
     };
 
     const handleResetPassword = () => {
@@ -235,11 +242,24 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                         </table>
                     </div>
 
-                    {/* ── Pagination Footer ─────────────────────────────── */}
-                    <div className="mt-auto flex flex-col sm:flex-row items-center justify-between border-t border-neutral-200 bg-white px-6 py-4 text-sm text-neutral-500 gap-4">
-                        <span className="font-semibold text-[#64748B]">
-                            Menampilkan {employees.from ?? 0} to {employees.to ?? 0} of {employees.total} entries
-                        </span>
+                    {/* ── Pagination ──────────────────────────────────── */}
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-neutral-100 px-6 py-4">
+                        <div className="flex items-center gap-3">
+                            <select
+                                value={perPage}
+                                onChange={handlePerPageChange}
+                                className="h-8 rounded-md border-neutral-300 text-xs text-neutral-600 focus:ring-[#035EA9] focus:border-[#035EA9] bg-white shadow-sm"
+                            >
+                                <option value="5">5</option>
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <p className="text-sm font-semibold text-neutral-500">
+                                Menampilkan {employees.from || 0} to {employees.to || 0} of {employees.total} entries
+                            </p>
+                        </div>
                         <div className="flex items-center gap-1">
                             {employees.prev_page_url ? (
                                 <Link
