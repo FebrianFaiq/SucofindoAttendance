@@ -29,6 +29,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => RoleMiddleware::class,
         ]);
+
+        // Mencegah infinite redirect saat user yang sudah login mengakses /login
+        $middleware->redirectUsersTo(fn (Request $request) =>
+            $request->user()?->isAdmin()
+                ? route('admin.dashboard')
+                : route('employee.dashboard')
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
