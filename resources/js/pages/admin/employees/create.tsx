@@ -227,18 +227,11 @@ export default function EmployeesCreate({ projects }: EmployeesCreateProps) {
                                 <label className="text-[14px] font-bold text-[#1E293B]">Default Password</label>
                                 <div className="relative">
                                     <Input 
-                                        type={showPassword ? "text" : "password"}
-                                        value="123" 
+                                        type="text"
+                                        defaultValue="123" 
                                         disabled
-                                        className="h-11 bg-[#F1F5F9] border-neutral-200 text-[#1E293B] font-semibold pr-10 cursor-not-allowed"
+                                        className="h-11 bg-[#F1F5F9] border-neutral-200 text-[#64748B] font-semibold focus-visible:ring-0 opacity-100 cursor-not-allowed"
                                     />
-                                    <button 
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#64748B]"
-                                    >
-                                        {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
-                                    </button>
                                 </div>
                                 <p className="text-[13px] font-medium text-[#64748B]">
                                     Password awal diset ke bawaan (<b>123</b>). Karyawan dapat mengganti password setelah login.

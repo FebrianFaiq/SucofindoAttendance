@@ -466,7 +466,6 @@ export default function AdminDashboard({
 
 AdminDashboard.layout = {
     breadcrumbs: [
-        { title: 'Home', href: '/admin/dashboard' },
         { title: 'Dashboard', href: '/admin/dashboard' },
     ],
 };

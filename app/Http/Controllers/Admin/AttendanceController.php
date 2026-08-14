@@ -19,7 +19,6 @@ class AttendanceController extends Controller
     public function index(Request $request): Response
     {
         $today = today();
-        $filterDate = $request->input('date', $today->toDateString());
 
         // 1. Query Kehadiran
         $query = Attendance::with([
@@ -29,10 +28,19 @@ class AttendanceController extends Controller
             },
         ]);
 
-        if ($request->filled('date')) {
-            $query->whereDate('check_in_at', $request->input('date'));
-        } else {
-            $query->whereDate('check_in_at', $today);
+        // Filter date range
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $singleDate = $request->input('date');
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('check_in_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        } elseif ($startDate) {
+            $query->whereDate('check_in_at', '>=', $startDate);
+        } elseif ($endDate) {
+            $query->whereDate('check_in_at', '<=', $endDate);
+        } elseif ($singleDate) {
+            $query->whereDate('check_in_at', $singleDate);
         }
 
         // Filter tipe WFO / WFA
@@ -47,13 +55,18 @@ class AttendanceController extends Controller
             });
         }
 
-        // Search nama atau NIK
+        // Search nama, NIK, atau nama Proyek / Bidang
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->whereHas('employee', function ($q) use ($search) {
                 $q->where('nik', 'like', "%{$search}%")
+                    ->orWhere('division', 'like', "%{$search}%")
                     ->orWhereHas('user', function ($uq) use ($search) {
                         $uq->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('projects', function ($pq) use ($search) {
+                        $pq->where('name', 'like', "%{$search}%")
+                            ->orWhere('code', 'like', "%{$search}%");
                     });
             });
         }
@@ -100,7 +113,14 @@ class AttendanceController extends Controller
                 'clockOutToday' => $todayClockOutCount,
                 'totalEmployees' => $totalEmployees,
             ],
-            'filters' => $request->only(['date', 'type', 'role', 'search']),
+            'filters' => [
+                'start_date' => $startDate ?? '',
+                'end_date' => $endDate ?? '',
+                'date' => $singleDate ?? '',
+                'type' => $request->input('type', ''),
+                'role' => $request->input('role', ''),
+                'search' => $request->input('search', ''),
+            ],
         ]);
     }
 }

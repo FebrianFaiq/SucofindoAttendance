@@ -19,17 +19,7 @@ export function AppSidebarHeader({
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
             </div>
 
-            {/* Center: Search Bar */}
-            <div className="hidden md:flex flex-1 max-w-md mx-4">
-                <div className="relative w-full">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                    <input
-                        type="text"
-                        placeholder="Search records..."
-                        className="h-9 w-full rounded-lg border border-neutral-200 bg-neutral-50 pl-9 pr-4 text-sm text-neutral-700 placeholder:text-neutral-400 outline-none focus:border-sucofindo-primary focus:ring-1 focus:ring-sucofindo-primary/30 transition-colors"
-                    />
-                </div>
-            </div>
+
 
             {/* Right: User Avatar */}
             <div className="flex items-center">

@@ -86,7 +86,7 @@ export default function EmployeesEdit({ employee, projects }: EmployeesEditProps
         <>
             <Head title={`Edit Karyawan - ${employee.user?.name}`} />
             <div className="flex h-full flex-1 flex-col bg-[#F9F9FF] p-8 font-mulish relative">
-                
+
                 {/* ── Header ────────────────────────────────────────── */}
                 <div className="mb-6">
                     <h1 className="text-[32px] font-bold text-[#1E293B] tracking-tight">
@@ -100,29 +100,29 @@ export default function EmployeesEdit({ employee, projects }: EmployeesEditProps
                 {/* ── Form Card ─────────────────────────────────────── */}
                 <form onSubmit={handleSubmit} className="rounded-xl border border-neutral-200 bg-white flex flex-col w-full shadow-sm">
                     <div className="p-8 flex flex-col gap-8">
-                        
+
                         {/* 1. Informasi Pribadi */}
                         <section className="flex flex-col gap-5">
                             <h2 className="text-[20px] font-bold text-[#1E293B]">Informasi Pribadi</h2>
-                            
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="flex flex-col gap-2">
                                     <label className="text-[14px] font-bold text-[#1E293B]">
                                         Nama Lengkap <span className="text-red-500">*</span>
                                     </label>
-                                    <Input 
+                                    <Input
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
                                         className="h-11 bg-[#F8FAFC] border-neutral-200 text-[#1E293B] font-semibold focus-visible:ring-[#035EA9]"
                                     />
                                     {errors.name && <p className="text-xs text-red-500 font-semibold">{errors.name}</p>}
                                 </div>
-                                
+
                                 <div className="flex flex-col gap-2">
                                     <label className="text-[14px] font-bold text-[#1E293B]">
                                         NIK <span className="text-red-500">*</span>
                                     </label>
-                                    <Input 
+                                    <Input
                                         value={data.nik}
                                         onChange={(e) => setData('nik', e.target.value)}
                                         className="h-11 bg-[#F8FAFC] border-neutral-200 text-[#1E293B] font-semibold focus-visible:ring-[#035EA9]"
@@ -134,7 +134,7 @@ export default function EmployeesEdit({ employee, projects }: EmployeesEditProps
                                     <label className="text-[14px] font-bold text-[#1E293B]">
                                         Alamat Email <span className="text-red-500">*</span>
                                     </label>
-                                    <Input 
+                                    <Input
                                         type="email"
                                         value={data.email}
                                         onChange={(e) => setData('email', e.target.value)}
@@ -145,7 +145,7 @@ export default function EmployeesEdit({ employee, projects }: EmployeesEditProps
 
                                 <div className="flex flex-col gap-2">
                                     <label className="text-[14px] font-bold text-[#1E293B]">Nomor Telepon</label>
-                                    <Input 
+                                    <Input
                                         value={data.phone}
                                         onChange={(e) => setData('phone', e.target.value)}
                                         className="h-11 bg-[#F8FAFC] border-neutral-200 text-[#1E293B] font-semibold focus-visible:ring-[#035EA9]"
@@ -161,6 +161,8 @@ export default function EmployeesEdit({ employee, projects }: EmployeesEditProps
                         <section className="flex flex-col gap-5">
                             <h2 className="text-[20px] font-bold text-[#1E293B]">Rincian & Tipe Pegawai</h2>
                             
+                            <h2 className="text-[20px] font-bold text-[#1E293B]">Rincian Karyawan</h2>
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                                 {/* Tipe Pegawai */}
                                 <div className="flex flex-col gap-2">
@@ -246,7 +248,7 @@ export default function EmployeesEdit({ employee, projects }: EmployeesEditProps
                                 <div className="flex flex-col gap-2">
                                     <label className="text-[14px] font-bold text-[#1E293B]">Status Akun</label>
                                     <div className="flex items-center gap-3 mt-1.5">
-                                        <button 
+                                        <button
                                             onClick={() => setData('is_active', !data.is_active)}
                                             type="button"
                                             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#035EA9] focus-visible:ring-offset-2 ${data.is_active ? 'bg-[#0B3B8B]' : 'bg-neutral-300'}`}
@@ -269,20 +271,20 @@ export default function EmployeesEdit({ employee, projects }: EmployeesEditProps
                         {/* 3. Security */}
                         <section className="flex flex-col gap-5">
                             <h2 className="text-[20px] font-bold text-[#1E293B]">Keamanan Akun</h2>
-                            
+
                             <div className="flex flex-col gap-2 max-w-[500px]">
                                 <label className="text-[14px] font-bold text-[#1E293B]">Reset Kata Sandi</label>
-                                
-                                <Button 
+
+                                <Button
                                     type="button"
-                                    variant="outline" 
+                                    variant="outline"
                                     className="w-[180px] h-10 border-[#035EA9] text-[#035EA9] font-bold hover:bg-[#F0F5FA] flex justify-center gap-2 mt-1"
                                     onClick={() => setIsResetOpen(true)}
                                 >
                                     <RotateCcw className="h-4 w-4" />
                                     Reset Password
                                 </Button>
-                                
+
                                 <p className="text-[13px] font-medium text-[#64748B] mt-1">
                                     Reset password akan mengembalikan kata sandi karyawan ke default (<b>123</b>).
                                 </p>
@@ -297,7 +299,7 @@ export default function EmployeesEdit({ employee, projects }: EmployeesEditProps
                                 Batal
                             </Button>
                         </Link>
-                        <Button 
+                        <Button
                             type="submit"
                             disabled={processing}
                             className="h-11 px-6 bg-[#0B3B8B] hover:bg-[#0B3B8B]/90 font-bold text-white flex gap-2"
@@ -309,7 +311,7 @@ export default function EmployeesEdit({ employee, projects }: EmployeesEditProps
                 </form>
 
                 {/* ── Dialogs ────────────────────────────────────────────── */}
-                
+
                 {/* 1. Reset Password Confirmation */}
                 <Dialog open={isResetOpen} onOpenChange={setIsResetOpen}>
                     <DialogContent className="sm:max-w-[420px] p-8 font-mulish text-center border-none">
@@ -323,7 +325,7 @@ export default function EmployeesEdit({ employee, projects }: EmployeesEditProps
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter className="flex flex-col sm:flex-col w-full gap-3 mt-6">
-                            <Button 
+                            <Button
                                 disabled={isResetProcessing}
                                 className="w-full bg-[#C81E1E] hover:bg-[#B91C1C] text-white font-bold h-11 sm:w-full"
                                 onClick={handleResetPassword}
@@ -352,7 +354,7 @@ export default function EmployeesEdit({ employee, projects }: EmployeesEditProps
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter className="w-full mt-6 sm:justify-center">
-                            <Button 
+                            <Button
                                 className="w-full bg-[#035EA9] hover:bg-[#035EA9]/90 text-white font-bold h-11"
                                 onClick={() => setIsResetSuccessOpen(false)}
                             >
