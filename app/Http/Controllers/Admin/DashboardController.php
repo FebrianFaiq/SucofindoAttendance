@@ -27,14 +27,13 @@ class DashboardController extends Controller
      */
     public function __invoke(Request $request): Response
     {
-        $totalEmployees = Employee::whereHas('user', fn ($q) => $q->where('is_active', true))->count();
+        $totalPtt = Employee::whereHas('user', fn ($q) => $q->where('is_active', true)->where('role', '!=', 'intern'))->count();
+        $totalInterns = Employee::whereHas('user', fn ($q) => $q->where('is_active', true)->where('role', 'intern'))->count();
         $todayAttendances = Attendance::today()->get();
 
         $checkedInToday = $todayAttendances->count();
         $wfoToday = $todayAttendances->where('type', 'WFO')->count();
         $wfaToday = $todayAttendances->where('type', 'WFA')->count();
-        $notCheckedIn = $totalEmployees - $checkedInToday;
-        $notCheckedOut = $todayAttendances->whereNull('check_out_at')->count();
         $overtimeToday = Overtime::whereDate('date', today())->count();
 
         // Trend Kehadiran 5 hari terakhir
@@ -54,10 +53,12 @@ class DashboardController extends Controller
             ['name' => 'WFA', 'value' => $wfaToday, 'color' => '#CBD5E1'],
         ];
 
+        $perPage = $request->query('per_page', 10);
+
         // Riwayat Kehadiran (Recent)
         $recentAttendances = Attendance::with(['employee.user', 'employee.projects' => function ($q) {
             $q->wherePivot('status', 'active');
-        }])->today()->latest('check_in_at')->limit(10)->get()->map(function ($attendance) {
+        }])->today()->latest('check_in_at')->limit($perPage)->get()->map(function ($attendance) {
             return [
                 'id' => $attendance->id,
                 'name' => $attendance->employee->user->name ?? '-',
@@ -78,17 +79,17 @@ class DashboardController extends Controller
 
         return Inertia::render('admin/dashboard', [
             'kpi' => [
-                'totalEmployees' => $totalEmployees,
+                'totalPtt' => $totalPtt,
+                'totalInterns' => $totalInterns,
                 'checkedInToday' => $checkedInToday,
-                'wfoToday' => $wfoToday,
-                'wfaToday' => $wfaToday,
-                'notCheckedIn' => $notCheckedIn,
-                'notCheckedOut' => $notCheckedOut,
                 'overtimeToday' => $overtimeToday,
             ],
             'attendanceTrendData' => $trendData,
             'workModeData' => $workModeData,
             'attendanceRecords' => $recentAttendances,
+            'filters' => [
+                'per_page' => $perPage,
+            ],
         ]);
     }
 }

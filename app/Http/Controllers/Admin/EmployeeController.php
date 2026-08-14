@@ -31,6 +31,7 @@ class EmployeeController extends Controller
     public function index(Request $request): Response
     {
         $search = $request->query('search');
+        $perPage = $request->query('per_page', 10);
 
         $employees = Employee::with(['user', 'projects' => function ($query) {
             $query->wherePivot('status', 'active');
@@ -46,13 +47,14 @@ class EmployeeController extends Controller
                 });
             })
             ->latest('id')
-            ->paginate(10)
+            ->paginate($perPage)
             ->withQueryString();
 
         return Inertia::render('admin/employees/index', [
             'employees' => $employees,
             'filters' => [
                 'search' => $search,
+                'per_page' => $perPage,
             ],
         ]);
     }

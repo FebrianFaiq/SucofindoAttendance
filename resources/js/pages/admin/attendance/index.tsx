@@ -1,18 +1,18 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { 
-    Search, 
-    UserSearch, 
-    ChevronLeft, 
-    ChevronRight, 
-    Download, 
-    LogIn, 
-    LogOut, 
-    Building2, 
-    FolderKanban, 
-    MapPin, 
-    ScanFace, 
-    ClipboardPenLine, 
-    CalendarX2, 
+import {
+    Search,
+    UserSearch,
+    ChevronLeft,
+    ChevronRight,
+    Download,
+    LogIn,
+    LogOut,
+    Building2,
+    FolderKanban,
+    MapPin,
+    ScanFace,
+    ClipboardPenLine,
+    CalendarX2,
     ListFilter,
     CalendarCheck,
     Calendar,
@@ -99,19 +99,21 @@ interface AttendanceIndexProps {
         start_date?: string;
         end_date?: string;
         search?: string;
+        per_page?: string | number;
     };
 }
 
-export default function AttendanceIndex({ 
-    attendances, 
-    holidays = [], 
-    todayInfo, 
-    kpi, 
-    filters 
+export default function AttendanceIndex({
+    attendances,
+    holidays = [],
+    todayInfo,
+    kpi,
+    filters
 }: AttendanceIndexProps) {
     const [startDate, setStartDate] = useState(filters?.start_date || '');
     const [endDate, setEndDate] = useState(filters?.end_date || '');
     const [searchTerm, setSearchTerm] = useState(filters?.search || '');
+    const [perPage, setPerPage] = useState(filters?.per_page || 10);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [selectedAttendance, setSelectedAttendance] = useState<AttendanceItem | null>(null);
 
@@ -132,7 +134,16 @@ export default function AttendanceIndex({
         if (e) e.preventDefault();
         router.get(
             '/admin/attendance',
-            { start_date: startDate || undefined, end_date: endDate || undefined, search: searchTerm || undefined },
+            { start_date: startDate || undefined, end_date: endDate || undefined, search: searchTerm || undefined, per_page: perPage },
+            { preserveState: true, replace: true }
+        );
+    };
+
+    const handlePerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setPerPage(e.target.value);
+        router.get(
+            '/admin/attendance',
+            { start_date: startDate || undefined, end_date: endDate || undefined, search: searchTerm || undefined, per_page: e.target.value },
             { preserveState: true, replace: true }
         );
     };
@@ -222,7 +233,7 @@ export default function AttendanceIndex({
         <>
             <Head title="Monitoring Kehadiran" />
             <div className="flex h-full flex-1 flex-col gap-6 bg-[#F9F9FF] p-6 font-mulish">
-                
+
                 {/* ── Header ────────────────────────────────────────── */}
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div>
@@ -236,7 +247,7 @@ export default function AttendanceIndex({
 
                     {/* Action Buttons (Daftar Hari Libur & Tambah Hari Libur) */}
                     <div className="flex items-center gap-3">
-                        <Button 
+                        <Button
                             variant="outline"
                             onClick={() => setIsHolidayListOpen(true)}
                             className="border-neutral-300 bg-white hover:bg-neutral-50 font-bold h-11 px-4 text-neutral-700 flex items-center gap-2 rounded-xl text-xs shadow-sm"
@@ -245,7 +256,7 @@ export default function AttendanceIndex({
                             Daftar Hari Libur ({holidays.length})
                         </Button>
 
-                        <Button 
+                        <Button
                             onClick={() => setIsAddHolidayOpen(true)}
                             className="bg-[#035EA9] hover:bg-[#035EA9]/90 text-white font-bold h-11 px-5 flex items-center gap-2 shadow-sm rounded-xl text-xs"
                         >
@@ -258,11 +269,11 @@ export default function AttendanceIndex({
                 {/* ── KPI Summary Cards ──────────────────────────────── */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Hadir Hari Ini */}
-                    <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-[#035EA9]">
+                    <div className="group relative overflow-hidden rounded-2xl border border-neutral-200 border-l-4 border-l-transparent bg-white p-5 shadow-sm flex items-center gap-4 transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-l-[#035EA9] hover:border-y-[#035EA9]/30 hover:border-r-[#035EA9]/30 hover:bg-[#F0F5FA]">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-[#035EA9] transition-colors group-hover:bg-[#D6E4F0]">
                             <CalendarCheck className="h-6 w-6" />
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col relative z-10">
                             <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Hadir Hari Ini</span>
                             <div className="flex items-baseline gap-1.5 mt-0.5">
                                 <span className="text-2xl font-black text-neutral-900">{kpi.presentToday}</span>
@@ -272,37 +283,36 @@ export default function AttendanceIndex({
                     </div>
 
                     {/* Clock In */}
-                    <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                    <div className="group relative overflow-hidden rounded-2xl border border-neutral-200 border-l-4 border-l-transparent bg-white p-5 shadow-sm flex items-center gap-4 transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-l-[#22C55E] hover:border-y-[#22C55E]/30 hover:border-r-[#22C55E]/30 hover:bg-[#F0FDF4]">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 transition-colors group-hover:bg-[#BBF7D0]">
                             <LogIn className="h-6 w-6" />
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col relative z-10">
                             <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Clock In</span>
                             <span className="text-2xl font-black text-neutral-900 mt-0.5">{kpi.clockInToday} <span className="text-xs text-neutral-500 font-normal">Orang</span></span>
                         </div>
                     </div>
 
                     {/* Clock Out */}
-                    <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-[#035EA9]">
+                    <div className="group relative overflow-hidden rounded-2xl border border-neutral-200 border-l-4 border-l-transparent bg-white p-5 shadow-sm flex items-center gap-4 transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-l-[#EF4444] hover:border-y-[#EF4444]/30 hover:border-r-[#EF4444]/30 hover:bg-[#FEF2F2]">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-[#035EA9] transition-colors group-hover:bg-[#FCD3D3] group-hover:text-[#EF4444]">
                             <LogOut className="h-6 w-6" />
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col relative z-10">
                             <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Clock Out</span>
                             <span className="text-2xl font-black text-neutral-900 mt-0.5">{kpi.clockOutToday} <span className="text-xs text-neutral-500 font-normal">Orang</span></span>
                         </div>
                     </div>
 
                     {/* Status Kalender Hari Ini */}
-                    <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm flex items-center gap-4">
-                        <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${
-                            todayInfo.is_holiday || todayInfo.is_weekend
-                                ? 'bg-amber-50 text-amber-600'
-                                : 'bg-emerald-50 text-emerald-600'
-                        }`}>
+                    <div className={`group relative overflow-hidden rounded-2xl border border-neutral-200 border-l-4 border-l-transparent bg-white p-5 shadow-sm flex items-center gap-4 transition-all hover:-translate-y-0.5 hover:shadow-md ${todayInfo.is_holiday || todayInfo.is_weekend ? 'hover:border-l-[#EF4444] hover:border-y-[#EF4444]/30 hover:border-r-[#EF4444]/30 hover:bg-[#FEF2F2]' : 'hover:border-l-[#22C55E] hover:border-y-[#22C55E]/30 hover:border-r-[#22C55E]/30 hover:bg-[#F0FDF4]'}`}>
+                        <div className={`flex h-12 w-12 items-center justify-center rounded-xl transition-colors ${todayInfo.is_holiday || todayInfo.is_weekend
+                                ? 'bg-amber-50 text-amber-600 group-hover:bg-[#FCD3D3] group-hover:text-[#EF4444]'
+                                : 'bg-emerald-50 text-emerald-600 group-hover:bg-[#BBF7D0]'
+                            }`}>
                             <Calendar className="h-6 w-6" />
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col relative z-10">
                             <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Status Hari Ini</span>
                             {todayInfo.is_holiday ? (
                                 <span className="text-sm font-bold text-red-600 truncate max-w-[170px]" title={todayInfo.holiday_name}>
@@ -337,22 +347,22 @@ export default function AttendanceIndex({
                         {/* Start Date */}
                         <div className="w-full lg:w-[200px] shrink-0">
                             <label className="mb-1.5 block text-sm font-bold text-neutral-800">Start Date</label>
-                            <Input 
+                            <Input
                                 type="date"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
-                                className="date-right-icon w-full h-[42px] rounded-lg border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9] font-medium text-neutral-600 px-3 pr-10" 
+                                className="date-right-icon w-full h-[42px] rounded-lg border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9] font-medium text-neutral-600 px-3 pr-10"
                             />
                         </div>
 
                         {/* End Date */}
                         <div className="w-full lg:w-[200px] shrink-0">
                             <label className="mb-1.5 block text-sm font-bold text-neutral-800">End Date</label>
-                            <Input 
+                            <Input
                                 type="date"
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
-                                className="date-right-icon w-full h-[42px] rounded-lg border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9] font-medium text-neutral-600 px-3 pr-10" 
+                                className="date-right-icon w-full h-[42px] rounded-lg border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9] font-medium text-neutral-600 px-3 pr-10"
                             />
                         </div>
 
@@ -361,26 +371,26 @@ export default function AttendanceIndex({
                             <label className="mb-1.5 block text-sm font-bold text-neutral-800">Karyawan / Proyek</label>
                             <div className="relative">
                                 <UserSearch className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-neutral-400 pointer-events-none" />
-                                <Input 
+                                <Input
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    placeholder="Cari Nama, NIK, atau Proyek..." 
-                                    className="pl-10 h-[42px] w-full rounded-lg border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9] text-sm" 
+                                    placeholder="Cari Nama, NIK, atau Proyek..."
+                                    className="pl-10 h-[42px] w-full rounded-lg border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9] text-sm"
                                 />
                             </div>
                         </div>
 
                         {/* Buttons */}
                         <div className="flex items-end gap-3 shrink-0">
-                            <Button 
+                            <Button
                                 type="button"
                                 onClick={handleReset}
-                                variant="outline" 
+                                variant="outline"
                                 className="h-[42px] min-w-[90px] rounded-lg border-neutral-300 font-bold text-neutral-700 shadow-sm hover:bg-neutral-50 text-center text-xs leading-[1.3] px-4 py-1"
                             >
                                 Reset Filter
                             </Button>
-                            <Button 
+                            <Button
                                 type="submit"
                                 className="h-[42px] min-w-[90px] rounded-lg bg-[#035EA9] font-bold text-white shadow-sm hover:bg-[#035EA9]/90 text-center text-xs leading-[1.3] px-4 py-1"
                             >
@@ -394,9 +404,9 @@ export default function AttendanceIndex({
                 <div className="flex-1 rounded-xl border border-neutral-200 bg-white shadow-sm overflow-hidden flex flex-col">
                     <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
                         <h2 className="text-xl font-bold text-neutral-900 tracking-tight">Data Kehadiran</h2>
-                        <a 
-                            href={exportUrl} 
-                            target="_blank" 
+                        <a
+                            href={exportUrl}
+                            target="_blank"
                             rel="noreferrer"
                         >
                             <Button variant="outline" className="h-9 border-neutral-300 font-bold text-neutral-700 shadow-sm hover:bg-neutral-50 flex gap-2">
@@ -406,8 +416,8 @@ export default function AttendanceIndex({
                         </a>
                     </div>
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm whitespace-nowrap">
-                            <thead className="bg-[#F8FAFC] text-neutral-600">
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-[#F8FAFC] text-neutral-600 whitespace-nowrap border-b border-neutral-200">
                                 <tr>
                                     <th className="px-6 py-4 font-bold tracking-wide">Karyawan</th>
                                     <th className="px-6 py-4 font-bold tracking-wide">Proyek / Bidang</th>
@@ -424,10 +434,10 @@ export default function AttendanceIndex({
                                         const clockOut = formatTime(item.check_out_at);
                                         const late = isLate(item.check_in_at);
                                         const isIntern = item.employee?.user?.role === 'intern';
-                                        
+
                                         return (
                                             <tr key={item.id} className="hover:bg-neutral-50/50 transition-colors">
-                                                <td className="px-6 py-3">
+                                                <td className="px-6 py-3 min-w-[250px]">
                                                     <div className="flex items-center gap-3">
                                                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E5F0F9] font-bold text-[#035EA9] shrink-0">
                                                             {getInitials(item.employee?.user?.name)}
@@ -456,21 +466,21 @@ export default function AttendanceIndex({
                                                         </span>
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-3 text-center">
+                                                <td className="px-6 py-3 text-center whitespace-nowrap">
                                                     <span className={`font-bold ${late ? 'text-[#DC2626]' : 'text-neutral-700'}`}>
                                                         {clockIn}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-3 text-center font-bold text-neutral-700">
+                                                <td className="px-6 py-3 text-center font-bold text-neutral-700 whitespace-nowrap">
                                                     {clockOut}
                                                 </td>
-                                                <td className="px-6 py-3">
+                                                <td className="px-6 py-3 whitespace-nowrap">
                                                     <Badge className="rounded-md border-none bg-[#E0E7FF] text-[#4338CA] hover:bg-[#E0E7FF]/80 px-2.5 py-1 text-[13px] font-bold">
                                                         {item.type || 'WFO'}
                                                     </Badge>
                                                 </td>
-                                                <td className="px-6 py-3 text-right">
-                                                    <button 
+                                                <td className="px-6 py-3 text-right whitespace-nowrap">
+                                                    <button
                                                         onClick={() => openDetails(item)}
                                                         className="font-bold text-[#035EA9] hover:underline"
                                                     >
@@ -506,10 +516,23 @@ export default function AttendanceIndex({
                     )}
 
                     {/* ── Pagination Footer ─────────────────────────────── */}
-                    <div className="mt-auto flex flex-col sm:flex-row items-center justify-between border-t border-neutral-200 bg-white px-6 py-4 text-sm text-neutral-500 gap-4">
-                        <span className="font-semibold text-[#64748B]">
-                            Menampilkan {attendances.from ?? 0} - {attendances.to ?? 0} dari {attendances.total} data
-                        </span>
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-neutral-100 px-6 py-4">
+                        <div className="flex items-center gap-3">
+                            <select
+                                value={perPage}
+                                onChange={handlePerPageChange}
+                                className="h-8 rounded-md border-neutral-300 text-xs text-neutral-600 focus:ring-[#035EA9] focus:border-[#035EA9] bg-white shadow-sm"
+                            >
+                                <option value="5">5</option>
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <p className="text-sm font-semibold text-neutral-500">
+                                Menampilkan {attendances.from || 0} - {attendances.to || 0} dari {attendances.total} data
+                            </p>
+                        </div>
                         <div className="flex items-center gap-1">
                             {attendances.prev_page_url ? (
                                 <Link
@@ -533,11 +556,10 @@ export default function AttendanceIndex({
                                             key={idx}
                                             href={link.url}
                                             preserveScroll
-                                            className={`flex h-8 w-8 items-center justify-center rounded text-xs font-bold transition-colors ${
-                                                link.active
+                                            className={`flex h-8 w-8 items-center justify-center rounded text-xs font-bold transition-colors ${link.active
                                                     ? 'bg-[#035EA9] text-white'
                                                     : 'text-neutral-600 hover:bg-neutral-100'
-                                            }`}
+                                                }`}
                                         >
                                             {link.label}
                                         </Link>
@@ -575,8 +597,8 @@ export default function AttendanceIndex({
                             const employeeName = selectedAttendance.employee?.user?.name ?? 'Karyawan';
                             const nik = selectedAttendance.employee?.nik ?? '—';
                             const isIntern = selectedAttendance.employee?.user?.role === 'intern';
-                            const assignmentName = isIntern 
-                                ? `Bidang: ${selectedAttendance.employee?.division || '—'}` 
+                            const assignmentName = isIntern
+                                ? `Bidang: ${selectedAttendance.employee?.division || '—'}`
                                 : (selectedAttendance.employee?.projects?.[0]?.name ?? 'Belum Ditugaskan');
                             const mode = selectedAttendance.type?.toUpperCase() || 'WFO';
                             const isPresent = !!selectedAttendance.check_in_at;
@@ -596,11 +618,10 @@ export default function AttendanceIndex({
                                                 NIK: {nik} · {assignmentName}
                                             </p>
                                         </div>
-                                        <Badge className={`shrink-0 rounded-full border-none px-3 py-1 text-[11px] font-bold ${
-                                            isPresent
+                                        <Badge className={`shrink-0 rounded-full border-none px-3 py-1 text-[11px] font-bold ${isPresent
                                                 ? 'bg-emerald-50 text-emerald-600'
                                                 : 'bg-red-50 text-red-600'
-                                        }`}>
+                                            }`}>
                                             {isPresent ? 'Present' : 'Absent'}
                                         </Badge>
                                     </div>
@@ -608,7 +629,7 @@ export default function AttendanceIndex({
                                     {/* ── Section: Attendance Summary ── */}
                                     <div className="px-6 pb-5">
                                         <h4 className="text-[11px] font-extrabold text-neutral-500 uppercase tracking-wider mb-3">Attendance Summary</h4>
-                                        
+
                                         {/* Clock In / Clock Out Cards */}
                                         <div className="grid grid-cols-2 gap-3">
                                             {/* Clock In */}
@@ -699,9 +720,9 @@ export default function AttendanceIndex({
                                                 </div>
                                                 <div className="px-3 py-2">
                                                     {selectedAttendance.check_in_latitude && selectedAttendance.check_in_longitude ? (
-                                                        <a 
-                                                            href={`https://www.google.com/maps?q=${selectedAttendance.check_in_latitude},${selectedAttendance.check_in_longitude}`} 
-                                                            target="_blank" 
+                                                        <a
+                                                            href={`https://www.google.com/maps?q=${selectedAttendance.check_in_latitude},${selectedAttendance.check_in_longitude}`}
+                                                            target="_blank"
                                                             rel="noreferrer"
                                                             className="text-xs font-semibold text-[#035EA9] hover:underline flex items-center gap-1"
                                                         >
@@ -717,9 +738,9 @@ export default function AttendanceIndex({
                                             <div className="rounded-xl border border-neutral-200 overflow-hidden">
                                                 <div className="h-[100px] bg-neutral-100 relative flex items-center justify-center">
                                                     {selectedAttendance.check_in_evidence ? (
-                                                        <img 
-                                                            src={`/storage/${selectedAttendance.check_in_evidence}`} 
-                                                            alt="Foto Bukti" 
+                                                        <img
+                                                            src={`/storage/${selectedAttendance.check_in_evidence}`}
+                                                            alt="Foto Bukti"
                                                             className="h-full w-full object-cover"
                                                             onError={(e) => {
                                                                 (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60';
@@ -897,7 +918,7 @@ export default function AttendanceIndex({
                                 <label className="text-xs font-bold text-neutral-700">
                                     Tanggal Libur <span className="text-red-500">*</span>
                                 </label>
-                                <Input 
+                                <Input
                                     type="date"
                                     value={holidayData.date}
                                     onChange={(e) => setHolidayData('date', e.target.value)}
@@ -912,7 +933,7 @@ export default function AttendanceIndex({
                                 <label className="text-xs font-bold text-neutral-700">
                                     Nama Hari Libur <span className="text-red-500">*</span>
                                 </label>
-                                <Input 
+                                <Input
                                     value={holidayData.name}
                                     onChange={(e) => setHolidayData('name', e.target.value)}
                                     placeholder="Contoh: HUT SUCOFINDO ke-70"
@@ -929,22 +950,20 @@ export default function AttendanceIndex({
                                     <button
                                         type="button"
                                         onClick={() => setHolidayData('is_national', true)}
-                                        className={`p-2.5 rounded-lg border text-xs font-bold text-center transition-all ${
-                                            holidayData.is_national
+                                        className={`p-2.5 rounded-lg border text-xs font-bold text-center transition-all ${holidayData.is_national
                                                 ? 'bg-[#E5F0F9] border-[#035EA9] text-[#035EA9]'
                                                 : 'border-neutral-200 bg-[#F8FAFC] text-neutral-600 hover:bg-neutral-100'
-                                        }`}
+                                            }`}
                                     >
                                         Libur Nasional
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setHolidayData('is_national', false)}
-                                        className={`p-2.5 rounded-lg border text-xs font-bold text-center transition-all ${
-                                            !holidayData.is_national
+                                        className={`p-2.5 rounded-lg border text-xs font-bold text-center transition-all ${!holidayData.is_national
                                                 ? 'bg-amber-50 border-amber-500 text-amber-700'
                                                 : 'border-neutral-200 bg-[#F8FAFC] text-neutral-600 hover:bg-neutral-100'
-                                        }`}
+                                            }`}
                                     >
                                         Libur Perusahaan
                                     </button>
@@ -954,7 +973,7 @@ export default function AttendanceIndex({
                             {/* Keterangan */}
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-xs font-bold text-neutral-700">Keterangan (Opsional)</label>
-                                <Input 
+                                <Input
                                     value={holidayData.description}
                                     onChange={(e) => setHolidayData('description', e.target.value)}
                                     placeholder="Contoh: Libur khusus cuti bersama internal kantor"
@@ -968,8 +987,8 @@ export default function AttendanceIndex({
                                         Batal
                                     </Button>
                                 </DialogClose>
-                                <Button 
-                                    type="submit" 
+                                <Button
+                                    type="submit"
                                     disabled={holidayProcessing}
                                     className="h-10 bg-[#0B3B8B] hover:bg-[#0B3B8B]/90 text-white font-bold text-xs"
                                 >
@@ -993,7 +1012,7 @@ export default function AttendanceIndex({
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter className="flex flex-col sm:flex-col gap-2 mt-4">
-                            <Button 
+                            <Button
                                 onClick={handleDeleteHoliday}
                                 className="w-full bg-[#C81E1E] hover:bg-[#B91C1C] text-white font-bold h-10 text-xs"
                             >

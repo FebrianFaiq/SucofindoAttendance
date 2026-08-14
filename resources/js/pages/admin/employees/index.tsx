@@ -52,6 +52,7 @@ interface EmployeesIndexProps {
     employees: PaginatedData<EmployeeItem>;
     filters?: {
         search?: string;
+        per_page?: string | number;
     };
 }
 
@@ -59,7 +60,8 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
     const [selectedEmployee, setSelectedEmployee] = useState<EmployeeItem | null>(null);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState(filters?.search || '');
-    
+    const [perPage, setPerPage] = useState(filters?.per_page || 10);
+
     // Dialog states
     const [isResetOpen, setIsResetOpen] = useState(false);
     const [isResetSuccessOpen, setIsResetSuccessOpen] = useState(false);
@@ -71,9 +73,14 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
         setIsSheetOpen(true);
     };
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        router.get('/admin/employees', { search: searchTerm }, { preserveState: true, replace: true });
+    const handleSearch = (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        router.get('/admin/employees', { search: searchTerm, per_page: perPage }, { preserveState: true, replace: true });
+    };
+
+    const handlePerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setPerPage(e.target.value);
+        router.get('/admin/employees', { search: searchTerm, per_page: e.target.value }, { preserveState: true, replace: true });
     };
 
     const handleResetPassword = () => {
@@ -125,7 +132,7 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
         <>
             <Head title="Karyawan" />
             <div className="flex h-full flex-1 flex-col gap-4 bg-[#F9F9FF] p-6 font-mulish">
-                
+
                 {/* ── Header & Control Bar ────────────────────────────── */}
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mt-2">
                     {/* Title Section */}
@@ -138,11 +145,11 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                     <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
                         <form onSubmit={handleSearch} className="relative w-full sm:w-[320px]">
                             <Search className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-neutral-400" />
-                            <Input 
+                            <Input
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                placeholder="Cari nama, NIK, email..." 
-                                className="pl-10 h-10 border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9]" 
+                                placeholder="Cari nama, NIK, email..."
+                                className="pl-10 h-10 border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9]"
                             />
                         </form>
                         <Link href="/admin/employees/create" className="flex h-10 w-full items-center gap-2 rounded-md bg-[#035EA9] px-4 font-bold text-white shadow-sm hover:bg-[#035EA9]/90 sm:w-auto justify-center">
@@ -155,8 +162,8 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                 {/* ── Table Container ───────────────────────────────── */}
                 <div className="mt-2 flex-1 rounded-xl border border-neutral-200 bg-white shadow-sm overflow-hidden flex flex-col">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm whitespace-nowrap">
-                            <thead className="border-b border-neutral-200 bg-[#F8FAFC] text-neutral-600">
+                        <table className="w-full text-left text-sm">
+                            <thead className="border-b border-neutral-200 bg-[#F8FAFC] text-neutral-600 whitespace-nowrap">
                                 <tr>
                                     <th className="px-6 py-4 font-bold tracking-wide">Karyawan</th>
                                     <th className="px-6 py-4 font-bold tracking-wide">NIK</th>
@@ -178,9 +185,9 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                         const activeProject = emp.projects?.[0]?.name ?? 'Belum Ditugaskan';
                                         return (
                                             <tr key={emp.id} className="hover:bg-neutral-50/50 transition-colors">
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-4 min-w-[250px]">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E5F0F9] font-bold text-[#035EA9]">
+                                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E5F0F9] font-bold text-[#035EA9] shrink-0">
                                                             {getInitials(emp.user?.name)}
                                                         </div>
                                                         <div className="flex flex-col">
@@ -208,7 +215,7 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                                         </Badge>
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-4 whitespace-nowrap">
                                                     {emp.user?.is_active ? (
                                                         <Badge className="rounded-md border-none bg-[#E0F2FE] text-[#0284C7] hover:bg-[#E0F2FE]/80 px-2.5 py-1 text-[13px] font-bold">
                                                             Active
@@ -219,8 +226,8 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                                         </Badge>
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <button 
+                                                <td className="px-6 py-4 text-right whitespace-nowrap">
+                                                    <button
                                                         onClick={() => openEmployeeDetails(emp)}
                                                         className="font-bold text-[#035EA9] hover:underline"
                                                     >
@@ -235,11 +242,24 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                         </table>
                     </div>
 
-                    {/* ── Pagination Footer ─────────────────────────────── */}
-                    <div className="mt-auto flex flex-col sm:flex-row items-center justify-between border-t border-neutral-200 bg-white px-6 py-4 text-sm text-neutral-500 gap-4">
-                        <span className="font-semibold text-[#64748B]">
-                            Menampilkan {employees.from ?? 0} to {employees.to ?? 0} of {employees.total} entries
-                        </span>
+                    {/* ── Pagination ──────────────────────────────────── */}
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-neutral-100 px-6 py-4">
+                        <div className="flex items-center gap-3">
+                            <select
+                                value={perPage}
+                                onChange={handlePerPageChange}
+                                className="h-8 rounded-md border-neutral-300 text-xs text-neutral-600 focus:ring-[#035EA9] focus:border-[#035EA9] bg-white shadow-sm"
+                            >
+                                <option value="5">5</option>
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <p className="text-sm font-semibold text-neutral-500">
+                                Menampilkan {employees.from || 0} to {employees.to || 0} of {employees.total} entries
+                            </p>
+                        </div>
                         <div className="flex items-center gap-1">
                             {employees.prev_page_url ? (
                                 <Link
@@ -263,11 +283,10 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                             key={idx}
                                             href={link.url}
                                             preserveScroll
-                                            className={`flex h-8 w-8 items-center justify-center rounded text-xs font-bold transition-colors ${
-                                                link.active
+                                            className={`flex h-8 w-8 items-center justify-center rounded text-xs font-bold transition-colors ${link.active
                                                     ? 'bg-[#035EA9] text-white'
                                                     : 'text-neutral-600 hover:bg-neutral-100'
-                                            }`}
+                                                }`}
                                         >
                                             {link.label}
                                         </Link>
@@ -301,7 +320,7 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                         <SheetHeader className="border-b border-neutral-200 px-8 py-4">
                             <SheetTitle className="text-lg font-bold text-neutral-900">Detail Karyawan</SheetTitle>
                         </SheetHeader>
-                        
+
                         {selectedEmployee && (
                             <div className="flex flex-col px-8 pb-8 pt-4 gap-5">
                                 {/* Profile Header */}
@@ -318,11 +337,10 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                         <span className="text-xs font-semibold">NIK: {selectedEmployee.nik}</span>
                                     </div>
                                     <div className="mt-1.5">
-                                        <Badge className={`text-[11px] font-bold border-none ${
-                                            selectedEmployee.user?.role === 'intern'
+                                        <Badge className={`text-[11px] font-bold border-none ${selectedEmployee.user?.role === 'intern'
                                                 ? 'bg-purple-100 text-purple-700 hover:bg-purple-100'
                                                 : 'bg-[#E5F0F9] text-[#035EA9] hover:bg-[#E5F0F9]'
-                                        }`}>
+                                            }`}>
                                             {selectedEmployee.user?.role === 'intern' ? 'Mahasiswa Magang' : 'Karyawan PTT'}
                                         </Badge>
                                     </div>
@@ -374,7 +392,7 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                         <ClipboardList className="h-4 w-4" />
                                         <h3 className="font-bold text-neutral-900 text-sm">Projek yang sedang Berjalan</h3>
                                     </div>
-                                    
+
                                     <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white p-2.5">
                                         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#F1F5F9]">
                                             <LayoutGrid className="h-4 w-4 text-[#64748B]" />
@@ -398,15 +416,15 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                             Edit Karyawan
                                         </Button>
                                     </Link>
-                                    <Button 
-                                        variant="outline" 
+                                    <Button
+                                        variant="outline"
                                         className="w-full border-neutral-300 h-9 text-xs font-bold text-neutral-700 flex gap-2 hover:bg-neutral-50"
                                         onClick={() => setIsResetOpen(true)}
                                     >
                                         <RotateCcw className="h-3.5 w-3.5" />
                                         Reset Password
                                     </Button>
-                                    <Button 
+                                    <Button
                                         className="w-full bg-[#FEE2E2] hover:bg-[#FEE2E2]/80 text-[#DC2626] h-9 text-xs font-bold border-none flex gap-2"
                                         onClick={() => setIsDeleteOpen(true)}
                                     >
@@ -420,7 +438,7 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                 </Sheet>
 
                 {/* ── Dialogs ────────────────────────────────────────────── */}
-                
+
                 {/* 1. Reset Password Confirmation */}
                 <Dialog open={isResetOpen} onOpenChange={setIsResetOpen}>
                     <DialogContent className="sm:max-w-[420px] p-8 font-mulish text-center border-none">
@@ -434,7 +452,7 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter className="flex flex-col sm:flex-col w-full gap-3 mt-6">
-                            <Button 
+                            <Button
                                 disabled={isProcessing}
                                 className="w-full bg-[#C81E1E] hover:bg-[#B91C1C] text-white font-bold h-11 sm:w-full"
                                 onClick={handleResetPassword}
@@ -463,7 +481,7 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter className="w-full mt-6 sm:justify-center">
-                            <Button 
+                            <Button
                                 className="w-full bg-[#035EA9] hover:bg-[#035EA9]/90 text-white font-bold h-11"
                                 onClick={() => setIsResetSuccessOpen(false)}
                             >
@@ -486,7 +504,7 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter className="flex flex-col sm:flex-col w-full gap-3 mt-6">
-                            <Button 
+                            <Button
                                 disabled={isProcessing}
                                 className="w-full bg-[#C81E1E] hover:bg-[#B91C1C] text-white font-bold h-11 sm:w-full"
                                 onClick={handleDeleteEmployee}

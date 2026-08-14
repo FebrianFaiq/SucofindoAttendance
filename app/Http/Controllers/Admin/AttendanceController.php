@@ -71,8 +71,9 @@ class AttendanceController extends Controller
             });
         }
 
+        $perPage = $request->query('per_page', 10);
         $attendances = $query->orderByDesc('check_in_at')
-            ->paginate(15)
+            ->paginate($perPage)
             ->withQueryString();
 
         // 2. Daftar Hari Libur (Seluruh tahun 2026)
@@ -120,6 +121,7 @@ class AttendanceController extends Controller
                 'type' => $request->input('type', ''),
                 'role' => $request->input('role', ''),
                 'search' => $request->input('search', ''),
+                'per_page' => $perPage,
             ],
         ]);
     }
