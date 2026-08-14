@@ -223,8 +223,8 @@ export default function AttendanceIndex({ attendances, filters }: AttendanceInde
                         </Button>
                     </div>
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm whitespace-nowrap">
-                            <thead className="bg-[#F8FAFC] text-neutral-600">
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-[#F8FAFC] text-neutral-600 whitespace-nowrap border-b border-neutral-200">
                                 <tr>
                                     <th className="px-6 py-4 font-bold tracking-wide">Karyawan</th>
                                     <th className="px-6 py-4 font-bold tracking-wide">Proyek</th>
@@ -243,34 +243,36 @@ export default function AttendanceIndex({ attendances, filters }: AttendanceInde
                                         
                                         return (
                                             <tr key={item.id} className="hover:bg-neutral-50/50 transition-colors">
-                                                <td className="px-6 py-3">
+                                                <td className="px-6 py-3 min-w-[250px]">
                                                     <div className="flex items-center gap-3">
                                                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E5F0F9] font-bold text-[#035EA9] shrink-0">
                                                             {getInitials(item.employee?.user?.name)}
                                                         </div>
                                                         <div className="flex flex-col gap-0.5">
-                                                            <span className="font-bold text-neutral-900">{item.employee?.user?.name}</span>
+                                                            <span className="font-bold text-neutral-900 leading-tight">{item.employee?.user?.name}</span>
                                                             <span className="text-xs font-semibold text-neutral-500">ID: {item.employee?.employee_code || item.employee?.nik}</span>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-3 font-semibold text-neutral-600">
-                                                    {item.employee?.projects?.[0]?.name ?? '—'}
+                                                <td className="px-6 py-3 font-semibold text-neutral-600 min-w-[200px]">
+                                                    <span className="leading-tight block whitespace-normal">
+                                                        {item.employee?.projects?.[0]?.name ?? '—'}
+                                                    </span>
                                                 </td>
-                                                <td className="px-6 py-3 text-center">
+                                                <td className="px-6 py-3 text-center whitespace-nowrap">
                                                     <span className={`font-bold ${late ? 'text-[#DC2626]' : 'text-neutral-700'}`}>
                                                         {clockIn}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-3 text-center font-bold text-neutral-700">
+                                                <td className="px-6 py-3 text-center font-bold text-neutral-700 whitespace-nowrap">
                                                     {clockOut}
                                                 </td>
-                                                <td className="px-6 py-3">
+                                                <td className="px-6 py-3 whitespace-nowrap">
                                                     <Badge className="rounded-md border-none bg-[#E0E7FF] text-[#4338CA] hover:bg-[#E0E7FF]/80 px-2.5 py-1 text-[13px] font-bold">
                                                         {item.type || 'WFO'}
                                                     </Badge>
                                                 </td>
-                                                <td className="px-6 py-3 text-right">
+                                                <td className="px-6 py-3 text-right whitespace-nowrap">
                                                     <button 
                                                         onClick={() => openDetails(item)}
                                                         className="font-bold text-[#035EA9] hover:underline"

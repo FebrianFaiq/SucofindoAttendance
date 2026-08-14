@@ -155,8 +155,8 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                 {/* ── Table Container ───────────────────────────────── */}
                 <div className="mt-2 flex-1 rounded-xl border border-neutral-200 bg-white shadow-sm overflow-hidden flex flex-col">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm whitespace-nowrap">
-                            <thead className="border-b border-neutral-200 bg-[#F8FAFC] text-neutral-600">
+                        <table className="w-full text-left text-sm">
+                            <thead className="border-b border-neutral-200 bg-[#F8FAFC] text-neutral-600 whitespace-nowrap">
                                 <tr>
                                     <th className="px-6 py-4 font-bold tracking-wide">Karyawan</th>
                                     <th className="px-6 py-4 font-bold tracking-wide">NIK</th>
@@ -178,22 +178,22 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                         const activeProject = emp.projects?.[0]?.name ?? 'Belum Ditugaskan';
                                         return (
                                             <tr key={emp.id} className="hover:bg-neutral-50/50 transition-colors">
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-4 min-w-[250px]">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E5F0F9] font-bold text-[#035EA9]">
+                                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E5F0F9] font-bold text-[#035EA9] shrink-0">
                                                             {getInitials(emp.user?.name)}
                                                         </div>
-                                                        <span className="font-bold text-neutral-900">{emp.user?.name}</span>
+                                                        <span className="font-bold text-neutral-900 leading-tight">{emp.user?.name}</span>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 font-semibold text-neutral-600">{emp.nik}</td>
-                                                <td className="px-6 py-4 font-semibold text-neutral-600">{emp.user?.email}</td>
-                                                <td className="px-6 py-4">
-                                                    <Badge variant="secondary" className="rounded-md border-none bg-[#E5F0F9] text-[#035EA9] hover:bg-[#D6E4F0] px-2.5 py-1 text-[13px] font-bold">
+                                                <td className="px-6 py-4 font-semibold text-neutral-600 whitespace-nowrap">{emp.nik}</td>
+                                                <td className="px-6 py-4 font-semibold text-neutral-600 whitespace-nowrap">{emp.user?.email}</td>
+                                                <td className="px-6 py-4 min-w-[200px]">
+                                                    <Badge variant="secondary" className="rounded-md border-none bg-[#E5F0F9] text-[#035EA9] hover:bg-[#D6E4F0] px-2.5 py-1 text-[13px] font-bold whitespace-normal text-left leading-tight">
                                                         {activeProject}
                                                     </Badge>
                                                 </td>
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-4 whitespace-nowrap">
                                                     {emp.user?.is_active ? (
                                                         <Badge className="rounded-md border-none bg-[#E0F2FE] text-[#0284C7] hover:bg-[#E0F2FE]/80 px-2.5 py-1 text-[13px] font-bold">
                                                             Active
@@ -204,7 +204,7 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                                         </Badge>
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-4 text-right">
+                                                <td className="px-6 py-4 text-right whitespace-nowrap">
                                                     <button 
                                                         onClick={() => openEmployeeDetails(emp)}
                                                         className="font-bold text-[#035EA9] hover:underline"
