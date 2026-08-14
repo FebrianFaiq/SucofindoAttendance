@@ -4,7 +4,6 @@ import {
     UserSearch,
     ChevronLeft,
     ChevronRight,
-    Download,
     LogIn,
     LogOut,
     Building2,
@@ -18,8 +17,11 @@ import {
     Calendar,
     Plus,
     Trash2,
-    ExternalLink
+    ExternalLink,
+    Download
 } from 'lucide-react';
+import { DatePicker } from '@/components/ui/date-picker';
+import { format, parseISO } from 'date-fns';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -330,39 +332,26 @@ export default function AttendanceIndex({
 
                 {/* ── Filter Bar ────────────────────────────── */}
                 <div className="rounded-xl border border-neutral-200 bg-white px-6 py-5 shadow-sm">
-                    <style>{`
-                        input[type="date"].date-right-icon::-webkit-calendar-picker-indicator {
-                            position: absolute;
-                            right: 12px;
-                            top: 50%;
-                            transform: translateY(-50%);
-                            cursor: pointer;
-                            opacity: 0.5;
-                        }
-                        input[type="date"].date-right-icon {
-                            position: relative;
-                        }
-                    `}</style>
                     <form onSubmit={handleFilter} className="flex flex-col lg:flex-row lg:items-end gap-4 lg:gap-5">
                         {/* Start Date */}
                         <div className="w-full lg:w-[200px] shrink-0">
                             <label className="mb-1.5 block text-sm font-bold text-neutral-800">Start Date</label>
-                            <Input
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                                className="date-right-icon w-full h-[42px] rounded-lg border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9] font-medium text-neutral-600 px-3 pr-10"
+                            <DatePicker
+                                date={startDate ? parseISO(startDate) : undefined}
+                                setDate={(d) => setStartDate(d ? format(d, 'yyyy-MM-dd') : '')}
+                                placeholder="Pilih Start Date"
+                                className="w-full h-[42px] rounded-lg border-neutral-300 bg-white shadow-sm font-medium text-neutral-600 px-3"
                             />
                         </div>
 
                         {/* End Date */}
                         <div className="w-full lg:w-[200px] shrink-0">
                             <label className="mb-1.5 block text-sm font-bold text-neutral-800">End Date</label>
-                            <Input
-                                type="date"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                                className="date-right-icon w-full h-[42px] rounded-lg border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9] font-medium text-neutral-600 px-3 pr-10"
+                            <DatePicker
+                                date={endDate ? parseISO(endDate) : undefined}
+                                setDate={(d) => setEndDate(d ? format(d, 'yyyy-MM-dd') : '')}
+                                placeholder="Pilih End Date"
+                                className="w-full h-[42px] rounded-lg border-neutral-300 bg-white shadow-sm font-medium text-neutral-600 px-3"
                             />
                         </div>
 
@@ -918,12 +907,11 @@ export default function AttendanceIndex({
                                 <label className="text-xs font-bold text-neutral-700">
                                     Tanggal Libur <span className="text-red-500">*</span>
                                 </label>
-                                <Input
-                                    type="date"
-                                    value={holidayData.date}
-                                    onChange={(e) => setHolidayData('date', e.target.value)}
-                                    required
-                                    className="h-10 bg-[#F8FAFC] border-neutral-200 text-xs font-semibold"
+                                <DatePicker
+                                    date={holidayData.date ? parseISO(holidayData.date) : undefined}
+                                    setDate={(d) => setHolidayData('date', d ? format(d, 'yyyy-MM-dd') : '')}
+                                    placeholder="Pilih Tanggal Libur"
+                                    className="w-full h-10 border-neutral-200 text-xs font-semibold px-3"
                                 />
                                 {holidayErrors.date && <p className="text-xs text-red-500 font-semibold">{holidayErrors.date}</p>}
                             </div>
