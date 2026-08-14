@@ -24,23 +24,36 @@ class AttendanceController extends Controller
             $q->wherePivot('status', 'active');
         }]);
 
-        // Filter tanggal (default: hari ini)
-        if ($request->filled('date')) {
-            $query->whereDate('check_in_at', $request->input('date'));
+        // Filter date range
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('check_in_at', [$request->input('start_date') . ' 00:00:00', $request->input('end_date') . ' 23:59:59']);
+        } elseif ($request->filled('start_date')) {
+            $query->whereDate('check_in_at', '>=', $request->input('start_date'));
+        } elseif ($request->filled('end_date')) {
+            $query->whereDate('check_in_at', '<=', $request->input('end_date'));
         } else {
+            // default to today? Or show all? The design says "Riwayat Aktivitas Kehadiran Hari ini"
             $query->today();
         }
 
-        // Filter karyawan
-        if ($request->filled('employee_id')) {
-            $query->where('employee_id', $request->input('employee_id'));
+        // Filter search (karyawan / proyek)
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->whereHas('employee.user', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('employee_code', 'like', "%{$search}%")
+                  ->orWhere('nik', 'like', "%{$search}%");
+            })->orWhereHas('employee.projects', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->wherePivot('status', 'active');
+            });
         }
 
-        $attendances = $query->orderByDesc('check_in_at')->paginate(20);
+        $attendances = $query->orderByDesc('check_in_at')->paginate(10);
 
         return Inertia::render('admin/attendance/index', [
             'attendances' => $attendances,
-            'filters' => $request->only(['date', 'employee_id']),
+            'filters' => $request->only(['start_date', 'end_date', 'search']),
         ]);
     }
 }
