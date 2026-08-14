@@ -16,8 +16,8 @@ use Illuminate\Support\Carbon;
  *
  * @property int $id
  * @property int $user_id
- * @property string $employee_code
  * @property string $nik
+ * @property string|null $division
  * @property string|null $phone
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -35,8 +35,8 @@ class Employee extends Model
      */
     protected $fillable = [
         'user_id',
-        'employee_code',
         'nik',
+        'division',
         'phone',
     ];
 

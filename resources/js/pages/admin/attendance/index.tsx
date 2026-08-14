@@ -1,9 +1,30 @@
-import { Head, Link, router } from '@inertiajs/react';
-import { Search, UserSearch, ChevronLeft, ChevronRight, Download, LogIn, LogOut, Building2, FolderKanban, MapPin, ScanFace, ClipboardPenLine, CalendarX2, ListFilter } from 'lucide-react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import {
+    Search,
+    UserSearch,
+    ChevronLeft,
+    ChevronRight,
+    Download,
+    LogIn,
+    LogOut,
+    Building2,
+    FolderKanban,
+    MapPin,
+    ScanFace,
+    ClipboardPenLine,
+    CalendarX2,
+    ListFilter,
+    CalendarCheck,
+    Calendar,
+    Plus,
+    Trash2,
+    ExternalLink
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import React, { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 
@@ -13,21 +34,32 @@ interface AttendanceItem {
     type: string;
     check_in_at: string | null;
     check_out_at: string | null;
+    check_in_evidence: string | null;
     check_in_latitude: number | null;
     check_in_longitude: number | null;
     work_notes: string | null;
     employee: {
         nik: string;
-        employee_code?: string;
+        division?: string | null;
         user: {
             name: string;
             email: string;
+            role?: string;
         };
         projects: {
             name: string;
             code: string;
         }[];
     };
+}
+
+interface HolidayItem {
+    id: number;
+    date: string;
+    date_formatted: string;
+    name: string;
+    is_national: boolean;
+    description: string | null;
 }
 
 interface PaginatedData<T> {
@@ -49,6 +81,20 @@ interface PaginatedData<T> {
 
 interface AttendanceIndexProps {
     attendances: PaginatedData<AttendanceItem>;
+    holidays: HolidayItem[];
+    todayInfo: {
+        date: string;
+        date_formatted: string;
+        is_holiday: boolean;
+        holiday_name?: string;
+        is_weekend: boolean;
+    };
+    kpi: {
+        presentToday: number;
+        clockInToday: number;
+        clockOutToday: number;
+        totalEmployees: number;
+    };
     filters?: {
         start_date?: string;
         end_date?: string;
@@ -56,20 +102,37 @@ interface AttendanceIndexProps {
     };
 }
 
-export default function AttendanceIndex({ attendances, filters }: AttendanceIndexProps) {
+export default function AttendanceIndex({
+    attendances,
+    holidays = [],
+    todayInfo,
+    kpi,
+    filters
+}: AttendanceIndexProps) {
     const [startDate, setStartDate] = useState(filters?.start_date || '');
     const [endDate, setEndDate] = useState(filters?.end_date || '');
     const [searchTerm, setSearchTerm] = useState(filters?.search || '');
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [selectedAttendance, setSelectedAttendance] = useState<AttendanceItem | null>(null);
 
+    // Holiday dialog states
+    const [isHolidayListOpen, setIsHolidayListOpen] = useState(false);
+    const [isAddHolidayOpen, setIsAddHolidayOpen] = useState(false);
+    const [holidayToDelete, setHolidayToDelete] = useState<HolidayItem | null>(null);
 
+    // Holiday Form
+    const { data: holidayData, setData: setHolidayData, post: postHoliday, processing: holidayProcessing, reset: resetHoliday, errors: holidayErrors } = useForm({
+        date: '',
+        name: '',
+        is_national: true,
+        description: '',
+    });
 
     const handleFilter = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
         router.get(
             '/admin/attendance',
-            { start_date: startDate, end_date: endDate, search: searchTerm },
+            { start_date: startDate || undefined, end_date: endDate || undefined, search: searchTerm || undefined },
             { preserveState: true, replace: true }
         );
     };
@@ -79,6 +142,25 @@ export default function AttendanceIndex({ attendances, filters }: AttendanceInde
         setEndDate('');
         setSearchTerm('');
         router.get('/admin/attendance', {}, { preserveState: true, replace: true });
+    };
+
+    const handleCreateHoliday = (e: React.FormEvent) => {
+        e.preventDefault();
+        postHoliday('/admin/holidays', {
+            onSuccess: () => {
+                setIsAddHolidayOpen(false);
+                resetHoliday();
+            },
+        });
+    };
+
+    const handleDeleteHoliday = () => {
+        if (!holidayToDelete) return;
+        router.delete(`/admin/holidays/${holidayToDelete.id}`, {
+            onSuccess: () => {
+                setHolidayToDelete(null);
+            },
+        });
     };
 
     const openDetails = (item: AttendanceItem) => {
@@ -130,19 +212,113 @@ export default function AttendanceIndex({ attendances, filters }: AttendanceInde
         return date.getHours() >= 8 && date.getMinutes() > 0;
     };
 
+    const exportUrl = `/admin/reports/export?${new URLSearchParams({
+        ...(startDate ? { start_date: startDate } : {}),
+        ...(endDate ? { end_date: endDate } : {}),
+        ...(searchTerm ? { search: searchTerm } : {}),
+    }).toString()}`;
+
     return (
         <>
-            <Head title="Kehadiran" />
-            <div className="flex h-full flex-1 flex-col gap-4 bg-[#F9F9FF] p-6 font-mulish">
-                
-                {/* ── Header ────────────────────────────── */}
-                <div className="flex flex-col gap-1 mt-2">
-                    <h1 className="text-3xl font-bold text-neutral-900 tracking-tight">Monitoring Absensi Karyawan</h1>
-                    <p className="text-neutral-500 font-medium">Riwayat Aktivitas Kehadiran Hari ini</p>
+            <Head title="Monitoring Kehadiran" />
+            <div className="flex h-full flex-1 flex-col gap-6 bg-[#F9F9FF] p-6 font-mulish">
+
+                {/* ── Header ────────────────────────────────────────── */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-neutral-900 tracking-tight">
+                            Monitoring Kehadiran
+                        </h1>
+                        <p className="text-neutral-500 font-medium mt-1">
+                            Pantau presensi harian karyawan & mahasiswa magang serta kelola master hari libur kerja.
+                        </p>
+                    </div>
+
+                    {/* Action Buttons (Daftar Hari Libur & Tambah Hari Libur) */}
+                    <div className="flex items-center gap-3">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsHolidayListOpen(true)}
+                            className="border-neutral-300 bg-white hover:bg-neutral-50 font-bold h-11 px-4 text-neutral-700 flex items-center gap-2 rounded-xl text-xs shadow-sm"
+                        >
+                            <Calendar className="h-4 w-4 text-[#035EA9]" />
+                            Daftar Hari Libur ({holidays.length})
+                        </Button>
+
+                        <Button
+                            onClick={() => setIsAddHolidayOpen(true)}
+                            className="bg-[#035EA9] hover:bg-[#035EA9]/90 text-white font-bold h-11 px-5 flex items-center gap-2 shadow-sm rounded-xl text-xs"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Tambah Hari Libur
+                        </Button>
+                    </div>
+                </div>
+
+                {/* ── KPI Summary Cards ──────────────────────────────── */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Hadir Hari Ini */}
+                    <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm flex items-center gap-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-[#035EA9]">
+                            <CalendarCheck className="h-6 w-6" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Hadir Hari Ini</span>
+                            <div className="flex items-baseline gap-1.5 mt-0.5">
+                                <span className="text-2xl font-black text-neutral-900">{kpi.presentToday}</span>
+                                <span className="text-xs text-neutral-500 font-semibold">/ {kpi.totalEmployees} Pegawai</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Clock In */}
+                    <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm flex items-center gap-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                            <LogIn className="h-6 w-6" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Clock In</span>
+                            <span className="text-2xl font-black text-neutral-900 mt-0.5">{kpi.clockInToday} <span className="text-xs text-neutral-500 font-normal">Orang</span></span>
+                        </div>
+                    </div>
+
+                    {/* Clock Out */}
+                    <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm flex items-center gap-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-[#035EA9]">
+                            <LogOut className="h-6 w-6" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Clock Out</span>
+                            <span className="text-2xl font-black text-neutral-900 mt-0.5">{kpi.clockOutToday} <span className="text-xs text-neutral-500 font-normal">Orang</span></span>
+                        </div>
+                    </div>
+
+                    {/* Status Kalender Hari Ini */}
+                    <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm flex items-center gap-4">
+                        <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${todayInfo.is_holiday || todayInfo.is_weekend
+                                ? 'bg-amber-50 text-amber-600'
+                                : 'bg-emerald-50 text-emerald-600'
+                            }`}>
+                            <Calendar className="h-6 w-6" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Status Hari Ini</span>
+                            {todayInfo.is_holiday ? (
+                                <span className="text-sm font-bold text-red-600 truncate max-w-[170px]" title={todayInfo.holiday_name}>
+                                    Libur: {todayInfo.holiday_name}
+                                </span>
+                            ) : todayInfo.is_weekend ? (
+                                <span className="text-sm font-bold text-amber-600">Akhir Pekan (Weekend)</span>
+                            ) : (
+                                <span className="text-sm font-bold text-emerald-600">Hari Kerja Normal</span>
+                            )}
+                            <span className="text-[11px] text-neutral-500 font-medium">{todayInfo.date_formatted}</span>
+                        </div>
+                    </div>
                 </div>
 
                 {/* ── Filter Bar ────────────────────────────── */}
-                <div className="mt-4 rounded-xl border border-neutral-200 bg-white px-6 py-5 shadow-sm">
+                <div className="rounded-xl border border-neutral-200 bg-white px-6 py-5 shadow-sm">
                     <style>{`
                         input[type="date"].date-right-icon::-webkit-calendar-picker-indicator {
                             position: absolute;
@@ -160,22 +336,22 @@ export default function AttendanceIndex({ attendances, filters }: AttendanceInde
                         {/* Start Date */}
                         <div className="w-full lg:w-[200px] shrink-0">
                             <label className="mb-1.5 block text-sm font-bold text-neutral-800">Start Date</label>
-                            <Input 
+                            <Input
                                 type="date"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
-                                className="date-right-icon w-full h-[42px] rounded-lg border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9] font-medium text-neutral-600 px-3 pr-10" 
+                                className="date-right-icon w-full h-[42px] rounded-lg border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9] font-medium text-neutral-600 px-3 pr-10"
                             />
                         </div>
 
                         {/* End Date */}
                         <div className="w-full lg:w-[200px] shrink-0">
                             <label className="mb-1.5 block text-sm font-bold text-neutral-800">End Date</label>
-                            <Input 
+                            <Input
                                 type="date"
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
-                                className="date-right-icon w-full h-[42px] rounded-lg border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9] font-medium text-neutral-600 px-3 pr-10" 
+                                className="date-right-icon w-full h-[42px] rounded-lg border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9] font-medium text-neutral-600 px-3 pr-10"
                             />
                         </div>
 
@@ -184,50 +360,56 @@ export default function AttendanceIndex({ attendances, filters }: AttendanceInde
                             <label className="mb-1.5 block text-sm font-bold text-neutral-800">Karyawan / Proyek</label>
                             <div className="relative">
                                 <UserSearch className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-neutral-400 pointer-events-none" />
-                                <Input 
+                                <Input
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    placeholder="Cari..." 
-                                    className="pl-10 h-[42px] w-full rounded-lg border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9] text-sm" 
+                                    placeholder="Cari Nama, NIK, atau Proyek..."
+                                    className="pl-10 h-[42px] w-full rounded-lg border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9] text-sm"
                                 />
                             </div>
                         </div>
 
                         {/* Buttons */}
                         <div className="flex items-end gap-3 shrink-0">
-                            <Button 
+                            <Button
                                 type="button"
                                 onClick={handleReset}
-                                variant="outline" 
+                                variant="outline"
                                 className="h-[42px] min-w-[90px] rounded-lg border-neutral-300 font-bold text-neutral-700 shadow-sm hover:bg-neutral-50 text-center text-xs leading-[1.3] px-4 py-1"
                             >
-                                Reset{'\n'}Filter
+                                Reset Filter
                             </Button>
-                            <Button 
+                            <Button
                                 type="submit"
                                 className="h-[42px] min-w-[90px] rounded-lg bg-[#035EA9] font-bold text-white shadow-sm hover:bg-[#035EA9]/90 text-center text-xs leading-[1.3] px-4 py-1"
                             >
-                                Terapkan{'\n'}Filter
+                                Terapkan Filter
                             </Button>
                         </div>
                     </form>
                 </div>
 
                 {/* ── Table Container ───────────────────────────────── */}
-                <div className="mt-2 flex-1 rounded-xl border border-neutral-200 bg-white shadow-sm overflow-hidden flex flex-col">
+                <div className="flex-1 rounded-xl border border-neutral-200 bg-white shadow-sm overflow-hidden flex flex-col">
                     <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
                         <h2 className="text-xl font-bold text-neutral-900 tracking-tight">Data Kehadiran</h2>
-                        <Button variant="outline" className="h-9 border-neutral-300 font-bold text-neutral-700 shadow-sm hover:bg-neutral-50 flex gap-2">
-                            <Download className="h-4 w-4" />
-                            Export
-                        </Button>
+                        <a
+                            href={exportUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            <Button variant="outline" className="h-9 border-neutral-300 font-bold text-neutral-700 shadow-sm hover:bg-neutral-50 flex gap-2">
+                                <Download className="h-4 w-4" />
+                                Export Recap
+                            </Button>
+                        </a>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
                             <thead className="bg-[#F8FAFC] text-neutral-600 whitespace-nowrap border-b border-neutral-200">
                                 <tr>
                                     <th className="px-6 py-4 font-bold tracking-wide">Karyawan</th>
-                                    <th className="px-6 py-4 font-bold tracking-wide">Proyek</th>
+                                    <th className="px-6 py-4 font-bold tracking-wide">Proyek / Bidang</th>
                                     <th className="px-6 py-4 font-bold tracking-wide text-center">Clock In</th>
                                     <th className="px-6 py-4 font-bold tracking-wide text-center">Clock Out</th>
                                     <th className="px-6 py-4 font-bold tracking-wide">Mode</th>
@@ -240,7 +422,8 @@ export default function AttendanceIndex({ attendances, filters }: AttendanceInde
                                         const clockIn = formatTime(item.check_in_at);
                                         const clockOut = formatTime(item.check_out_at);
                                         const late = isLate(item.check_in_at);
-                                        
+                                        const isIntern = item.employee?.user?.role === 'intern';
+
                                         return (
                                             <tr key={item.id} className="hover:bg-neutral-50/50 transition-colors">
                                                 <td className="px-6 py-3 min-w-[250px]">
@@ -249,15 +432,28 @@ export default function AttendanceIndex({ attendances, filters }: AttendanceInde
                                                             {getInitials(item.employee?.user?.name)}
                                                         </div>
                                                         <div className="flex flex-col gap-0.5">
-                                                            <span className="font-bold text-neutral-900 leading-tight">{item.employee?.user?.name}</span>
-                                                            <span className="text-xs font-semibold text-neutral-500">ID: {item.employee?.employee_code || item.employee?.nik}</span>
+                                                            <span className="font-bold text-neutral-900">{item.employee?.user?.name}</span>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-xs font-semibold text-neutral-500">NIK: {item.employee?.nik}</span>
+                                                                {isIntern && (
+                                                                    <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 border-none text-[10px] font-bold px-1.5 py-0">
+                                                                        Magang
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-3 font-semibold text-neutral-600 min-w-[200px]">
-                                                    <span className="leading-tight block whitespace-normal">
-                                                        {item.employee?.projects?.[0]?.name ?? '—'}
-                                                    </span>
+                                                <td className="px-6 py-3 font-semibold text-neutral-600">
+                                                    {isIntern ? (
+                                                        <Badge className="bg-purple-50 text-purple-700 border-none font-bold text-xs">
+                                                            Bidang: {item.employee?.division || '—'}
+                                                        </Badge>
+                                                    ) : (
+                                                        <span className="font-semibold text-neutral-800">
+                                                            {item.employee?.projects?.[0]?.name ?? '—'}
+                                                        </span>
+                                                    )}
                                                 </td>
                                                 <td className="px-6 py-3 text-center whitespace-nowrap">
                                                     <span className={`font-bold ${late ? 'text-[#DC2626]' : 'text-neutral-700'}`}>
@@ -273,7 +469,7 @@ export default function AttendanceIndex({ attendances, filters }: AttendanceInde
                                                     </Badge>
                                                 </td>
                                                 <td className="px-6 py-3 text-right whitespace-nowrap">
-                                                    <button 
+                                                    <button
                                                         onClick={() => openDetails(item)}
                                                         className="font-bold text-[#035EA9] hover:underline"
                                                     >
@@ -336,11 +532,10 @@ export default function AttendanceIndex({ attendances, filters }: AttendanceInde
                                             key={idx}
                                             href={link.url}
                                             preserveScroll
-                                            className={`flex h-8 w-8 items-center justify-center rounded text-xs font-bold transition-colors ${
-                                                link.active
+                                            className={`flex h-8 w-8 items-center justify-center rounded text-xs font-bold transition-colors ${link.active
                                                     ? 'bg-[#035EA9] text-white'
                                                     : 'text-neutral-600 hover:bg-neutral-100'
-                                            }`}
+                                                }`}
                                         >
                                             {link.label}
                                         </Link>
@@ -376,8 +571,11 @@ export default function AttendanceIndex({ attendances, filters }: AttendanceInde
                             const clockOut12 = formatTime12(selectedAttendance.check_out_at);
                             const totalHours = calculateTotalHours(selectedAttendance.check_in_at, selectedAttendance.check_out_at);
                             const employeeName = selectedAttendance.employee?.user?.name ?? 'Karyawan';
-                            const empCode = selectedAttendance.employee?.employee_code || `EMP-${selectedAttendance.employee?.nik}`;
-                            const projectName = selectedAttendance.employee?.projects?.[0]?.name ?? '—';
+                            const nik = selectedAttendance.employee?.nik ?? '—';
+                            const isIntern = selectedAttendance.employee?.user?.role === 'intern';
+                            const assignmentName = isIntern
+                                ? `Bidang: ${selectedAttendance.employee?.division || '—'}`
+                                : (selectedAttendance.employee?.projects?.[0]?.name ?? 'Belum Ditugaskan');
                             const mode = selectedAttendance.type?.toUpperCase() || 'WFO';
                             const isPresent = !!selectedAttendance.check_in_at;
                             const clockInTime = formatTime(selectedAttendance.check_in_at);
@@ -393,14 +591,13 @@ export default function AttendanceIndex({ attendances, filters }: AttendanceInde
                                         <div className="flex-1 min-w-0">
                                             <h3 className="text-base font-bold text-neutral-900 leading-snug">{employeeName}</h3>
                                             <p className="text-xs font-medium text-neutral-500 mt-0.5">
-                                                {empCode} · {projectName}
+                                                NIK: {nik} · {assignmentName}
                                             </p>
                                         </div>
-                                        <Badge className={`shrink-0 rounded-full border-none px-3 py-1 text-[11px] font-bold ${
-                                            isPresent
+                                        <Badge className={`shrink-0 rounded-full border-none px-3 py-1 text-[11px] font-bold ${isPresent
                                                 ? 'bg-emerald-50 text-emerald-600'
                                                 : 'bg-red-50 text-red-600'
-                                        }`}>
+                                            }`}>
                                             {isPresent ? 'Present' : 'Absent'}
                                         </Badge>
                                     </div>
@@ -408,7 +605,7 @@ export default function AttendanceIndex({ attendances, filters }: AttendanceInde
                                     {/* ── Section: Attendance Summary ── */}
                                     <div className="px-6 pb-5">
                                         <h4 className="text-[11px] font-extrabold text-neutral-500 uppercase tracking-wider mb-3">Attendance Summary</h4>
-                                        
+
                                         {/* Clock In / Clock Out Cards */}
                                         <div className="grid grid-cols-2 gap-3">
                                             {/* Clock In */}
@@ -498,17 +695,40 @@ export default function AttendanceIndex({ attendances, filters }: AttendanceInde
                                                     <MapPin className="h-7 w-7 text-[#035EA9] relative z-10 drop-shadow-md" />
                                                 </div>
                                                 <div className="px-3 py-2">
-                                                    <span className="text-xs font-semibold text-neutral-700">Jl. Raya Pasar Minggu</span>
+                                                    {selectedAttendance.check_in_latitude && selectedAttendance.check_in_longitude ? (
+                                                        <a
+                                                            href={`https://www.google.com/maps?q=${selectedAttendance.check_in_latitude},${selectedAttendance.check_in_longitude}`}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="text-xs font-semibold text-[#035EA9] hover:underline flex items-center gap-1"
+                                                        >
+                                                            <span>Buka Google Maps</span>
+                                                            <ExternalLink className="h-3 w-3" />
+                                                        </a>
+                                                    ) : (
+                                                        <span className="text-xs font-semibold text-neutral-500">Koordinat tidak tersedia</span>
+                                                    )}
                                                 </div>
                                             </div>
                                             {/* Biometric / Selfie */}
                                             <div className="rounded-xl border border-neutral-200 overflow-hidden">
                                                 <div className="h-[100px] bg-neutral-100 relative flex items-center justify-center">
-                                                    <ScanFace className="h-10 w-10 text-neutral-300" />
+                                                    {selectedAttendance.check_in_evidence ? (
+                                                        <img
+                                                            src={`/storage/${selectedAttendance.check_in_evidence}`}
+                                                            alt="Foto Bukti"
+                                                            className="h-full w-full object-cover"
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60';
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <ScanFace className="h-10 w-10 text-neutral-300" />
+                                                    )}
                                                     <div className="absolute bottom-2 right-2 h-3 w-3 rounded-full bg-emerald-400 border-2 border-white" />
                                                 </div>
                                                 <div className="px-3 py-2">
-                                                    <span className="text-xs font-semibold text-neutral-700">Biometric Match</span>
+                                                    <span className="text-xs font-semibold text-neutral-700">Foto Presensi</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -528,10 +748,12 @@ export default function AttendanceIndex({ attendances, filters }: AttendanceInde
                                                     </Badge>
                                                 </div>
                                                 <div className="flex flex-col gap-1">
-                                                    <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Active Project</span>
+                                                    <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+                                                        {isIntern ? 'Bidang' : 'Active Project'}
+                                                    </span>
                                                     <Badge className="rounded-md border-none bg-[#E5F0F9] text-[#035EA9] hover:bg-[#E5F0F9] px-2 py-0.5 text-xs font-bold w-fit flex items-center gap-1">
                                                         <FolderKanban className="h-3 w-3" />
-                                                        {projectName}
+                                                        {assignmentName}
                                                     </Badge>
                                                 </div>
                                             </div>
@@ -543,7 +765,7 @@ export default function AttendanceIndex({ attendances, filters }: AttendanceInde
                                                 </div>
                                                 <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5">
                                                     <p className="text-xs font-medium text-neutral-600 leading-relaxed">
-                                                        {selectedAttendance.work_notes || '"Lorem ipsum dolor sit amet, consectetur adipiscing elit."'}
+                                                        {selectedAttendance.work_notes || 'Tidak ada catatan kerja.'}
                                                     </p>
                                                 </div>
                                             </div>
@@ -554,6 +776,233 @@ export default function AttendanceIndex({ attendances, filters }: AttendanceInde
                         })()}
                     </SheetContent>
                 </Sheet>
+
+                {/* ── Dialog 1: Modal Daftar Hari Libur (Full List) ──── */}
+                <Dialog open={isHolidayListOpen} onOpenChange={setIsHolidayListOpen}>
+                    <DialogContent className="sm:max-w-[720px] p-6 font-mulish max-h-[85vh] flex flex-col">
+                        <DialogHeader className="border-b border-neutral-200 pb-3">
+                            <div className="flex items-center justify-between pr-6">
+                                <div>
+                                    <DialogTitle className="text-xl font-bold text-[#1E293B] flex items-center gap-2">
+                                        <Calendar className="h-5 w-5 text-[#035EA9]" />
+                                        Daftar Hari Libur ({holidays.length})
+                                    </DialogTitle>
+                                    <DialogDescription className="text-xs text-neutral-500 mt-1">
+                                        Daftar hari libur nasional (SKB 3 Menteri) dan libur khusus perusahaan tahun 2026.
+                                    </DialogDescription>
+                                </div>
+
+                                <Button
+                                    size="sm"
+                                    onClick={() => {
+                                        setIsHolidayListOpen(false);
+                                        setIsAddHolidayOpen(true);
+                                    }}
+                                    className="bg-[#035EA9] hover:bg-[#035EA9]/90 text-white font-bold text-xs h-9 px-3 flex items-center gap-1.5 rounded-lg"
+                                >
+                                    <Plus className="h-3.5 w-3.5" />
+                                    Tambah Libur
+                                </Button>
+                            </div>
+                        </DialogHeader>
+
+                        <div className="flex-1 overflow-y-auto mt-3">
+                            <table className="w-full text-left text-xs">
+                                <thead className="bg-[#F8FAFC] border-b border-neutral-200 text-neutral-500 font-bold uppercase sticky top-0">
+                                    <tr>
+                                        <th className="px-4 py-2.5">Tanggal</th>
+                                        <th className="px-4 py-2.5">Nama Hari Libur</th>
+                                        <th className="px-4 py-2.5">Kategori</th>
+                                        <th className="px-4 py-2.5 text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-neutral-100">
+                                    {holidays.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={4} className="px-4 py-8 text-center text-neutral-500">
+                                                Belum ada data hari libur terdaftar.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        holidays.map((h) => (
+                                            <tr key={h.id} className="hover:bg-neutral-50/60">
+                                                <td className="px-4 py-3 font-bold text-[#035EA9] whitespace-nowrap">
+                                                    {h.date_formatted}
+                                                </td>
+                                                <td className="px-4 py-3 font-semibold text-neutral-900">
+                                                    {h.name}
+                                                    {h.description && (
+                                                        <p className="text-[11px] text-neutral-400 font-normal mt-0.5">{h.description}</p>
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    {h.is_national ? (
+                                                        <Badge className="bg-blue-50 text-blue-700 border-none font-bold text-[10px]">
+                                                            Libur Nasional
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge className="bg-amber-50 text-amber-700 border-none font-bold text-[10px]">
+                                                            Libur Perusahaan
+                                                        </Badge>
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-3 text-right">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setIsHolidayListOpen(false);
+                                                            setHolidayToDelete(h);
+                                                        }}
+                                                        className="p-1.5 rounded-lg text-red-600 hover:bg-red-50"
+                                                        title="Hapus Hari Libur"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <DialogFooter className="border-t border-neutral-200 pt-3">
+                            <DialogClose asChild>
+                                <Button variant="outline" className="text-xs font-bold h-9">
+                                    Tutup
+                                </Button>
+                            </DialogClose>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* ── Dialog 2: Modal Tambah Hari Libur ──────────────── */}
+                <Dialog open={isAddHolidayOpen} onOpenChange={setIsAddHolidayOpen}>
+                    <DialogContent className="sm:max-w-[480px] p-6 font-mulish">
+                        <DialogHeader>
+                            <DialogTitle className="text-xl font-bold text-[#1E293B]">
+                                Tambah Hari Libur Baru
+                            </DialogTitle>
+                            <DialogDescription className="text-xs text-neutral-500">
+                                Tambahkan tanggal libur nasional atau libur khusus perusahaan ke kalender sistem absensi.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <form onSubmit={handleCreateHoliday} className="flex flex-col gap-4 mt-2">
+                            {/* Tanggal */}
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-bold text-neutral-700">
+                                    Tanggal Libur <span className="text-red-500">*</span>
+                                </label>
+                                <Input
+                                    type="date"
+                                    value={holidayData.date}
+                                    onChange={(e) => setHolidayData('date', e.target.value)}
+                                    required
+                                    className="h-10 bg-[#F8FAFC] border-neutral-200 text-xs font-semibold"
+                                />
+                                {holidayErrors.date && <p className="text-xs text-red-500 font-semibold">{holidayErrors.date}</p>}
+                            </div>
+
+                            {/* Nama Libur */}
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-bold text-neutral-700">
+                                    Nama Hari Libur <span className="text-red-500">*</span>
+                                </label>
+                                <Input
+                                    value={holidayData.name}
+                                    onChange={(e) => setHolidayData('name', e.target.value)}
+                                    placeholder="Contoh: HUT SUCOFINDO ke-70"
+                                    required
+                                    className="h-10 bg-[#F8FAFC] border-neutral-200 text-xs font-semibold"
+                                />
+                                {holidayErrors.name && <p className="text-xs text-red-500 font-semibold">{holidayErrors.name}</p>}
+                            </div>
+
+                            {/* Kategori */}
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-bold text-neutral-700">Kategori</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setHolidayData('is_national', true)}
+                                        className={`p-2.5 rounded-lg border text-xs font-bold text-center transition-all ${holidayData.is_national
+                                                ? 'bg-[#E5F0F9] border-[#035EA9] text-[#035EA9]'
+                                                : 'border-neutral-200 bg-[#F8FAFC] text-neutral-600 hover:bg-neutral-100'
+                                            }`}
+                                    >
+                                        Libur Nasional
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setHolidayData('is_national', false)}
+                                        className={`p-2.5 rounded-lg border text-xs font-bold text-center transition-all ${!holidayData.is_national
+                                                ? 'bg-amber-50 border-amber-500 text-amber-700'
+                                                : 'border-neutral-200 bg-[#F8FAFC] text-neutral-600 hover:bg-neutral-100'
+                                            }`}
+                                    >
+                                        Libur Perusahaan
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Keterangan */}
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-bold text-neutral-700">Keterangan (Opsional)</label>
+                                <Input
+                                    value={holidayData.description}
+                                    onChange={(e) => setHolidayData('description', e.target.value)}
+                                    placeholder="Contoh: Libur khusus cuti bersama internal kantor"
+                                    className="h-10 bg-[#F8FAFC] border-neutral-200 text-xs font-semibold"
+                                />
+                            </div>
+
+                            <DialogFooter className="flex justify-end gap-2 mt-4">
+                                <DialogClose asChild>
+                                    <Button type="button" variant="outline" className="h-10 text-xs font-bold">
+                                        Batal
+                                    </Button>
+                                </DialogClose>
+                                <Button
+                                    type="submit"
+                                    disabled={holidayProcessing}
+                                    className="h-10 bg-[#0B3B8B] hover:bg-[#0B3B8B]/90 text-white font-bold text-xs"
+                                >
+                                    {holidayProcessing ? 'Menyimpan...' : 'Simpan Hari Libur'}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+
+                {/* ── Dialog 3: Konfirmasi Hapus Hari Libur ──────────── */}
+                <Dialog open={!!holidayToDelete} onOpenChange={(open) => !open && setHolidayToDelete(null)}>
+                    <DialogContent className="sm:max-w-[400px] p-6 font-mulish text-center border-none">
+                        <DialogHeader className="flex flex-col items-center">
+                            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50 mb-3">
+                                <Trash2 className="h-7 w-7 text-red-600" />
+                            </div>
+                            <DialogTitle className="text-xl font-bold text-neutral-900">Hapus Hari Libur?</DialogTitle>
+                            <DialogDescription className="text-xs text-neutral-500 mt-2 text-center leading-relaxed">
+                                Apakah Anda yakin ingin menghapus hari libur <b>"{holidayToDelete?.name}"</b> ({holidayToDelete?.date})? Karyawan akan dapat melakukan absensi pada tanggal tersebut.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter className="flex flex-col sm:flex-col gap-2 mt-4">
+                            <Button
+                                onClick={handleDeleteHoliday}
+                                className="w-full bg-[#C81E1E] hover:bg-[#B91C1C] text-white font-bold h-10 text-xs"
+                            >
+                                Ya, Hapus Hari Libur
+                            </Button>
+                            <DialogClose asChild>
+                                <Button variant="outline" className="w-full border-neutral-300 font-bold text-neutral-700 h-10 text-xs">
+                                    Batal
+                                </Button>
+                            </DialogClose>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
             </div>
         </>
     );

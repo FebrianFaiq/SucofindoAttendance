@@ -127,4 +127,10 @@ Route::prefix('admin')
             ->name('admin.reports.index');
         Route::get('reports/export', [Admin\ReportController::class, 'export'])
             ->name('admin.reports.export');
+
+        // Master Hari Libur (Holiday Management)
+        Route::post('holidays', [Admin\HolidayController::class, 'store'])
+            ->name('admin.holidays.store');
+        Route::delete('holidays/{holiday}', [Admin\HolidayController::class, 'destroy'])
+            ->name('admin.holidays.destroy');
     });

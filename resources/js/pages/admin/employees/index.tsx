@@ -11,8 +11,8 @@ import AppLayout from '@/layouts/app-layout';
 interface EmployeeItem {
     id: number;
     user_id: number;
-    employee_code?: string;
     nik: string;
+    division?: string | null;
     phone: string | null;
     user: {
         id: number;
@@ -59,7 +59,7 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
     const [selectedEmployee, setSelectedEmployee] = useState<EmployeeItem | null>(null);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState(filters?.search || '');
-    
+
     // Dialog states
     const [isResetOpen, setIsResetOpen] = useState(false);
     const [isResetSuccessOpen, setIsResetSuccessOpen] = useState(false);
@@ -125,7 +125,7 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
         <>
             <Head title="Karyawan" />
             <div className="flex h-full flex-1 flex-col gap-4 bg-[#F9F9FF] p-6 font-mulish">
-                
+
                 {/* ── Header & Control Bar ────────────────────────────── */}
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mt-2">
                     {/* Title Section */}
@@ -138,11 +138,11 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                     <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
                         <form onSubmit={handleSearch} className="relative w-full sm:w-[320px]">
                             <Search className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-neutral-400" />
-                            <Input 
+                            <Input
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                placeholder="Cari nama, NIK, email..." 
-                                className="pl-10 h-10 border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9]" 
+                                placeholder="Cari nama, NIK, email..."
+                                className="pl-10 h-10 border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9]"
                             />
                         </form>
                         <Link href="/admin/employees/create" className="flex h-10 w-full items-center gap-2 rounded-md bg-[#035EA9] px-4 font-bold text-white shadow-sm hover:bg-[#035EA9]/90 sm:w-auto justify-center">
@@ -183,15 +183,30 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E5F0F9] font-bold text-[#035EA9] shrink-0">
                                                             {getInitials(emp.user?.name)}
                                                         </div>
-                                                        <span className="font-bold text-neutral-900 leading-tight">{emp.user?.name}</span>
+                                                        <div className="flex flex-col">
+                                                            <span className="font-bold text-neutral-900">{emp.user?.name}</span>
+                                                            <span className="text-[11px] font-semibold text-neutral-500">
+                                                                {emp.user?.role === 'intern' ? (
+                                                                    <span className="text-purple-600 font-bold">Mahasiswa Magang</span>
+                                                                ) : (
+                                                                    'Karyawan PTT'
+                                                                )}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 font-semibold text-neutral-600 whitespace-nowrap">{emp.nik}</td>
-                                                <td className="px-6 py-4 font-semibold text-neutral-600 whitespace-nowrap">{emp.user?.email}</td>
-                                                <td className="px-6 py-4 min-w-[200px]">
-                                                    <Badge variant="secondary" className="rounded-md border-none bg-[#E5F0F9] text-[#035EA9] hover:bg-[#D6E4F0] px-2.5 py-1 text-[13px] font-bold whitespace-normal text-left leading-tight">
-                                                        {activeProject}
-                                                    </Badge>
+                                                <td className="px-6 py-4 font-semibold text-neutral-600">{emp.nik}</td>
+                                                <td className="px-6 py-4 font-semibold text-neutral-600">{emp.user?.email}</td>
+                                                <td className="px-6 py-4">
+                                                    {emp.user?.role === 'intern' ? (
+                                                        <Badge variant="secondary" className="rounded-md border-none bg-purple-50 text-purple-700 hover:bg-purple-100 px-2.5 py-1 text-[13px] font-bold">
+                                                            Bidang: {emp.division || '—'}
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge variant="secondary" className="rounded-md border-none bg-[#E5F0F9] text-[#035EA9] hover:bg-[#D6E4F0] px-2.5 py-1 text-[13px] font-bold">
+                                                            {activeProject}
+                                                        </Badge>
+                                                    )}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     {emp.user?.is_active ? (
@@ -205,7 +220,7 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 text-right whitespace-nowrap">
-                                                    <button 
+                                                    <button
                                                         onClick={() => openEmployeeDetails(emp)}
                                                         className="font-bold text-[#035EA9] hover:underline"
                                                     >
@@ -248,11 +263,10 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                             key={idx}
                                             href={link.url}
                                             preserveScroll
-                                            className={`flex h-8 w-8 items-center justify-center rounded text-xs font-bold transition-colors ${
-                                                link.active
+                                            className={`flex h-8 w-8 items-center justify-center rounded text-xs font-bold transition-colors ${link.active
                                                     ? 'bg-[#035EA9] text-white'
                                                     : 'text-neutral-600 hover:bg-neutral-100'
-                                            }`}
+                                                }`}
                                         >
                                             {link.label}
                                         </Link>
@@ -286,7 +300,7 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                         <SheetHeader className="border-b border-neutral-200 px-8 py-4">
                             <SheetTitle className="text-lg font-bold text-neutral-900">Detail Karyawan</SheetTitle>
                         </SheetHeader>
-                        
+
                         {selectedEmployee && (
                             <div className="flex flex-col px-8 pb-8 pt-4 gap-5">
                                 {/* Profile Header */}
@@ -302,16 +316,28 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                         <IdCard className="h-3.5 w-3.5" />
                                         <span className="text-xs font-semibold">NIK: {selectedEmployee.nik}</span>
                                     </div>
+                                    <div className="mt-1.5">
+                                        <Badge className={`text-[11px] font-bold border-none ${selectedEmployee.user?.role === 'intern'
+                                                ? 'bg-purple-100 text-purple-700 hover:bg-purple-100'
+                                                : 'bg-[#E5F0F9] text-[#035EA9] hover:bg-[#E5F0F9]'
+                                            }`}>
+                                            {selectedEmployee.user?.role === 'intern' ? 'Mahasiswa Magang' : 'Karyawan PTT'}
+                                        </Badge>
+                                    </div>
                                 </div>
 
                                 {/* Employee Info Card */}
                                 <div className="rounded-xl border border-neutral-200 bg-white p-3.5">
                                     <div className="grid grid-cols-2 gap-y-4 gap-x-3">
                                         <div className="flex flex-col gap-1">
-                                            <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">PROJEK</span>
+                                            <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">
+                                                {selectedEmployee.user?.role === 'intern' ? 'BIDANG' : 'PROJEK'}
+                                            </span>
                                             <div className="border-b-2 border-[#035EA9] pb-1.5">
                                                 <span className="text-xs font-semibold text-neutral-900">
-                                                    {selectedEmployee.projects?.[0]?.name ?? 'Belum Ditugaskan'}
+                                                    {selectedEmployee.user?.role === 'intern'
+                                                        ? (selectedEmployee.division || '—')
+                                                        : (selectedEmployee.projects?.[0]?.name ?? 'Belum Ditugaskan')}
                                                 </span>
                                             </div>
                                         </div>
@@ -346,7 +372,7 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                         <ClipboardList className="h-4 w-4" />
                                         <h3 className="font-bold text-neutral-900 text-sm">Projek yang sedang Berjalan</h3>
                                     </div>
-                                    
+
                                     <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white p-2.5">
                                         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#F1F5F9]">
                                             <LayoutGrid className="h-4 w-4 text-[#64748B]" />
@@ -370,15 +396,15 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                             Edit Karyawan
                                         </Button>
                                     </Link>
-                                    <Button 
-                                        variant="outline" 
+                                    <Button
+                                        variant="outline"
                                         className="w-full border-neutral-300 h-9 text-xs font-bold text-neutral-700 flex gap-2 hover:bg-neutral-50"
                                         onClick={() => setIsResetOpen(true)}
                                     >
                                         <RotateCcw className="h-3.5 w-3.5" />
                                         Reset Password
                                     </Button>
-                                    <Button 
+                                    <Button
                                         className="w-full bg-[#FEE2E2] hover:bg-[#FEE2E2]/80 text-[#DC2626] h-9 text-xs font-bold border-none flex gap-2"
                                         onClick={() => setIsDeleteOpen(true)}
                                     >
@@ -392,7 +418,7 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                 </Sheet>
 
                 {/* ── Dialogs ────────────────────────────────────────────── */}
-                
+
                 {/* 1. Reset Password Confirmation */}
                 <Dialog open={isResetOpen} onOpenChange={setIsResetOpen}>
                     <DialogContent className="sm:max-w-[420px] p-8 font-mulish text-center border-none">
@@ -406,7 +432,7 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter className="flex flex-col sm:flex-col w-full gap-3 mt-6">
-                            <Button 
+                            <Button
                                 disabled={isProcessing}
                                 className="w-full bg-[#C81E1E] hover:bg-[#B91C1C] text-white font-bold h-11 sm:w-full"
                                 onClick={handleResetPassword}
@@ -435,7 +461,7 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter className="w-full mt-6 sm:justify-center">
-                            <Button 
+                            <Button
                                 className="w-full bg-[#035EA9] hover:bg-[#035EA9]/90 text-white font-bold h-11"
                                 onClick={() => setIsResetSuccessOpen(false)}
                             >
@@ -458,7 +484,7 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter className="flex flex-col sm:flex-col w-full gap-3 mt-6">
-                            <Button 
+                            <Button
                                 disabled={isProcessing}
                                 className="w-full bg-[#C81E1E] hover:bg-[#B91C1C] text-white font-bold h-11 sm:w-full"
                                 onClick={handleDeleteEmployee}

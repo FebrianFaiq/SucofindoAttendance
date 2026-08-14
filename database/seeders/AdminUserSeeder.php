@@ -17,7 +17,7 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
         // 1. Akun Admin
-        $admin = User::updateOrCreate(
+        $admin = User::withTrashed()->updateOrCreate(
             ['email' => 'admin@sucofindo.com'],
             [
                 'name' => 'Admin SUCOFINDO',
@@ -25,6 +25,7 @@ class AdminUserSeeder extends Seeder
                 'role' => 'admin',
                 'must_change_password' => false,
                 'is_active' => true,
+                'deleted_at' => null,
             ]
         );
 
@@ -34,7 +35,7 @@ class AdminUserSeeder extends Seeder
         $project3 = Project::where('code', 'PLJ-2026')->first();
 
         // 2. Akun Karyawan Utama (Testing Login)
-        $employeeUser1 = User::updateOrCreate(
+        $employeeUser1 = User::withTrashed()->updateOrCreate(
             ['email' => 'karyawan@sucofindo.com'],
             [
                 'name' => 'Budi Santoso (Karyawan PTT)',
@@ -42,15 +43,16 @@ class AdminUserSeeder extends Seeder
                 'role' => 'employee',
                 'must_change_password' => false,
                 'is_active' => true,
+                'deleted_at' => null,
             ]
         );
 
-        $emp1 = Employee::updateOrCreate(
+        $emp1 = Employee::withTrashed()->updateOrCreate(
             ['user_id' => $employeeUser1->id],
             [
-                'employee_code' => 'EMP-0001',
                 'nik' => '3201123456780001',
                 'phone' => '081234567890',
+                'deleted_at' => null,
             ]
         );
 
@@ -66,7 +68,6 @@ class AdminUserSeeder extends Seeder
             [
                 'name' => 'Siti Rahmawati',
                 'email' => 'siti.rahma@sucofindo.com',
-                'code' => 'EMP-0002',
                 'nik' => '3201123456780002',
                 'phone' => '081298765432',
                 'project_id' => $project2?->id,
@@ -75,7 +76,6 @@ class AdminUserSeeder extends Seeder
             [
                 'name' => 'Ahmad Fauzi',
                 'email' => 'ahmad.fauzi@sucofindo.com',
-                'code' => 'EMP-0003',
                 'nik' => '3201123456780003',
                 'phone' => '081311223344',
                 'project_id' => $project3?->id,
@@ -84,7 +84,6 @@ class AdminUserSeeder extends Seeder
             [
                 'name' => 'Dewi Lestari',
                 'email' => 'dewi.lestari@sucofindo.com',
-                'code' => 'EMP-0004',
                 'nik' => '3201123456780004',
                 'phone' => '081255667788',
                 'project_id' => $project1?->id,
@@ -93,32 +92,44 @@ class AdminUserSeeder extends Seeder
             [
                 'name' => 'Rizky Pratama',
                 'email' => 'rizky.pratama@sucofindo.com',
-                'code' => 'EMP-0005',
                 'nik' => '3201123456780005',
                 'phone' => '081299887766',
+                'role' => 'employee',
                 'project_id' => null,
                 'is_active' => false,
+            ],
+            [
+                'name' => 'Kevin Sanjaya (Mahasiswa Magang)',
+                'email' => 'magang@sucofindo.com',
+                'nik' => '3201123456780006',
+                'phone' => '081233445566',
+                'role' => 'intern',
+                'division' => 'BIT',
+                'project_id' => null,
+                'is_active' => true,
             ],
         ];
 
         foreach ($dummyEmployees as $dummy) {
-            $user = User::updateOrCreate(
+            $user = User::withTrashed()->updateOrCreate(
                 ['email' => $dummy['email']],
                 [
                     'name' => $dummy['name'],
                     'password' => Hash::make('123'),
-                    'role' => 'employee',
+                    'role' => $dummy['role'] ?? 'employee',
                     'must_change_password' => false,
                     'is_active' => $dummy['is_active'],
+                    'deleted_at' => null,
                 ]
             );
 
-            $emp = Employee::updateOrCreate(
+            $emp = Employee::withTrashed()->updateOrCreate(
                 ['user_id' => $user->id],
                 [
-                    'employee_code' => $dummy['code'],
                     'nik' => $dummy['nik'],
+                    'division' => $dummy['division'] ?? null,
                     'phone' => $dummy['phone'],
+                    'deleted_at' => null,
                 ]
             );
 

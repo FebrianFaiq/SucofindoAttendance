@@ -2,12 +2,14 @@
 
 namespace App\Http\Requests\Employee;
 
+use App\Models\Holiday;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Validator;
 
 /**
- * Validasi form Check-In karyawan (FR-ATT-01).
+ * Validasi form Check-In karyawan & magang (FR-ATT-01).
+ * Meliputi validasi weekend & hari libur nasional/perusahaan.
  */
 class CheckInRequest extends FormRequest
 {
@@ -30,12 +32,32 @@ class CheckInRequest extends FormRequest
     }
 
     /**
-     * Validasi tambahan: cek duplikasi check-in hari ini.
+     * Validasi tambahan:
+     * 1. Cek hari libur (Weekend & Tanggal Merah)
+     * 2. Cek duplikasi check-in hari ini
      */
     public function after(): array
     {
         return [
             function (Validator $validator): void {
+                $today = today();
+
+                // 1. Cek apakah hari libur nasional / perusahaan terdaftar di master holidays
+                $holiday = Holiday::getHolidayDetails($today);
+                if ($holiday) {
+                    $validator->errors()->add('holiday', "Hari ini adalah hari libur ({$holiday->name}). Absensi tidak diizinkan.");
+
+                    return;
+                }
+
+                // 2. Cek apakah akhir pekan (Sabtu / Minggu)
+                if ($today->isWeekend()) {
+                    $dayName = $today->isoFormat('dddd') ?: ($today->isSaturday() ? 'Sabtu' : 'Minggu');
+                    $validator->errors()->add('holiday', "Hari ini adalah akhir pekan ({$dayName}). Absensi tidak diizinkan.");
+
+                    return;
+                }
+
                 /** @var \App\Models\User $user */
                 $user = Auth::user();
                 $employee = $user->employee;
@@ -46,6 +68,7 @@ class CheckInRequest extends FormRequest
                     return;
                 }
 
+                // 3. Cek apakah sudah check-in hari ini
                 $todayAttendance = $employee->todayAttendance();
 
                 if ($todayAttendance) {

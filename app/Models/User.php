@@ -99,9 +99,25 @@ class User extends Authenticatable
     }
 
     /**
-     * Cek apakah user memiliki role employee.
+     * Cek apakah user memiliki role employee (Karyawan PTT).
      */
     public function isEmployee(): bool
+    {
+        return $this->role === 'employee';
+    }
+
+    /**
+     * Cek apakah user memiliki role intern (Mahasiswa Magang).
+     */
+    public function isIntern(): bool
+    {
+        return $this->role === 'intern';
+    }
+
+    /**
+     * Cek apakah user berhak mengajukan lembur (hanya employee biasa, intern tidak bisa).
+     */
+    public function canOvertime(): bool
     {
         return $this->role === 'employee';
     }

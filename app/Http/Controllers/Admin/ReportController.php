@@ -50,25 +50,36 @@ class ReportController extends Controller
     {
         $query = Attendance::with(['employee.user']);
 
-        // Terapkan filter yang sama dengan index
-        if ($request->filled('date_from')) {
-            $query->whereDate('check_in_at', '>=', $request->input('date_from'));
+        $dateFrom = $request->input('start_date', $request->input('date_from'));
+        $dateTo = $request->input('end_date', $request->input('date_to'));
+
+        if ($dateFrom) {
+            $query->whereDate('check_in_at', '>=', $dateFrom);
         }
-        if ($request->filled('date_to')) {
-            $query->whereDate('check_in_at', '<=', $request->input('date_to'));
+        if ($dateTo) {
+            $query->whereDate('check_in_at', '<=', $dateTo);
         }
         if ($request->filled('employee_id')) {
             $query->where('employee_id', $request->input('employee_id'));
+        }
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->whereHas('employee', function ($q) use ($search) {
+                $q->where('nik', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($uq) use ($search) {
+                        $uq->where('name', 'like', "%{$search}%");
+                    });
+            });
         }
 
         $attendances = $query->orderByDesc('check_in_at')->get();
 
         // Generate CSV
-        $csvHeader = ['Nama', 'Kode Karyawan', 'Tanggal', 'Jam Masuk', 'Jam Keluar', 'Tipe', 'Catatan Kerja'];
+        $csvHeader = ['Nama', 'NIK', 'Tanggal', 'Jam Masuk', 'Jam Keluar', 'Tipe', 'Catatan Kerja'];
         $csvRows = $attendances->map(function ($attendance) {
             return [
                 $attendance->employee->user->name ?? '-',
-                $attendance->employee->employee_code ?? '-',
+                $attendance->employee->nik ?? '-',
                 $attendance->check_in_at?->format('Y-m-d') ?? '-',
                 $attendance->check_in_at?->format('H:i') ?? '-',
                 $attendance->check_out_at?->format('H:i') ?? '-',

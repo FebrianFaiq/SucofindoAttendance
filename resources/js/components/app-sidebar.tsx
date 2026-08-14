@@ -11,6 +11,7 @@ import {
     Settings,
     User as UserIcon,
     Users,
+    Sparkles,
 } from 'lucide-react';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -31,39 +32,52 @@ export function AppSidebar() {
     const user = page.props.auth?.user as User | undefined;
     const role = user?.role ?? 'employee';
 
-    // Menu Navigasi untuk Employee
-    const employeeNavItems: NavItem[] = [
+    // Menu Navigasi untuk Employee / Intern
+    const allEmployeeNavItems: (NavItem & { internAllowed?: boolean })[] = [
         {
             title: 'Dashboard',
             href: '/employee/dashboard',
             icon: LayoutGrid,
+            internAllowed: true,
         },
         {
             title: 'Check In',
             href: '/employee/check-in',
             icon: LogIn,
+            internAllowed: true,
         },
         {
             title: 'Check Out',
             href: '/employee/check-out',
             icon: LogOut,
+            internAllowed: true,
         },
         {
             title: 'Lembur',
             href: '/employee/overtime',
             icon: Clock,
+            internAllowed: false, // Mahasiswa magang tidak memiliki akses ke fitur lembur
         },
         {
             title: 'Riwayat Kehadiran',
             href: '/employee/history',
             icon: History,
+            internAllowed: true,
         },
         {
             title: 'Profil Saya',
             href: '/employee/profile',
             icon: UserIcon,
+            internAllowed: true,
         },
     ];
+
+    const employeeNavItems = allEmployeeNavItems.filter((item) => {
+        if (role === 'intern') {
+            return item.internAllowed;
+        }
+        return true;
+    });
 
     // Menu Navigasi untuk Admin (sesuai desain)
     const adminNavItems: NavItem[] = [
@@ -93,8 +107,6 @@ export function AppSidebar() {
             icon: FolderKanban,
         },
     ];
-
-
 
     const mainNavItems = role === 'admin' ? adminNavItems : employeeNavItems;
     const dashboardUrl = role === 'admin' ? '/admin/dashboard' : '/employee/dashboard';

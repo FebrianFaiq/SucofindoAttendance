@@ -27,6 +27,8 @@ class UpdateEmployeeRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
             'nik' => ['required', 'string', 'max:50', Rule::unique('employees', 'nik')->ignore($employee?->id)],
+            'role' => ['sometimes', 'in:employee,intern'],
+            'division' => ['nullable', 'required_if:role,intern', 'in:LSI,DukBis,BIT,KSP'],
             'phone' => ['nullable', 'string', 'max:20'],
             'project_id' => ['nullable', 'exists:projects,id'],
             'is_active' => ['nullable', 'boolean'],
@@ -42,8 +44,6 @@ class UpdateEmployeeRequest extends FormRequest
             'name.required' => 'Nama karyawan wajib diisi.',
             'email.required' => 'Email wajib diisi.',
             'email.unique' => 'Email sudah terdaftar.',
-            'employee_code.required' => 'Kode karyawan wajib diisi.',
-            'employee_code.unique' => 'Kode karyawan sudah digunakan.',
             'nik.required' => 'NIK wajib diisi.',
             'nik.unique' => 'NIK sudah terdaftar.',
         ];

@@ -61,7 +61,7 @@ class DashboardController extends Controller
             return [
                 'id' => $attendance->id,
                 'name' => $attendance->employee->user->name ?? '-',
-                'employeeId' => $attendance->employee->employee_code ?? '-',
+                'employeeId' => $attendance->employee->nik ?? '-',
                 'avatar' => null,
                 'avatarColor' => 'bg-emerald-500', // We can improve this logic later if needed
                 'project' => $attendance->employee->activeProject()?->name ?? '-',

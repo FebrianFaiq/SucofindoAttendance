@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { RotateCcw, Save, AlertTriangle, CheckCircle2, Check, X } from 'lucide-react';
+import { RotateCcw, Save, AlertTriangle, CheckCircle2, Briefcase, GraduationCap } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 
 interface Project {
@@ -15,8 +15,8 @@ interface Project {
 interface EmployeeData {
     id: number;
     user_id: number;
-    employee_code?: string;
     nik: string;
+    division: string | null;
     phone: string | null;
     user: {
         id: number;
@@ -48,6 +48,8 @@ export default function EmployeesEdit({ employee, projects }: EmployeesEditProps
         nik: employee.nik || '',
         email: employee.user?.email || '',
         phone: employee.phone || '',
+        role: employee.user?.role || 'employee',
+        division: employee.division || 'BIT',
         project_id: activeProjectId,
         is_active: employee.user?.is_active ?? true,
     });
@@ -91,7 +93,7 @@ export default function EmployeesEdit({ employee, projects }: EmployeesEditProps
                         Edit Data Karyawan
                     </h1>
                     <p className="text-[#64748B] font-medium text-[15px] mt-1">
-                        Perbarui detail informasi karyawan dan penugasan proyek.
+                        Perbarui detail informasi karyawan atau mahasiswa magang dan penugasan proyek.
                     </p>
                 </div>
 
@@ -155,32 +157,97 @@ export default function EmployeesEdit({ employee, projects }: EmployeesEditProps
 
                         <div className="h-[1px] w-full bg-neutral-200"></div>
 
-                        {/* 2. Rincian Karyawan */}
+                        {/* 2. Rincian & Tipe Pegawai */}
                         <section className="flex flex-col gap-5">
+                            <h2 className="text-[20px] font-bold text-[#1E293B]">Rincian & Tipe Pegawai</h2>
+                            
                             <h2 className="text-[20px] font-bold text-[#1E293B]">Rincian Karyawan</h2>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                                {/* Tipe Pegawai */}
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-[14px] font-bold text-[#1E293B]">Penugasan Proyek (Assigned Project)</label>
-                                    <select
-                                        value={data.project_id}
-                                        onChange={(e) => setData('project_id', e.target.value)}
-                                        className="h-11 w-full rounded-md border border-neutral-200 bg-[#F8FAFC] px-3 font-semibold text-neutral-800 shadow-sm focus:border-[#035EA9] focus:outline-none focus:ring-1 focus:ring-[#035EA9]"
-                                    >
-                                        <option value="">-- Pilih Proyek (Opsional) --</option>
-                                        {projects.map((proj) => (
-                                            <option key={proj.id} value={proj.id}>
-                                                {proj.name} ({proj.code})
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {errors.project_id && <p className="text-xs text-red-500 font-semibold">{errors.project_id}</p>}
+                                    <label className="text-[14px] font-bold text-[#1E293B]">
+                                        Tipe / Kategori Pegawai <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setData('role', 'employee')}
+                                            className={`flex items-center gap-2.5 p-3 rounded-lg border text-left transition-all ${
+                                                data.role === 'employee'
+                                                    ? 'border-[#035EA9] bg-[#E5F0F9]/50 text-[#035EA9] font-bold shadow-sm'
+                                                    : 'border-neutral-200 bg-[#F8FAFC] text-neutral-600 font-semibold hover:bg-neutral-100'
+                                            }`}
+                                        >
+                                            <Briefcase className="h-4 w-4 shrink-0" />
+                                            <div className="flex flex-col">
+                                                <span className="text-xs">Karyawan PTT</span>
+                                                <span className="text-[10px] font-normal text-neutral-500">Absen & Lembur</span>
+                                            </div>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setData('role', 'intern')}
+                                            className={`flex items-center gap-2.5 p-3 rounded-lg border text-left transition-all ${
+                                                data.role === 'intern'
+                                                    ? 'border-[#035EA9] bg-[#E5F0F9]/50 text-[#035EA9] font-bold shadow-sm'
+                                                    : 'border-neutral-200 bg-[#F8FAFC] text-neutral-600 font-semibold hover:bg-neutral-100'
+                                            }`}
+                                        >
+                                            <GraduationCap className="h-4 w-4 shrink-0" />
+                                            <div className="flex flex-col">
+                                                <span className="text-xs">Mahasiswa Magang</span>
+                                                <span className="text-[10px] font-normal text-neutral-500">Hanya Kehadiran</span>
+                                            </div>
+                                        </button>
+                                    </div>
+                                    {errors.role && <p className="text-xs text-red-500 font-semibold">{errors.role}</p>}
                                 </div>
+
+                                {/* Kondisional: Proyek untuk Employee vs Bidang untuk Intern */}
+                                {data.role === 'intern' ? (
+                                    <div className="flex flex-col gap-2">
+                                        <label className="text-[14px] font-bold text-[#1E293B]">
+                                            Bidang / Divisi Penempatan <span className="text-red-500">*</span>
+                                        </label>
+                                        <select
+                                            value={data.division}
+                                            onChange={(e) => setData('division', e.target.value)}
+                                            className="h-11 w-full rounded-md border border-neutral-200 bg-[#F8FAFC] px-3 font-semibold text-neutral-800 shadow-sm focus:border-[#035EA9] focus:outline-none focus:ring-1 focus:ring-[#035EA9]"
+                                        >
+                                            <option value="LSI">LSI (Layanan Sertifikasi & Inspeksi)</option>
+                                            <option value="DukBis">DukBis (Dukungan Bisnis)</option>
+                                            <option value="BIT">BIT (Bisnis & Informasi Teknologi)</option>
+                                            <option value="KSP">KSP (Konsultasi & Solusi Perusahaan)</option>
+                                        </select>
+                                        {errors.division && <p className="text-xs text-red-500 font-semibold">{errors.division}</p>}
+                                        <p className="text-xs text-neutral-500">
+                                            Mahasiswa magang ditempatkan berdasarkan Bidang kerja, bukan proyek.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col gap-2">
+                                        <label className="text-[14px] font-bold text-[#1E293B]">Penugasan Proyek (Assigned Project)</label>
+                                        <select
+                                            value={data.project_id}
+                                            onChange={(e) => setData('project_id', e.target.value)}
+                                            className="h-11 w-full rounded-md border border-neutral-200 bg-[#F8FAFC] px-3 font-semibold text-neutral-800 shadow-sm focus:border-[#035EA9] focus:outline-none focus:ring-1 focus:ring-[#035EA9]"
+                                        >
+                                            <option value="">-- Pilih Proyek (Opsional) --</option>
+                                            {projects.map((proj) => (
+                                                <option key={proj.id} value={proj.id}>
+                                                    {proj.name} ({proj.code})
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {errors.project_id && <p className="text-xs text-red-500 font-semibold">{errors.project_id}</p>}
+                                    </div>
+                                )}
 
                                 <div className="flex flex-col gap-2">
                                     <label className="text-[14px] font-bold text-[#1E293B]">Status Akun</label>
                                     <div className="flex items-center gap-3 mt-1.5">
-                                        {/* Custom Toggle Switch */}
                                         <button
                                             onClick={() => setData('is_active', !data.is_active)}
                                             type="button"
