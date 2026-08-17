@@ -3,15 +3,9 @@ import {
     CalendarCheck,
     Clock,
     FolderKanban,
-    History,
     LayoutGrid,
-    LogIn,
-    LogOut,
     LogOut as LogOutIcon,
-    Settings,
-    User as UserIcon,
     Users,
-    Sparkles,
 } from 'lucide-react';
 import { NavMain } from '@/components/nav-main';
 import { logout } from '@/routes';
@@ -32,24 +26,12 @@ export function AppSidebar() {
     const user = page.props.auth?.user as User | undefined;
     const role = user?.role ?? 'employee';
 
-    // Menu Navigasi untuk Employee / Intern
+    // Menu Navigasi untuk Employee / Intern (sesuai desain: Absensi + Lembur)
     const allEmployeeNavItems: (NavItem & { internAllowed?: boolean })[] = [
         {
-            title: 'Dashboard',
+            title: 'Absensi',
             href: '/employee/dashboard',
-            icon: LayoutGrid,
-            internAllowed: true,
-        },
-        {
-            title: 'Check In',
-            href: '/employee/check-in',
-            icon: LogIn,
-            internAllowed: true,
-        },
-        {
-            title: 'Check Out',
-            href: '/employee/check-out',
-            icon: LogOut,
+            icon: CalendarCheck,
             internAllowed: true,
         },
         {
@@ -57,18 +39,6 @@ export function AppSidebar() {
             href: '/employee/overtime',
             icon: Clock,
             internAllowed: false, // Mahasiswa magang tidak memiliki akses ke fitur lembur
-        },
-        {
-            title: 'Riwayat Kehadiran',
-            href: '/employee/history',
-            icon: History,
-            internAllowed: true,
-        },
-        {
-            title: 'Profil Saya',
-            href: '/employee/profile',
-            icon: UserIcon,
-            internAllowed: true,
         },
     ];
 

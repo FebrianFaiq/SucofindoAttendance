@@ -4,7 +4,6 @@ import {
     UserSearch,
     ChevronLeft,
     ChevronRight,
-    Download,
     LogIn,
     LogOut,
     Building2,
@@ -18,8 +17,11 @@ import {
     Calendar,
     Plus,
     Trash2,
-    ExternalLink
+    ExternalLink,
+    Download
 } from 'lucide-react';
+import { DatePicker } from '@/components/ui/date-picker';
+import { format, parseISO } from 'date-fns';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,7 +36,12 @@ interface AttendanceItem {
     type: string;
     check_in_at: string | null;
     check_out_at: string | null;
+    check_in_at_formatted: string | null;
+    check_out_at_formatted: string | null;
+    check_in_at_iso: string | null;
+    check_out_at_iso: string | null;
     check_in_evidence: string | null;
+    check_in_evidence_url: string | null;
     check_in_latitude: number | null;
     check_in_longitude: number | null;
     work_notes: string | null;
@@ -189,20 +196,36 @@ export default function AttendanceIndex({
             .toUpperCase();
     };
 
-    const formatTime = (dateString: string | null) => {
+    // Use server-side formatted WIB time (HH:mm) when available, fallback to client-side parsing
+    const formatTime = (formattedTime: string | null | undefined, dateString: string | null) => {
+        if (formattedTime) return formattedTime;
         if (!dateString) return '—';
         const date = new Date(dateString);
-        return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' });
     };
 
-    const formatTime12 = (dateString: string | null) => {
-        if (!dateString) return { time: '—', period: '' };
-        const date = new Date(dateString);
-        let hours = date.getHours();
-        const minutes = date.getMinutes().toString().padStart(2, '0');
+    const formatTime12 = (formattedTime: string | null | undefined, dateString: string | null) => {
+        // Use server-formatted HH:mm if available
+        const timeStr = formattedTime || (dateString ? null : null);
+        if (!timeStr && !dateString) return { time: '—', period: '' };
+
+        let hours: number;
+        let minutes: string;
+        if (timeStr) {
+            const [h, m] = timeStr.split(':').map(Number);
+            hours = h;
+            minutes = m.toString().padStart(2, '0');
+        } else {
+            const date = new Date(dateString!);
+            // Convert to WIB using Intl
+            const wibParts = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', hour12: false, timeZone: 'Asia/Jakarta' }).formatToParts(date);
+            hours = parseInt(wibParts.find(p => p.type === 'hour')?.value || '0');
+            minutes = wibParts.find(p => p.type === 'minute')?.value || '00';
+        }
+
         const period = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12 || 12;
-        return { time: `${hours.toString().padStart(2, '0')}:${minutes}`, period };
+        const displayHours = hours % 12 || 12;
+        return { time: `${displayHours.toString().padStart(2, '0')}:${minutes}`, period };
     };
 
     const calculateTotalHours = (checkIn: string | null, checkOut: string | null) => {
@@ -217,7 +240,11 @@ export default function AttendanceIndex({
         return `${h}h ${m}m`;
     };
 
-    const isLate = (dateString: string | null) => {
+    const isLate = (formattedTime: string | null | undefined, dateString: string | null) => {
+        if (formattedTime) {
+            const [h, m] = formattedTime.split(':').map(Number);
+            return h >= 8 && m > 0;
+        }
         if (!dateString) return false;
         const date = new Date(dateString);
         return date.getHours() >= 8 && date.getMinutes() > 0;
@@ -330,39 +357,26 @@ export default function AttendanceIndex({
 
                 {/* ── Filter Bar ────────────────────────────── */}
                 <div className="rounded-xl border border-neutral-200 bg-white px-6 py-5 shadow-sm">
-                    <style>{`
-                        input[type="date"].date-right-icon::-webkit-calendar-picker-indicator {
-                            position: absolute;
-                            right: 12px;
-                            top: 50%;
-                            transform: translateY(-50%);
-                            cursor: pointer;
-                            opacity: 0.5;
-                        }
-                        input[type="date"].date-right-icon {
-                            position: relative;
-                        }
-                    `}</style>
                     <form onSubmit={handleFilter} className="flex flex-col lg:flex-row lg:items-end gap-4 lg:gap-5">
                         {/* Start Date */}
                         <div className="w-full lg:w-[200px] shrink-0">
                             <label className="mb-1.5 block text-sm font-bold text-neutral-800">Start Date</label>
-                            <Input
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                                className="date-right-icon w-full h-[42px] rounded-lg border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9] font-medium text-neutral-600 px-3 pr-10"
+                            <DatePicker
+                                date={startDate ? parseISO(startDate) : undefined}
+                                setDate={(d) => setStartDate(d ? format(d, 'yyyy-MM-dd') : '')}
+                                placeholder="Pilih Start Date"
+                                className="w-full h-[42px] rounded-lg border-neutral-300 bg-white shadow-sm font-medium text-neutral-600 px-3"
                             />
                         </div>
 
                         {/* End Date */}
                         <div className="w-full lg:w-[200px] shrink-0">
                             <label className="mb-1.5 block text-sm font-bold text-neutral-800">End Date</label>
-                            <Input
-                                type="date"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                                className="date-right-icon w-full h-[42px] rounded-lg border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9] font-medium text-neutral-600 px-3 pr-10"
+                            <DatePicker
+                                date={endDate ? parseISO(endDate) : undefined}
+                                setDate={(d) => setEndDate(d ? format(d, 'yyyy-MM-dd') : '')}
+                                placeholder="Pilih End Date"
+                                className="w-full h-[42px] rounded-lg border-neutral-300 bg-white shadow-sm font-medium text-neutral-600 px-3"
                             />
                         </div>
 
@@ -430,9 +444,9 @@ export default function AttendanceIndex({
                             {attendances.data.length > 0 && (
                                 <tbody className="divide-y divide-neutral-200 text-neutral-700">
                                     {attendances.data.map((item) => {
-                                        const clockIn = formatTime(item.check_in_at);
-                                        const clockOut = formatTime(item.check_out_at);
-                                        const late = isLate(item.check_in_at);
+                                        const clockIn = formatTime(item.check_in_at_formatted, item.check_in_at);
+                                        const clockOut = formatTime(item.check_out_at_formatted, item.check_out_at);
+                                        const late = isLate(item.check_in_at_formatted, item.check_in_at);
                                         const isIntern = item.employee?.user?.role === 'intern';
 
                                         return (
@@ -591,9 +605,9 @@ export default function AttendanceIndex({
                 <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                     <SheetContent side="right" className="w-[400px] sm:w-[420px] p-0 font-mulish overflow-y-auto border-l border-neutral-200">
                         {selectedAttendance && (() => {
-                            const clockIn12 = formatTime12(selectedAttendance.check_in_at);
-                            const clockOut12 = formatTime12(selectedAttendance.check_out_at);
-                            const totalHours = calculateTotalHours(selectedAttendance.check_in_at, selectedAttendance.check_out_at);
+                            const clockIn12 = formatTime12(selectedAttendance.check_in_at_formatted, selectedAttendance.check_in_at);
+                            const clockOut12 = formatTime12(selectedAttendance.check_out_at_formatted, selectedAttendance.check_out_at);
+                            const totalHours = calculateTotalHours(selectedAttendance.check_in_at_iso || selectedAttendance.check_in_at, selectedAttendance.check_out_at_iso || selectedAttendance.check_out_at);
                             const employeeName = selectedAttendance.employee?.user?.name ?? 'Karyawan';
                             const nik = selectedAttendance.employee?.nik ?? '—';
                             const isIntern = selectedAttendance.employee?.user?.role === 'intern';
@@ -602,8 +616,8 @@ export default function AttendanceIndex({
                                 : (selectedAttendance.employee?.projects?.[0]?.name ?? 'Belum Ditugaskan');
                             const mode = selectedAttendance.type?.toUpperCase() || 'WFO';
                             const isPresent = !!selectedAttendance.check_in_at;
-                            const clockInTime = formatTime(selectedAttendance.check_in_at);
-                            const clockOutTime = formatTime(selectedAttendance.check_out_at);
+                            const clockInTime = formatTime(selectedAttendance.check_in_at_formatted, selectedAttendance.check_in_at);
+                            const clockOutTime = formatTime(selectedAttendance.check_out_at_formatted, selectedAttendance.check_out_at);
 
                             return (
                                 <div className="flex flex-col">
@@ -737,13 +751,13 @@ export default function AttendanceIndex({
                                             {/* Biometric / Selfie */}
                                             <div className="rounded-xl border border-neutral-200 overflow-hidden">
                                                 <div className="h-[100px] bg-neutral-100 relative flex items-center justify-center">
-                                                    {selectedAttendance.check_in_evidence ? (
+                                                    {(selectedAttendance.check_in_evidence_url || selectedAttendance.check_in_evidence) ? (
                                                         <img
-                                                            src={`/storage/${selectedAttendance.check_in_evidence}`}
+                                                            src={selectedAttendance.check_in_evidence_url || `/storage/${selectedAttendance.check_in_evidence}`}
                                                             alt="Foto Bukti"
                                                             className="h-full w-full object-cover"
                                                             onError={(e) => {
-                                                                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60';
+                                                                (e.target as HTMLImageElement).style.display = 'none';
                                                             }}
                                                         />
                                                     ) : (
@@ -918,12 +932,11 @@ export default function AttendanceIndex({
                                 <label className="text-xs font-bold text-neutral-700">
                                     Tanggal Libur <span className="text-red-500">*</span>
                                 </label>
-                                <Input
-                                    type="date"
-                                    value={holidayData.date}
-                                    onChange={(e) => setHolidayData('date', e.target.value)}
-                                    required
-                                    className="h-10 bg-[#F8FAFC] border-neutral-200 text-xs font-semibold"
+                                <DatePicker
+                                    date={holidayData.date ? parseISO(holidayData.date) : undefined}
+                                    setDate={(d) => setHolidayData('date', d ? format(d, 'yyyy-MM-dd') : '')}
+                                    placeholder="Pilih Tanggal Libur"
+                                    className="w-full h-10 border-neutral-200 text-xs font-semibold px-3"
                                 />
                                 {holidayErrors.date && <p className="text-xs text-red-500 font-semibold">{holidayErrors.date}</p>}
                             </div>

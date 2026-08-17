@@ -20,10 +20,15 @@ import {
     Pie,
     PieChart,
     ResponsiveContainer,
-    Tooltip,
+    Tooltip as RechartsTooltip,
     XAxis,
     YAxis,
 } from 'recharts';
+import {
+    ChartContainer,
+    ChartTooltip,
+    ChartTooltipContent,
+} from '@/components/ui/chart';
 
 // ─── Static Data ────────────────────────────────────────────────────────────
 
@@ -128,6 +133,20 @@ export default function AdminDashboard({
 // ─── Component ──────────────────────────────────────────────────────────────
 
 
+    const attendanceChartConfig = {
+        value: {
+            label: "Kehadiran",
+            color: "#035EA9",
+        }
+    };
+
+    const workModeChartConfig = {
+        value: {
+            label: "Total",
+            color: "#035EA9",
+        }
+    };
+
     return (
         <>
             <Head title="Dashboard Admin" />
@@ -183,15 +202,12 @@ export default function AdminDashboard({
                             </button>
                         </div>
                         <div className="h-[280px] w-full">
-                            <ResponsiveContainer
-                                width="100%"
-                                height="100%"
-                            >
+                            <ChartContainer config={attendanceChartConfig} className="h-full w-full">
                                 <AreaChart data={attendanceTrendData}>
                                     <defs>
                                         <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#035EA9" stopOpacity={0.2} />
-                                            <stop offset="95%" stopColor="#035EA9" stopOpacity={0} />
+                                            <stop offset="5%" stopColor="var(--color-value)" stopOpacity={0.2} />
+                                            <stop offset="95%" stopColor="var(--color-value)" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid
@@ -220,38 +236,26 @@ export default function AdminDashboard({
                                         allowDecimals={false}
                                         dx={-10}
                                     />
-                                    <Tooltip
-                                        contentStyle={{
-                                            background: 'white',
-                                            border: '1px solid #e5e7eb',
-                                            borderRadius: '8px',
-                                            fontSize: '13px',
-                                            boxShadow:
-                                                '0 4px 6px -1px rgba(0,0,0,0.1)',
-                                        }}
-                                        formatter={(
-                                            value,
-                                        ) => [
-                                            Number(value).toLocaleString(),
-                                            'Kehadiran',
-                                        ]}
+                                    <ChartTooltip
+                                        cursor={false}
+                                        content={<ChartTooltipContent />}
                                     />
                                     <Area
                                         type="monotone"
                                         dataKey="value"
-                                        stroke="#035EA9"
+                                        stroke="var(--color-value)"
                                         strokeWidth={2.5}
                                         fillOpacity={1}
                                         fill="url(#colorValue)"
                                         activeDot={{
-                                            fill: '#035EA9',
+                                            fill: 'var(--color-value)',
                                             stroke: 'white',
                                             strokeWidth: 2,
                                             r: 7,
                                         }}
                                     />
                                 </AreaChart>
-                            </ResponsiveContainer>
+                            </ChartContainer>
                         </div>
                     </div>
 
@@ -261,11 +265,12 @@ export default function AdminDashboard({
                             Mode Kerja
                         </h2>
                         <div className="flex h-[220px] items-center justify-center">
-                            <ResponsiveContainer
-                                width="100%"
-                                height="100%"
-                            >
+                            <ChartContainer config={workModeChartConfig} className="h-full w-full">
                                 <PieChart>
+                                    <ChartTooltip
+                                        cursor={false}
+                                        content={<ChartTooltipContent hideLabel />}
+                                    />
                                     <Pie
                                         data={workModeData}
                                         cx="50%"
@@ -273,6 +278,7 @@ export default function AdminDashboard({
                                         innerRadius={70}
                                         outerRadius={95}
                                         dataKey="value"
+                                        nameKey="name"
                                         strokeWidth={0}
                                     >
                                         {workModeData.map(
@@ -284,21 +290,8 @@ export default function AdminDashboard({
                                             ),
                                         )}
                                     </Pie>
-                                    <Tooltip
-                                        contentStyle={{
-                                            background: 'white',
-                                            border: '1px solid #e5e7eb',
-                                            borderRadius: '8px',
-                                            fontSize: '13px',
-                                            boxShadow:
-                                                '0 4px 6px -1px rgba(0,0,0,0.1)',
-                                        }}
-                                        formatter={(
-                                            value,
-                                        ) => [`${value}%`]}
-                                    />
                                 </PieChart>
-                            </ResponsiveContainer>
+                            </ChartContainer>
                         </div>
                         {/* Legend */}
                         <div className="mt-4 flex items-center justify-center gap-6">

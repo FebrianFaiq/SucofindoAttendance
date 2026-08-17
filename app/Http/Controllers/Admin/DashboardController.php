@@ -59,18 +59,26 @@ class DashboardController extends Controller
         $recentAttendances = Attendance::with(['employee.user', 'employee.projects' => function ($q) {
             $q->wherePivot('status', 'active');
         }])->today()->latest('check_in_at')->limit($perPage)->get()->map(function ($attendance) {
+            $checkIn = $attendance->check_in_at->timezone('Asia/Jakarta');
+            $checkOut = $attendance->check_out_at?->timezone('Asia/Jakarta');
+            
+            $isIntern = $attendance->employee->user?->role === 'intern';
+            $projectName = $isIntern 
+                ? 'Bidang: ' . ($attendance->employee->division ?? '-') 
+                : ($attendance->employee->activeProject()?->name ?? '-');
+
             return [
                 'id' => $attendance->id,
                 'name' => $attendance->employee->user->name ?? '-',
                 'employeeId' => $attendance->employee->nik ?? '-',
                 'avatar' => null,
-                'avatarColor' => 'bg-emerald-500', // We can improve this logic later if needed
-                'project' => $attendance->employee->activeProject()?->name ?? '-',
-                'clockIn' => $attendance->check_in_at->format('H:i'),
-                'clockInLate' => $attendance->check_in_at->format('H:i') > '08:00', // Simplified logic
-                'clockOut' => $attendance->check_out_at ? $attendance->check_out_at->format('H:i') : '--:--',
-                'status' => $attendance->check_out_at ? 'Checked Out' : 'Checked In',
-                'statusColor' => $attendance->check_out_at ? 'text-[#035EA9] bg-blue-50' : 'text-emerald-600 bg-emerald-50',
+                'avatarColor' => 'bg-emerald-500',
+                'project' => $projectName,
+                'clockIn' => $checkIn->format('H:i'),
+                'clockInLate' => $checkIn->format('H:i') > '08:00',
+                'clockOut' => $checkOut ? $checkOut->format('H:i') : '--:--',
+                'status' => $checkOut ? 'Checked Out' : 'Checked In',
+                'statusColor' => $checkOut ? 'text-[#035EA9] bg-blue-50' : 'text-emerald-600 bg-emerald-50',
                 'mode' => $attendance->type,
                 'modeBorder' => $attendance->type === 'WFO' ? 'border-[#035EA9] text-[#035EA9]' : 'border-[#00A099] text-[#00A099]',
                 'notes' => $attendance->work_notes,

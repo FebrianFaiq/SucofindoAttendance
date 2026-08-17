@@ -76,6 +76,22 @@ class AttendanceController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
+        // Transform attendance data to include WIB-formatted times and evidence URL
+        $attendances->getCollection()->transform(function ($attendance) {
+            $checkIn = $attendance->check_in_at?->timezone('Asia/Jakarta');
+            $checkOut = $attendance->check_out_at?->timezone('Asia/Jakarta');
+
+            $attendance->check_in_at_formatted = $checkIn?->format('H:i');
+            $attendance->check_out_at_formatted = $checkOut?->format('H:i');
+            $attendance->check_in_at_iso = $checkIn?->toIso8601String();
+            $attendance->check_out_at_iso = $checkOut?->toIso8601String();
+            $attendance->check_in_evidence_url = $attendance->check_in_evidence
+                ? '/storage/' . $attendance->check_in_evidence
+                : null;
+
+            return $attendance;
+        });
+
         // 2. Daftar Hari Libur (Seluruh tahun 2026)
         $holidays = Holiday::orderBy('date')->get()->map(function ($h) {
             return [
