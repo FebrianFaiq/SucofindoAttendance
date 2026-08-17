@@ -26,7 +26,11 @@ class CheckOutController extends Controller
         return Inertia::render('employee/check-out', [
             'hasCheckedIn' => $todayAttendance !== null,
             'alreadyCheckedOut' => $todayAttendance?->check_out_at !== null,
-            'todayAttendance' => $todayAttendance,
+            'todayAttendance' => $todayAttendance ? [
+                'id' => $todayAttendance->id,
+                'check_in_at' => $todayAttendance->check_in_at?->toIso8601String(),
+                'check_out_at' => $todayAttendance->check_out_at?->toIso8601String(),
+            ] : null,
         ]);
     }
 

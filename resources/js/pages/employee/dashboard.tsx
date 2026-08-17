@@ -1,43 +1,290 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import {
+    ArrowRight,
+    LogIn as LogInIcon,
+    LogOut as LogOutIcon,
+    Clock,
+} from 'lucide-react';
+import { ServiceSelectorModal } from '@/components/service-selector-modal';
+import type { User } from '@/types';
 
-/**
- * Dashboard Karyawan
- *
- * Menampilkan ringkasan status kehadiran hari ini:
- * - Status check-in/check-out hari ini
- * - Proyek aktif
- * - Quick action: Check In / Check Out
- */
-export default function EmployeeDashboard() {
+// ─── Types ─────────────────────────────────────────────────────────────────
+
+interface AttendanceRecord {
+    id: number;
+    date: string;
+    date_raw: string;
+    clock_in: string | null;
+    clock_out: string | null;
+    status: string;
+    is_late: boolean;
+    type: string;
+    project_name: string;
+    duration: string | null;
+}
+
+interface EmployeeDashboardProps {
+    hasCheckedIn: boolean;
+    hasCheckedOut: boolean;
+    clockInTime: string | null;
+    clockOutTime: string | null;
+    totalDuration: string;
+    recentAttendances: AttendanceRecord[];
+    detectedLocation: string;
+}
+
+// ─── Helpers ───────────────────────────────────────────────────────────────
+
+function getGreeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 11) return 'Selamat Pagi';
+    if (hour < 15) return 'Selamat Siang';
+    if (hour < 18) return 'Selamat Sore';
+    return 'Selamat Malam';
+}
+
+function getTodayFormatted(): string {
+    return new Intl.DateTimeFormat('id-ID', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    }).format(new Date());
+}
+
+// ─── Component ─────────────────────────────────────────────────────────────
+
+export default function EmployeeDashboard({
+    hasCheckedIn,
+    hasCheckedOut,
+    clockInTime,
+    clockOutTime,
+    totalDuration,
+    recentAttendances,
+    detectedLocation,
+}: EmployeeDashboardProps) {
+    const page = usePage();
+    const user = page.props.auth?.user as User | undefined;
+
     return (
         <>
             <Head title="Dashboard" />
+            <ServiceSelectorModal />
+
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
-                <div>
-                    <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-                        Dashboard
-                    </h1>
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                        Ringkasan status kehadiran Anda hari ini.
-                    </p>
+                {/* ── Greeting Card ─────────────────────────────────────── */}
+                <div className="relative overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-6 md:p-8 shadow-sm">
+                    {/* Decorative circles */}
+                    <div className="absolute -top-10 right-20 h-32 w-32 rounded-full bg-[#EFF6FF] blur-2xl" />
+                    <div className="absolute -top-5 right-48 h-24 w-24 rounded-full bg-[#EFF6FF] blur-2xl" />
+
+                    <div className="relative z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div className="flex-1">
+                            {/* Status badge */}
+                            {!hasCheckedIn ? (
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F3F4F6] px-3 py-1 text-xs font-semibold text-[#6B7280] mb-3">
+                                    <Clock className="h-4 w-4" />
+                                    Belum Absen Hari Ini
+                                </span>
+                            ) : hasCheckedOut ? (
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#D1FAE5] px-3 py-1 text-xs font-semibold text-[#059669] mb-3">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-[#059669]" />
+                                    Sudah Selesai
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EFF6FF] px-3 py-1 text-xs font-semibold text-[#035EA9] mb-3">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-[#035EA9]" />
+                                    Sedang Bekerja
+                                </span>
+                            )}
+
+                            <h1 className="text-2xl md:text-3xl font-extrabold text-[#14141A] font-['Mulish',sans-serif]">
+                                {getGreeting()}, {user?.name?.split(' ')[0] ?? 'Rekan'}!
+                            </h1>
+                            <p className="mt-2 text-sm text-[#6B7280] leading-relaxed">
+                                {getTodayFormatted()} •{' '}
+                                {!hasCheckedIn
+                                    ? 'Silakan lakukan Clock In untuk memulai aktivitas.'
+                                    : hasCheckedOut
+                                      ? 'Anda sudah menyelesaikan hari kerja.'
+                                      : 'Anda sedang bekerja. Jangan lupa Clock Out nanti.'}
+                            </p>
+                        </div>
+
+                        <div className="flex flex-col items-start md:items-end gap-2 mt-4 md:mt-0">
+                            {!hasCheckedIn ? (
+                                <Link
+                                    href="/employee/check-in"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-[#035EA9] px-6 py-3.5 text-sm font-semibold text-white shadow-lg transition-all hover:bg-[#024a87] hover:shadow-xl active:scale-[0.98]"
+                                >
+                                    <LogInIcon className="h-4 w-4" />
+                                    Absen Hari ini
+                                </Link>
+                            ) : !hasCheckedOut ? (
+                                <Link
+                                    href="/employee/check-out"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-[#035EA9] px-6 py-3.5 text-sm font-semibold text-white shadow-lg transition-all hover:bg-[#024a87] hover:shadow-xl active:scale-[0.98]"
+                                >
+                                    <LogOutIcon className="h-4 w-4" />
+                                    Clock Out
+                                </Link>
+                            ) : null}
+                            <p className="text-xs text-[#9CA3AF]">
+                                Lokasi terdeteksi: {detectedLocation}
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
-                {/* TODO: Implement dashboard content */}
-                <div className="grid gap-4 md:grid-cols-2">
-                    <div className="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-950">
-                        <p className="text-sm font-medium text-neutral-500">Status Hari Ini</p>
-                        <p className="mt-1 text-sm text-neutral-400">Belum Check In</p>
+                {/* ── Clock Status Cards ─────────────────────────────────── */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    {/* Clock In */}
+                    <div className="group relative overflow-hidden rounded-xl border border-neutral-200 border-l-4 border-l-transparent bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-l-[#10B981] hover:border-y-[#10B981]/30 hover:border-r-[#10B981]/30 hover:bg-[#F0FDF4]">
+                        <div className="flex items-start justify-between relative z-10">
+                            <div>
+                                <p className="text-xs font-medium text-neutral-500 leading-tight uppercase tracking-wider">
+                                    Clock In
+                                </p>
+                                <p className="mt-2 text-2xl font-bold text-[#14141A] font-['Mulish',sans-serif]">
+                                    {clockInTime ?? '--:--'}
+                                </p>
+                            </div>
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg transition-colors bg-[#D1FAE5] group-hover:bg-[#BBF7D0]">
+                                <LogInIcon className="h-5 w-5 text-[#059669]" />
+                            </div>
+                        </div>
                     </div>
-                    <div className="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-950">
-                        <p className="text-sm font-medium text-neutral-500">Proyek Aktif</p>
-                        <p className="mt-1 text-sm text-neutral-400">—</p>
+
+                    {/* Clock Out */}
+                    <div className="group relative overflow-hidden rounded-xl border border-neutral-200 border-l-4 border-l-transparent bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-l-[#EF4444] hover:border-y-[#EF4444]/30 hover:border-r-[#EF4444]/30 hover:bg-[#FEF2F2]">
+                        <div className="flex items-start justify-between relative z-10">
+                            <div>
+                                <p className="text-xs font-medium text-neutral-500 leading-tight uppercase tracking-wider">
+                                    Clock Out
+                                </p>
+                                <p className="mt-2 text-2xl font-bold text-[#14141A] font-['Mulish',sans-serif]">
+                                    {clockOutTime ?? '--:--'}
+                                </p>
+                            </div>
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg transition-colors bg-[#FEE2E2] group-hover:bg-[#FECACA]">
+                                <LogOutIcon className="h-5 w-5 text-[#DC2626]" />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Total Durasi */}
+                    <div className="group relative overflow-hidden rounded-xl border border-neutral-200 border-l-4 border-l-transparent bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-l-[#035EA9] hover:border-y-[#035EA9]/30 hover:border-r-[#035EA9]/30 hover:bg-[#F0F5FA]">
+                        <div className="flex items-start justify-between relative z-10">
+                            <div>
+                                <p className="text-xs font-medium text-neutral-500 leading-tight uppercase tracking-wider">
+                                    Total Durasi
+                                </p>
+                                <p className="mt-2 text-2xl font-bold text-[#14141A] font-['Mulish',sans-serif]">
+                                    {totalDuration}
+                                </p>
+                            </div>
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg transition-colors bg-[#EFF6FF] group-hover:bg-[#DBEAFE]">
+                                <Clock className="h-5 w-5 text-[#035EA9]" />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div className="flex-1 rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-950">
-                    <p className="text-center text-sm text-neutral-400">
-                        Quick actions dan riwayat singkat akan ditampilkan di sini.
-                    </p>
+                {/* ── Aktivitas Terbaru ──────────────────────────────────── */}
+                <div className="rounded-xl border border-[#E5E7EB] bg-white">
+                    {/* Header */}
+                    <div className="flex items-center justify-between border-b border-[#F3F4F6] px-6 py-4">
+                        <h2 className="text-base font-bold text-[#14141A] font-['Mulish',sans-serif]">
+                            Aktivitas Terbaru
+                        </h2>
+                        <Link
+                            href="/employee/history"
+                            className="inline-flex items-center gap-1 text-sm font-semibold text-[#035EA9] transition-colors hover:text-[#024a87]"
+                        >
+                            Lihat Semua
+                            <ArrowRight className="h-4 w-4" />
+                        </Link>
+                    </div>
+
+                    {/* Table */}
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-[#F3F4F6]">
+                                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
+                                        Tanggal
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
+                                        Clock In
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
+                                        Clock Out
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
+                                        Status
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
+                                        Mode & Proyek
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {recentAttendances.length > 0 ? (
+                                    recentAttendances.map((record) => (
+                                        <tr
+                                            key={record.id}
+                                            className="border-b border-[#F9FAFB] last:border-0 transition-colors hover:bg-[#FAFBFC]"
+                                        >
+                                            <td className="px-6 py-4 text-sm font-medium text-[#14141A]">
+                                                {record.date}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-[#374151]">
+                                                {record.clock_in ?? '--:--'}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-[#374151]">
+                                                {record.clock_out ?? '--:--'}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span
+                                                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                                        record.status === 'Belum Clock Out'
+                                                            ? 'bg-[#FEF3C7] text-[#D97706]'
+                                                            : 'bg-[#D1FAE5] text-[#059669]'
+                                                    }`}
+                                                >
+                                                    <span
+                                                        className={`h-1.5 w-1.5 rounded-full ${
+                                                            record.status === 'Belum Clock Out'
+                                                                ? 'bg-[#D97706]'
+                                                                : 'bg-[#059669]'
+                                                        }`}
+                                                    />
+                                                    {record.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm font-medium text-[#14141A]">
+                                                    {record.type}
+                                                </div>
+                                                <div className="text-xs text-[#9CA3AF]">
+                                                    {record.project_name}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td
+                                            colSpan={5}
+                                            className="px-6 py-12 text-center text-sm text-[#9CA3AF]"
+                                        >
+                                            Belum ada data aktivitas kehadiran.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </>
@@ -45,5 +292,7 @@ export default function EmployeeDashboard() {
 }
 
 EmployeeDashboard.layout = () => ({
-    breadcrumbs: [{ title: 'Dashboard', href: '/employee/dashboard' }],
+    breadcrumbs: [
+        { title: 'Absensi', href: '/employee/dashboard' },
+    ],
 });
