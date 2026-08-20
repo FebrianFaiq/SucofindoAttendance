@@ -25,8 +25,22 @@ class HistoryController extends Controller
         $employee = $user->employee;
 
         $attendances = Attendance::forEmployee($employee->id)
+            ->where('check_in_at', '>=', now()->subMonth())
             ->orderByDesc('check_in_at')
-            ->paginate(15);
+            ->paginate(15)
+            ->through(function ($attendance) use ($employee) {
+                $checkIn = $attendance->check_in_at?->timezone('Asia/Jakarta');
+                $checkOut = $attendance->check_out_at?->timezone('Asia/Jakarta');
+
+                return [
+                    'id' => $attendance->id,
+                    'date' => $checkIn?->translatedFormat('d M Y') ?? '-',
+                    'clock_in' => $checkIn?->format('H:i'),
+                    'clock_out' => $checkOut?->format('H:i'),
+                    'type' => strtoupper($attendance->type ?? 'WFO'),
+                    'project_name' => $employee->activeProject()?->name ?? '-',
+                ];
+            });
 
         return Inertia::render('employee/history', [
             'attendances' => $attendances,

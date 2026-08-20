@@ -27,8 +27,8 @@ class DashboardController extends Controller
         // Ambil 5 record kehadiran terbaru untuk tabel "Aktivitas Terbaru"
         $recentAttendances = $employee
             ? $employee->attendances()
+                ->where('check_in_at', '>=', now()->subWeek())
                 ->orderByDesc('check_in_at')
-                ->limit(5)
                 ->get()
                 ->map(function ($attendance) use ($employee) {
                     $checkIn = $attendance->check_in_at?->timezone('Asia/Jakarta');
