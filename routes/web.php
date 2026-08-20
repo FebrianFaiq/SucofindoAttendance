@@ -46,8 +46,7 @@ Route::middleware(['auth'])->group(function () {
 // Employee Routes (Web User)
 // ───────────────────────────────────────────
 Route::prefix('employee')
-    // ->middleware(['auth', EnsurePasswordChanged::class])
-    ->middleware(['auth'])
+    ->middleware(['auth', EnsurePasswordChanged::class])
     ->group(function () {
         // Dashboard
         Route::get('dashboard', Employee\DashboardController::class)

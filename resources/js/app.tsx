@@ -15,6 +15,8 @@ createInertiaApp({
         switch (true) {
             case name === 'welcome':
                 return null;
+            case name === 'auth/force-change-password':
+                return null;
             case name.startsWith('auth/'):
                 return AuthLayout;
             case name.startsWith('employee/'):
