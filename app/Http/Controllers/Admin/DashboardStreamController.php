@@ -7,25 +7,53 @@ use App\Models\Attendance;
 use App\Models\Employee;
 use App\Models\Overtime;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
-class DashboardController extends Controller
+class DashboardStreamController extends Controller
 {
     /**
-     * Tampilkan dashboard admin dengan KPI cards.
-     * (FR-ADM-01, FR-ADM-02, FR-ADM-03)
-     *
-     * KPI Cards:
-     * - Total Karyawan (aktif)
-     * - Hadir Hari Ini
-     * - WFO Hari Ini
-     * - WFA Hari Ini
-     * - Belum Check In
-     * - Belum Check Out
-     * - Lembur Hari Ini
+     * Stream SSE data untuk Dashboard Admin (Live Update)
      */
-    public function __invoke(Request $request): Response
+    public function __invoke(Request $request): StreamedResponse
+    {
+        return response()->stream(function () use ($request) {
+            // Kita batasi waktu stream misal maksimal 2 menit, setelah itu klien otomatis reconnect.
+            // Ini untuk mencegah proses PHP yang hang tanpa henti di FPM.
+            $startTime = time();
+            $maxDuration = 120; // 2 menit
+            
+            while (true) {
+                if (connection_aborted() || (time() - $startTime) > $maxDuration) {
+                    break;
+                }
+
+                $data = $this->getDashboardData($request);
+                
+                // Format SSE
+                echo "event: message\n";
+                echo "data: " . json_encode($data) . "\n\n";
+                
+                // Flush buffer PHP dan server web
+                if (ob_get_level() > 0) {
+                    ob_flush();
+                }
+                flush();
+                
+                // Tunggu 3 detik sebelum polling berikutnya
+                sleep(3);
+            }
+        }, 200, [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache',
+            'Connection' => 'keep-alive',
+            'X-Accel-Buffering' => 'no', // Disable buffering untuk Nginx
+        ]);
+    }
+
+    /**
+     * Ekstrak logika ambil data agar bisa direuse oleh Stream Controller
+     */
+    private function getDashboardData(Request $request): array
     {
         $totalPtt = Employee::whereHas('user', fn ($q) => $q->where('is_active', true)->where('role', '!=', 'intern'))->count();
         $totalInterns = Employee::whereHas('user', fn ($q) => $q->where('is_active', true)->where('role', 'intern'))->count();
@@ -85,7 +113,7 @@ class DashboardController extends Controller
             ];
         });
 
-        return Inertia::render('admin/dashboard', [
+        return [
             'kpi' => [
                 'totalPtt' => $totalPtt,
                 'totalInterns' => $totalInterns,
@@ -95,9 +123,6 @@ class DashboardController extends Controller
             'attendanceTrendData' => $trendData,
             'workModeData' => $workModeData,
             'attendanceRecords' => $recentAttendances,
-            'filters' => [
-                'per_page' => $perPage,
-            ],
-        ]);
+        ];
     }
 }

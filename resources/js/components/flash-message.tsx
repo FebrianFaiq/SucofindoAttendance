@@ -1,6 +1,6 @@
 import { usePage } from '@inertiajs/react';
-import React, { useEffect, useState } from 'react';
 import { Check, X, AlertCircle } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 
 interface FlashProps {
     flash?: {
@@ -39,7 +39,9 @@ export function FlashMessage() {
         }
     }, [flash]);
 
-    if (!visible || !message) return null;
+    if (!visible || !message) {
+return null;
+}
 
     const isSuccess = type === 'success';
 

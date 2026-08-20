@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Employee\CheckOutRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -17,7 +18,7 @@ class CheckOutController extends Controller
      */
     public function create(): Response
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
         $employee = $user->employee;
 
@@ -40,7 +41,7 @@ class CheckOutController extends Controller
      */
     public function store(CheckOutRequest $request): RedirectResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
         $employee = $user->employee;
 

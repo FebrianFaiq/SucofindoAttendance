@@ -31,8 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         // Mencegah infinite redirect saat user yang sudah login mengakses /login
-        $middleware->redirectUsersTo(fn (Request $request) =>
-            $request->user()?->isAdmin()
+        $middleware->redirectUsersTo(fn (Request $request) => $request->user()?->isAdmin()
                 ? route('admin.dashboard')
                 : route('employee.dashboard')
         );

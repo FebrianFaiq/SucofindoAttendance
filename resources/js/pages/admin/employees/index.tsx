@@ -1,11 +1,11 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Search, Plus, ChevronLeft, ChevronRight, IdCard, ClipboardList, Pen, RotateCcw, Trash2, LayoutGrid, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import React, { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import AppLayout from '@/layouts/app-layout';
 
 interface EmployeeItem {
@@ -74,7 +74,10 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
     };
 
     const handleSearch = (e?: React.FormEvent) => {
-        if (e) e.preventDefault();
+        if (e) {
+e.preventDefault();
+}
+
         router.get('/admin/employees', { search: searchTerm, per_page: perPage }, { preserveState: true, replace: true });
     };
 
@@ -84,7 +87,10 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
     };
 
     const handleResetPassword = () => {
-        if (!selectedEmployee) return;
+        if (!selectedEmployee) {
+return;
+}
+
         setIsProcessing(true);
         router.post(
             `/admin/employees/${selectedEmployee.id}/reset-password`,
@@ -103,7 +109,10 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
     };
 
     const handleDeleteEmployee = () => {
-        if (!selectedEmployee) return;
+        if (!selectedEmployee) {
+return;
+}
+
         setIsProcessing(true);
         router.delete(`/admin/employees/${selectedEmployee.id}`, {
             onSuccess: () => {
@@ -119,7 +128,10 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
     };
 
     const getInitials = (name: string) => {
-        if (!name) return 'EM';
+        if (!name) {
+return 'EM';
+}
+
         return name
             .split(' ')
             .map((n) => n[0])
@@ -183,6 +195,7 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                 ) : (
                                     employees.data.map((emp) => {
                                         const activeProject = emp.projects?.[0]?.name ?? 'Belum Ditugaskan';
+
                                         return (
                                             <tr key={emp.id} className="hover:bg-neutral-50/50 transition-colors">
                                                 <td className="px-6 py-4 min-w-[250px]">

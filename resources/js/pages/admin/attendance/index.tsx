@@ -1,4 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
+import { format, parseISO } from 'date-fns';
 import {
     Search,
     UserSearch,
@@ -20,14 +21,13 @@ import {
     ExternalLink,
     Download
 } from 'lucide-react';
-import { DatePicker } from '@/components/ui/date-picker';
-import { format, parseISO } from 'date-fns';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import React, { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import AppLayout from '@/layouts/app-layout';
 
 interface AttendanceItem {
@@ -138,7 +138,10 @@ export default function AttendanceIndex({
     });
 
     const handleFilter = (e?: React.FormEvent) => {
-        if (e) e.preventDefault();
+        if (e) {
+e.preventDefault();
+}
+
         router.get(
             '/admin/attendance',
             { start_date: startDate || undefined, end_date: endDate || undefined, search: searchTerm || undefined, per_page: perPage },
@@ -173,7 +176,10 @@ export default function AttendanceIndex({
     };
 
     const handleDeleteHoliday = () => {
-        if (!holidayToDelete) return;
+        if (!holidayToDelete) {
+return;
+}
+
         router.delete(`/admin/holidays/${holidayToDelete.id}`, {
             onSuccess: () => {
                 setHolidayToDelete(null);
@@ -187,7 +193,10 @@ export default function AttendanceIndex({
     };
 
     const getInitials = (name: string) => {
-        if (!name) return 'EM';
+        if (!name) {
+return 'EM';
+}
+
         return name
             .split(' ')
             .map((n) => n[0])
@@ -198,19 +207,30 @@ export default function AttendanceIndex({
 
     // Use server-side formatted WIB time (HH:mm) when available, fallback to client-side parsing
     const formatTime = (formattedTime: string | null | undefined, dateString: string | null) => {
-        if (formattedTime) return formattedTime;
-        if (!dateString) return '—';
+        if (formattedTime) {
+return formattedTime;
+}
+
+        if (!dateString) {
+return '—';
+}
+
         const date = new Date(dateString);
+
         return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' });
     };
 
     const formatTime12 = (formattedTime: string | null | undefined, dateString: string | null) => {
         // Use server-formatted HH:mm if available
         const timeStr = formattedTime || (dateString ? null : null);
-        if (!timeStr && !dateString) return { time: '—', period: '' };
+
+        if (!timeStr && !dateString) {
+return { time: '—', period: '' };
+}
 
         let hours: number;
         let minutes: string;
+
         if (timeStr) {
             const [h, m] = timeStr.split(':').map(Number);
             hours = h;
@@ -225,28 +245,43 @@ export default function AttendanceIndex({
 
         const period = hours >= 12 ? 'PM' : 'AM';
         const displayHours = hours % 12 || 12;
+
         return { time: `${displayHours.toString().padStart(2, '0')}:${minutes}`, period };
     };
 
     const calculateTotalHours = (checkIn: string | null, checkOut: string | null) => {
-        if (!checkIn || !checkOut) return '—';
+        if (!checkIn || !checkOut) {
+return '—';
+}
+
         const start = new Date(checkIn);
         const end = new Date(checkOut);
         const diffMs = end.getTime() - start.getTime();
-        if (diffMs <= 0) return '—';
+
+        if (diffMs <= 0) {
+return '—';
+}
+
         const totalMinutes = Math.floor(diffMs / 60000);
         const h = Math.floor(totalMinutes / 60);
         const m = totalMinutes % 60;
+
         return `${h}h ${m}m`;
     };
 
     const isLate = (formattedTime: string | null | undefined, dateString: string | null) => {
         if (formattedTime) {
             const [h, m] = formattedTime.split(':').map(Number);
+
             return h >= 8 && m > 0;
         }
-        if (!dateString) return false;
+
+        if (!dateString) {
+return false;
+}
+
         const date = new Date(dateString);
+
         return date.getHours() >= 8 && date.getMinutes() > 0;
     };
 
@@ -254,6 +289,22 @@ export default function AttendanceIndex({
         ...(startDate ? { start_date: startDate } : {}),
         ...(endDate ? { end_date: endDate } : {}),
         ...(searchTerm ? { search: searchTerm } : {}),
+    }).toString()}`;
+
+    // Ekstrak bulan dan tahun dari startDate jika ada, jika tidak gunakan bulan/tahun saat ini
+    const exportMonth = startDate ? String(parseISO(startDate).getMonth() + 1) : String(new Date().getMonth() + 1);
+    const exportYear = startDate ? String(parseISO(startDate).getFullYear()) : String(new Date().getFullYear());
+
+    const excelExportKaryawanUrl = `/admin/reports/export-excel?${new URLSearchParams({
+        role: 'employee',
+        month: exportMonth,
+        year: exportYear,
+    }).toString()}`;
+
+    const excelExportMagangUrl = `/admin/reports/export-excel?${new URLSearchParams({
+        role: 'intern',
+        month: exportMonth,
+        year: exportYear,
     }).toString()}`;
 
     return (
@@ -418,16 +469,38 @@ export default function AttendanceIndex({
                 <div className="flex-1 rounded-xl border border-neutral-200 bg-white shadow-sm overflow-hidden flex flex-col">
                     <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
                         <h2 className="text-xl font-bold text-neutral-900 tracking-tight">Data Kehadiran</h2>
-                        <a
-                            href={exportUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                        >
-                            <Button variant="outline" className="h-9 border-neutral-300 font-bold text-neutral-700 shadow-sm hover:bg-neutral-50 flex gap-2">
-                                <Download className="h-4 w-4" />
-                                Export Recap
-                            </Button>
-                        </a>
+                        <div className="flex gap-2">
+                            <a
+                                href={exportUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                <Button variant="outline" className="h-9 border-neutral-300 font-bold text-neutral-700 shadow-sm hover:bg-neutral-50 flex gap-2">
+                                    <Download className="h-4 w-4" />
+                                    Export CSV
+                                </Button>
+                            </a>
+                            <a
+                                href={excelExportKaryawanUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                <Button className="h-9 bg-emerald-600 font-bold text-white shadow-sm hover:bg-emerald-700 flex gap-2">
+                                    <Download className="h-4 w-4" />
+                                    Excel Karyawan
+                                </Button>
+                            </a>
+                            <a
+                                href={excelExportMagangUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                <Button className="h-9 bg-indigo-600 font-bold text-white shadow-sm hover:bg-indigo-700 flex gap-2">
+                                    <Download className="h-4 w-4" />
+                                    Excel Magang
+                                </Button>
+                            </a>
+                        </div>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">

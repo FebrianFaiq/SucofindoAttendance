@@ -34,6 +34,7 @@ function getTodayFormatted(): string {
 
 function formatTime(dateStr: string): string {
     const d = new Date(dateStr);
+
     return d.toLocaleTimeString('id-ID', {
         hour: '2-digit',
         minute: '2-digit',
@@ -48,6 +49,7 @@ function calculateDuration(checkInStr: string): string {
     const totalMinutes = Math.floor(diffMs / 60000);
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
+
     return `${hours}j ${minutes}m`;
 }
 
@@ -85,10 +87,12 @@ export default function CheckOut({
                     hour12: false,
                 }),
             );
+
             if (todayAttendance?.check_in_at) {
                 setDuration(calculateDuration(todayAttendance.check_in_at));
             }
         }, 1000);
+
         return () => clearInterval(interval);
     }, [todayAttendance]);
 

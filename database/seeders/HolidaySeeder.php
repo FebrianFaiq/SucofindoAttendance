@@ -58,6 +58,7 @@ class HolidaySeeder extends Seeder
                         );
                     }
                 }
+
                 return;
             }
         } catch (\Throwable $e) {

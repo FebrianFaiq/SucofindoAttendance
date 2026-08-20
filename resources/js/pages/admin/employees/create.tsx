@@ -1,9 +1,9 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import React, { useState } from 'react';
-import AppLayout from '@/layouts/app-layout';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Eye, EyeOff, UserPlus, GraduationCap, Briefcase } from 'lucide-react';
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import AppLayout from '@/layouts/app-layout';
 
 interface Project {
     id: number;

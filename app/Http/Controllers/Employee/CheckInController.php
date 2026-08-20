@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Employee;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Employee\CheckInRequest;
 use App\Models\Attendance;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -19,7 +20,7 @@ class CheckInController extends Controller
      */
     public function create(): Response
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
         $employee = $user->employee;
 
@@ -37,7 +38,7 @@ class CheckInController extends Controller
      */
     public function store(CheckInRequest $request): RedirectResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
         $employee = $user->employee;
 
@@ -55,9 +56,9 @@ class CheckInController extends Controller
         }
 
         $extension = $photo->getClientOriginalExtension() ?: 'jpg';
-        $fileName = Str::uuid() . '.' . $extension;
+        $fileName = Str::uuid().'.'.$extension;
         $photo->move($targetDir, $fileName);
-        $photoPath = 'attendance/check-in/' . $fileName;
+        $photoPath = 'attendance/check-in/'.$fileName;
 
         Attendance::create([
             'employee_id' => $employee->id,

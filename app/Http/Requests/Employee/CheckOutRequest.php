@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Employee;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Validator;
@@ -33,7 +34,7 @@ class CheckOutRequest extends FormRequest
     {
         return [
             function (Validator $validator): void {
-                /** @var \App\Models\User $user */
+                /** @var User $user */
                 $user = Auth::user();
                 $employee = $user->employee;
 

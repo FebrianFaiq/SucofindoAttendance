@@ -109,4 +109,3 @@ class Employee extends Model
         return $this->attendances()->today()->first();
     }
 }
-

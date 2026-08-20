@@ -114,7 +114,7 @@ class EmployeeController extends Controller
         });
 
         return redirect()->route('admin.employees.index')
-            ->with('success', 'Data Karyawan Berhasil di Tambahkan (Password default: ' . self::DEFAULT_PASSWORD . ')');
+            ->with('success', 'Data Karyawan Berhasil di Tambahkan (Password default: '.self::DEFAULT_PASSWORD.')');
     }
 
     /**

@@ -20,6 +20,7 @@ export function ServiceSelectorModal() {
 
     useEffect(() => {
         const hasSelected = sessionStorage.getItem('sucofindo_service_selected');
+
         if (!hasSelected) {
             setOpen(true);
         }

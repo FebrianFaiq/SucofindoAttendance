@@ -34,7 +34,7 @@ class AttendanceController extends Controller
         $singleDate = $request->input('date');
 
         if ($startDate && $endDate) {
-            $query->whereBetween('check_in_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+            $query->whereBetween('check_in_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         } elseif ($startDate) {
             $query->whereDate('check_in_at', '>=', $startDate);
         } elseif ($endDate) {
@@ -86,7 +86,7 @@ class AttendanceController extends Controller
             $attendance->check_in_at_iso = $checkIn?->toIso8601String();
             $attendance->check_out_at_iso = $checkOut?->toIso8601String();
             $attendance->check_in_evidence_url = $attendance->check_in_evidence
-                ? '/storage/' . $attendance->check_in_evidence
+                ? '/storage/'.$attendance->check_in_evidence
                 : null;
 
             return $attendance;

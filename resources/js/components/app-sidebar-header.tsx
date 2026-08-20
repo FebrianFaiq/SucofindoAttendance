@@ -1,8 +1,8 @@
 import { usePage } from '@inertiajs/react';
 import { Search, User } from 'lucide-react';
 import { Breadcrumbs } from '@/components/breadcrumbs';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { UserMenuContent } from '@/components/user-menu-content';
 import type { BreadcrumbItem as BreadcrumbItemType, User as UserType } from '@/types';
 

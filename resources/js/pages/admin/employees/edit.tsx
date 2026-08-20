@@ -1,10 +1,10 @@
 import { Head, Link, useForm, router } from '@inertiajs/react';
-import React, { useState } from 'react';
-import AppLayout from '@/layouts/app-layout';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { RotateCcw, Save, AlertTriangle, CheckCircle2, Briefcase, GraduationCap } from 'lucide-react';
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import AppLayout from '@/layouts/app-layout';
 
 interface Project {
     id: number;

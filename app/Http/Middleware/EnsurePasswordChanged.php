@@ -14,7 +14,7 @@ class EnsurePasswordChanged
 
         $exempt = $request->routeIs('force-change-password') || $request->routeIs('logout');
 
-        if ($user && $user->must_change_password && !$exempt) {
+        if ($user && $user->must_change_password && ! $exempt) {
             return redirect()->route('force-change-password');
         }
 

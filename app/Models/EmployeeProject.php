@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -93,8 +94,8 @@ class EmployeeProject extends Model
     /**
      * Scope: hanya assignment yang aktif.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<EmployeeProject> $query
-     * @return \Illuminate\Database\Eloquent\Builder<EmployeeProject>
+     * @param  Builder<EmployeeProject>  $query
+     * @return Builder<EmployeeProject>
      */
     public function scopeActive($query)
     {
