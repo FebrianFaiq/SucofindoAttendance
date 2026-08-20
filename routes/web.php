@@ -102,8 +102,7 @@ Route::prefix('admin')
 
         // Manajemen Proyek (Project Management)
         Route::resource('projects', Admin\ProjectController::class)
-            ->names('admin.projects')
-            ->except(['show']);
+            ->names('admin.projects');
 
         // Penugasan Proyek (Project Assignment)
         Route::post('assignments', [Admin\AssignmentController::class, 'store'])

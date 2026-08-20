@@ -17,13 +17,18 @@ class AssignmentController extends Controller
      */
     public function store(AssignmentRequest $request): RedirectResponse
     {
-        EmployeeProject::create([
-            'employee_id' => $request->validated('employee_id'),
-            'project_id' => $request->validated('project_id'),
-            'status' => 'active',
-            'assigned_at' => today(),
-            'assigned_by' => Auth::id(),
-        ]);
+        $projectId = $request->validated('project_id');
+        $employeeIds = $request->validated('employee_ids');
+
+        foreach ($employeeIds as $employeeId) {
+            EmployeeProject::create([
+                'employee_id' => $employeeId,
+                'project_id' => $projectId,
+                'status' => 'active',
+                'assigned_at' => today(),
+                'assigned_by' => Auth::id(),
+            ]);
+        }
 
         return redirect()->back()
             ->with('success', 'Karyawan berhasil ditugaskan ke proyek.');

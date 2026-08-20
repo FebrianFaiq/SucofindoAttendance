@@ -48,6 +48,30 @@ class ProjectController extends Controller
     }
 
     /**
+     * Tampilkan detail proyek.
+     */
+    public function show(Project $project): Response
+    {
+        $project->load([
+            'employees' => function ($query) {
+                $query->with('user:id,name,email,role,is_active');
+            }
+        ]);
+
+        $availableEmployees = \App\Models\Employee::with(['user:id,name,email,role', 'projects' => function($q) {
+            $q->where('employee_projects.status', 'active');
+        }])
+        ->whereHas('user', function($q) {
+            $q->where('is_active', true)->where('role', 'employee');
+        })->get();
+
+        return Inertia::render('admin/projects/show', [
+            'project' => $project,
+            'availableEmployees' => $availableEmployees,
+        ]);
+    }
+
+    /**
      * Tampilkan form edit proyek.
      */
     public function edit(Project $project): Response

@@ -22,7 +22,8 @@ class AssignmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'employee_id' => ['required', 'exists:employees,id'],
+            'employee_ids' => ['required', 'array', 'min:1'],
+            'employee_ids.*' => ['exists:employees,id'],
             'project_id' => ['required', 'exists:projects,id'],
         ];
     }
@@ -34,21 +35,22 @@ class AssignmentRequest extends FormRequest
     {
         return [
             function (Validator $validator): void {
-                $employeeId = $this->input('employee_id');
+                $employeeIds = $this->input('employee_ids', []);
 
-                if (! $employeeId) {
+                if (empty($employeeIds)) {
                     return;
                 }
 
-                $hasActive = DB::table('employee_projects')
-                    ->where('employee_id', $employeeId)
+                $activeEmployees = DB::table('employee_projects')
+                    ->whereIn('employee_id', $employeeIds)
                     ->where('status', 'active')
-                    ->exists();
+                    ->pluck('employee_id')
+                    ->toArray();
 
-                if ($hasActive) {
+                if (count($activeEmployees) > 0) {
                     $validator->errors()->add(
-                        'employee_id',
-                        'Karyawan ini sudah memiliki proyek aktif. Akhiri penugasan saat ini terlebih dahulu.'
+                        'employee_ids',
+                        'Satu atau lebih karyawan yang dipilih sudah memiliki proyek aktif.'
                     );
                 }
             },
