@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
+import 'change_password_page.dart';
 import 'service_selector_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -44,7 +45,7 @@ class _LoginPageState extends State<LoginPage>
     if (email == 'karyawan@sucofindo.co.id' && password == 'password') {
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const ServiceSelectorPage()),
+        MaterialPageRoute(builder: (_) => const ChangePasswordPage()),
       );
     } else {
       setState(() {
