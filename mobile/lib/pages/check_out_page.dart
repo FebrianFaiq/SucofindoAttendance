@@ -14,12 +14,10 @@ class CheckOutPage extends StatefulWidget {
 }
 
 class _CheckOutPageState extends State<CheckOutPage> {
-  // Live clock
   late Timer _timer;
   String _liveTime = '';
   String _duration = '0j 0m';
 
-  // Form
   final _notesController = TextEditingController();
   bool _isSubmitting = false;
 
@@ -32,10 +30,12 @@ class _CheckOutPageState extends State<CheckOutPage> {
 
   void _updateTime() {
     final now = DateTime.now();
-    setState(() {
-      _liveTime = IdDateHelper.formatTime(now);
-      _duration = _calculateDuration();
-    });
+    if (mounted) {
+      setState(() {
+        _liveTime = IdDateHelper.formatTime(now);
+        _duration = _calculateDuration();
+      });
+    }
   }
 
   String _calculateDuration() {
@@ -61,11 +61,11 @@ class _CheckOutPageState extends State<CheckOutPage> {
   }
 
   Future<void> _handleSubmit() async {
-    if (_notesController.text.trim().isEmpty) {
+    if (_notesController.text.trim().length < 10) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Silakan isi catatan pekerjaan',
+            'Catatan pekerjaan minimal 10 karakter',
             style: GoogleFonts.mulish(fontWeight: FontWeight.w600),
           ),
           backgroundColor: AppColors.danger,
@@ -81,7 +81,6 @@ class _CheckOutPageState extends State<CheckOutPage> {
 
     if (!mounted) return;
 
-    // Show success dialog
     await showDialog(
       context: context,
       barrierDismissible: false,
@@ -129,7 +128,7 @@ class _CheckOutPageState extends State<CheckOutPage> {
               child: ElevatedButton(
                 onPressed: () {
                   Navigator.of(ctx).pop();
-                  Navigator.of(context).pop(true); // Return true to dashboard
+                  Navigator.of(context).pop(true);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
@@ -154,235 +153,224 @@ class _CheckOutPageState extends State<CheckOutPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textSecondary),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          'Clock Out',
-          style: GoogleFonts.mulish(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+      backgroundColor: const Color(0xFFF9F9FF),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(70),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(16),
+              bottomRight: Radius.circular(16),
+            ),
+          ),
+          child: SafeArea(
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, color: AppColors.primaryDark),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                Expanded(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 48),
+                      child: Image.asset(
+                        'assets/images/logo-sucofindo.png',
+                        height: 44,
+                        errorBuilder: (ctx, err, stack) => const Icon(Icons.business, color: AppColors.primary),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        centerTitle: true,
+      ),
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.all(24),
+        color: const Color(0xFFF9F9FF),
+        child: SafeArea(
+          child: SizedBox(
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: _isSubmitting ? null : _handleSubmit,
+              icon: _isSubmitting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        valueColor: AlwaysStoppedAnimation(Colors.white),
+                      ),
+                    )
+                  : const Icon(Icons.logout_outlined, size: 20, color: Colors.white),
+              label: Text(
+                _isSubmitting ? 'Memproses...' : 'Konfirmasi Clock Out',
+                style: GoogleFonts.mulish(fontWeight: FontWeight.w700, fontSize: 14),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.danger,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: AppColors.border,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Main Card ───────────────────────────────────────
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
+            // Main Time Card
+            _buildMainTimeCard(),
+            const SizedBox(height: 16),
+
+            // Stats Row
+            Row(
+              children: [
+                Expanded(child: _buildStatCard('Clock In', Icons.login_outlined, widget.clockInTime)),
+                const SizedBox(width: 16),
+                Expanded(child: _buildStatCard('Durasi Kerja', Icons.timer, _duration)),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Catatan Pekerjaan
+            _buildNotesField(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMainTimeCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border, width: 1.2),
+      ),
+      child: Column(
+        children: [
+          Text(
+            'WAKTU SAAT INI',
+            style: GoogleFonts.mulish(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textSecondary,
+              letterSpacing: 1,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            _liveTime,
+            style: GoogleFonts.mulish(
+              fontSize: 48,
+              fontWeight: FontWeight.w800,
+              color: AppColors.primaryDark,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _getTodayFormatted(),
+            style: GoogleFonts.mulish(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.dangerLight,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.logout_outlined, size: 14, color: AppColors.danger),
+                const SizedBox(width: 8),
+                Text(
+                  'Siap Untuk Clock Out',
+                  style: GoogleFonts.mulish(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.danger,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String title, IconData icon, String value) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border, width: 1.2),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(11), // Slightly less than 12 to fit inside border
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              right: -15,
+              top: -15,
+              child: Container(
+                width: 60,
+                height: 60,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFF0F4FA),
+                ),
               ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Live Clock
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 32, 24, 8),
-                    child: Column(
-                      children: [
-                        Text(
-                          _liveTime,
-                          style: GoogleFonts.mulish(
-                            fontSize: 56,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.primary,
-                            letterSpacing: 2,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          _getTodayFormatted(),
-                          style: GoogleFonts.mulish(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Clock In & Duration Row
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 20),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Row(
-                      children: [
-                        // Clock In
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            child: Column(
-                              children: [
-                                Text(
-                                  'CLOCK IN',
-                                  style: GoogleFonts.mulish(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.textMuted,
-                                    letterSpacing: 1,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.login_rounded, size: 16, color: AppColors.textSecondary),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      widget.clockInTime,
-                                      style: GoogleFonts.mulish(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        // Divider
-                        Container(width: 1, height: 50, color: AppColors.border),
-                        // Duration
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            child: Column(
-                              children: [
-                                Text(
-                                  'DURASI KERJA',
-                                  style: GoogleFonts.mulish(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.textMuted,
-                                    letterSpacing: 1,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      _duration,
-                                      style: GoogleFonts.mulish(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.primary,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    const Icon(Icons.schedule_rounded, size: 16, color: AppColors.primary),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Work Notes
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Catatan Pekerjaan',
-                          style: GoogleFonts.mulish(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        TextField(
-                          controller: _notesController,
-                          maxLines: 5,
-                          style: GoogleFonts.mulish(
-                            fontSize: 14,
-                            color: AppColors.textPrimary,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: 'Ceritakan pekerjaan atau aktivitas yang Anda lakukan hari ini...',
-                            hintStyle: GoogleFonts.mulish(
-                              fontSize: 13,
-                              color: AppColors.textMuted,
-                            ),
-                            filled: true,
-                            fillColor: AppColors.surface,
-                            contentPadding: const EdgeInsets.all(16),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AppColors.border),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AppColors.border),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-
-                  // Submit Button
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton.icon(
-                        onPressed: _isSubmitting ? null : _handleSubmit,
-                        icon: _isSubmitting
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  valueColor: AlwaysStoppedAnimation(Colors.white),
-                                ),
-                              )
-                            : const Icon(Icons.logout_rounded, size: 20),
-                        label: Text(
-                          _isSubmitting ? 'Memproses...' : 'Konfirmasi Clock Out',
-                          style: GoogleFonts.mulish(fontWeight: FontWeight.w700),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
-                          disabledForegroundColor: Colors.white70,
-                          elevation: 4,
-                          shadowColor: AppColors.primary.withValues(alpha: 0.3),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
+                  Row(
+                    children: [
+                      Icon(icon, size: 16, color: AppColors.textSecondary),
+                      const SizedBox(width: 8),
+                      Text(
+                        title,
+                        style: GoogleFonts.mulish(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textSecondary,
                         ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    value,
+                    style: GoogleFonts.mulish(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ],
@@ -391,6 +379,81 @@ class _CheckOutPageState extends State<CheckOutPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildNotesField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            RichText(
+              text: TextSpan(
+                text: 'Catatan Pekerjaan ',
+                style: GoogleFonts.mulish(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+                children: const [
+                  TextSpan(
+                    text: '*',
+                    style: TextStyle(color: AppColors.danger),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              'Minimal 10 karakter',
+              style: GoogleFonts.mulish(
+                fontSize: 11,
+                color: AppColors.textMuted,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Theme(
+          data: Theme.of(context).copyWith(
+            inputDecorationTheme: const InputDecorationTheme(
+              filled: true,
+              fillColor: Colors.white,
+            ),
+          ),
+          child: TextField(
+            controller: _notesController,
+            maxLines: 6,
+            style: GoogleFonts.mulish(
+              fontSize: 14,
+              color: AppColors.textPrimary,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Lorem Ipsum',
+              hintStyle: GoogleFonts.mulish(
+                fontSize: 14,
+                color: AppColors.textPrimary,
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: const EdgeInsets.all(16),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.border, width: 1.2),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.border, width: 1.2),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

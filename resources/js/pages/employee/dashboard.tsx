@@ -82,7 +82,7 @@ export default function EmployeeDashboard({
             <Head title="Dashboard" />
             {user?.role !== 'intern' && <ServiceSelectorModal />}
 
-            <div className="flex h-full flex-1 flex-col gap-6 p-6">
+            <div className="flex h-full flex-1 flex-col gap-6 p-6 bg-sucofindo-light">
                 {/* ── Greeting Card ─────────────────────────────────────── */}
                 <div className="relative overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-6 md:p-8 shadow-sm">
                     {/* Decorative Bubbles - Right Side (Asymmetrical & Clipped) */}

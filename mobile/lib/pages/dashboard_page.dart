@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/id_date_helper.dart';
@@ -6,7 +7,7 @@ import '../theme/app_colors.dart';
 import 'check_in_page.dart';
 import 'check_out_page.dart';
 import 'history_page.dart';
-import 'login_page.dart';
+import 'profile_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -16,13 +17,10 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  // Attendance state — simulates the web's hasCheckedIn / hasCheckedOut
   bool _hasCheckedIn = false;
   bool _hasCheckedOut = false;
   String? _clockInTime;
   String? _clockOutTime;
-
-  // Live clock
   late Timer _timer;
 
   @override
@@ -42,14 +40,6 @@ class _DashboardPageState extends State<DashboardPage> {
     super.dispose();
   }
 
-  String _getGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 11) return 'Selamat Pagi';
-    if (hour < 15) return 'Selamat Siang';
-    if (hour < 18) return 'Selamat Sore';
-    return 'Selamat Malam';
-  }
-
   String _getTodayFormatted() {
     return IdDateHelper.formatFull(DateTime.now());
   }
@@ -57,7 +47,6 @@ class _DashboardPageState extends State<DashboardPage> {
   String _getTotalDuration() {
     if (_clockInTime == null) return '0j 0m';
     if (_clockOutTime != null) {
-      // Parse simple HH:mm
       final inParts = _clockInTime!.split(':');
       final outParts = _clockOutTime!.split(':');
       final inMinutes = int.parse(inParts[0]) * 60 + int.parse(inParts[1]);
@@ -65,7 +54,6 @@ class _DashboardPageState extends State<DashboardPage> {
       final diff = outMinutes - inMinutes;
       return '${diff ~/ 60}j ${diff % 60}m';
     }
-    // Live duration
     final inParts = _clockInTime!.split(':');
     final now = DateTime.now();
     final inMinutes = int.parse(inParts[0]) * 60 + int.parse(inParts[1]);
@@ -75,488 +63,490 @@ class _DashboardPageState extends State<DashboardPage> {
     return '${diff ~/ 60}j ${diff % 60}m';
   }
 
-  void _navigateToCheckIn() async {
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => const CheckInPage()),
-    );
-    if (result == true && mounted) {
-      setState(() {
-        _hasCheckedIn = true;
-        _clockInTime = IdDateHelper.formatTime(DateTime.now());
-      });
+  void _handleAction() async {
+    if (!_hasCheckedIn) {
+      final result = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(builder: (_) => const CheckInPage()),
+      );
+      if (result == true && mounted) {
+        setState(() {
+          _hasCheckedIn = true;
+          _clockInTime = IdDateHelper.formatTime(DateTime.now());
+        });
+      }
+    } else if (!_hasCheckedOut) {
+      final result = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(
+          builder: (_) => CheckOutPage(clockInTime: _clockInTime ?? '--:--'),
+        ),
+      );
+      if (result == true && mounted) {
+        setState(() {
+          _hasCheckedOut = true;
+          _clockOutTime = IdDateHelper.formatTime(DateTime.now());
+        });
+      }
     }
   }
 
-  void _navigateToCheckOut() async {
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => CheckOutPage(clockInTime: _clockInTime ?? '--:--'),
-      ),
-    );
-    if (result == true && mounted) {
-      setState(() {
-        _hasCheckedOut = true;
-        _clockOutTime = IdDateHelper.formatTime(DateTime.now());
-      });
-    }
-  }
-
-  // Static recent attendance data
+  // Static recent attendance data (Riwayat Absensi)
   static final List<Map<String, String>> _recentAttendances = [
     {
-      'date': 'Senin, 18 Agustus 2026',
-      'clockIn': '07:55',
-      'clockOut': '17:03',
-      'status': 'Selesai',
-      'mode': 'WFO',
-      'project': 'PT. Telkom Indonesia',
+      'dateTitle': 'Jumat, 20 Okt',
+      'time': '08:00 - 17:00',
+      'duration': '9j 0m',
     },
     {
-      'date': 'Jumat, 15 Agustus 2026',
-      'clockIn': '08:02',
-      'clockOut': '17:10',
-      'status': 'Selesai',
-      'mode': 'WFA',
-      'project': 'PT. Pertamina',
-    },
-    {
-      'date': 'Kamis, 14 Agustus 2026',
-      'clockIn': '07:48',
-      'clockOut': '17:00',
-      'status': 'Selesai',
-      'mode': 'WFO',
-      'project': 'PT. Telkom Indonesia',
-    },
-    {
-      'date': 'Rabu, 13 Agustus 2026',
-      'clockIn': '08:15',
-      'clockOut': '17:22',
-      'status': 'Selesai',
-      'mode': 'WFO',
-      'project': 'PT. Telkom Indonesia',
+      'dateTitle': 'Kamis, 19 Okt',
+      'time': '08:15 - 17:00',
+      'duration': '8j 45m',
     },
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.primarySurface,
-              borderRadius: BorderRadius.circular(10),
+      backgroundColor: const Color(0xFFF9F9FF),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(70),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(16),
+              bottomRight: Radius.circular(16),
             ),
-            child: const Center(
-              child: Icon(Icons.business, color: AppColors.primary, size: 18),
+          ),
+          child: SafeArea(
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, color: AppColors.primaryDark),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                Expanded(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 48), // balance the back button
+                      child: Image.asset(
+                        'assets/images/logo-sucofindo.png',
+                        height: 44, // increased from 32
+                        errorBuilder: (ctx, err, stack) => const Icon(Icons.business, color: AppColors.primary),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Sucofindo',
-              style: GoogleFonts.mulish(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            Text(
-              'Attendance System',
-              style: GoogleFonts.mulish(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textMuted,
-              ),
-            ),
-          ],
+      ),
+      floatingActionButton: SizedBox(
+        width: 64,
+        height: 64,
+        child: FloatingActionButton(
+          onPressed: _handleAction,
+          backgroundColor: AppColors.primaryDark,
+          elevation: 4,
+          shape: const CircleBorder(),
+          child: const Icon(Icons.fingerprint, color: Colors.white, size: 34),
         ),
-        centerTitle: false,
-        actions: [
-          // Logout
-          IconButton(
-            icon: const Icon(Icons.logout_rounded, color: AppColors.textMuted, size: 22),
-            tooltip: 'Keluar',
-            onPressed: () {
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const LoginPage()),
-                (_) => false,
-              );
-            },
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: BottomAppBar(
+        color: Colors.white,
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8,
+        padding: EdgeInsets.zero,
+        child: SizedBox(
+          height: 70,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // Lembur
+              _buildBottomNavItem(
+                icon: Icons.access_time,
+                label: 'Lembur',
+                isActive: false,
+                onTap: () {},
+              ),
+              // Absensi (Center)
+              SizedBox(
+                width: 80,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Container(
+                      width: 5,
+                      height: 5,
+                      decoration: const BoxDecoration(
+                        color: AppColors.primaryDark,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Absensi',
+                      style: GoogleFonts.mulish(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primaryDark,
+                      ),
+                    ),
+                    const SizedBox(height: 13), // total 2+5+6 = 13 for alignment
+                  ],
+                ),
+              ),
+              // Profil
+              _buildBottomNavItem(
+                icon: Icons.person_outline,
+                label: 'Profil',
+                isActive: false,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ProfilePage()),
+                  );
+                },
+              ),
+            ],
           ),
-          const SizedBox(width: 4),
-        ],
+        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Greeting Card ─────────────────────────────────────
-            _buildGreetingCard(),
+            // Header Text
+            Text(
+              'Absensi',
+              style: GoogleFonts.mulish(
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: AppColors.primaryDark,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Catatan kehadiran Anda hari ini',
+              style: GoogleFonts.mulish(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Main Status Card
+            _buildMainStatusCard(),
             const SizedBox(height: 16),
 
-            // ── Clock Status Cards ────────────────────────────────
-            _buildClockStatusCards(),
-            const SizedBox(height: 16),
+            // 3 Stats Cards
+            _buildStatsCards(),
+            const SizedBox(height: 24),
 
-            // ── Aktivitas Terbaru ──────────────────────────────────
-            _buildRecentActivitySection(),
+            // Riwayat Absensi
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Riwayat Absensi',
+                  style: GoogleFonts.mulish(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const HistoryPage())),
+                  child: Text(
+                    'Lihat Semua',
+                    style: GoogleFonts.mulish(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ..._recentAttendances.map((record) => _buildHistoryCard(record)),
+            const SizedBox(height: 40),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildGreetingCard() {
+  Widget _buildBottomNavItem({
+    required IconData icon,
+    required String label,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 80,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Icon(
+              icon,
+              size: 26,
+              color: isActive ? AppColors.primaryDark : AppColors.textSecondary,
+            ),
+            if (isActive) ...[
+              const SizedBox(height: 4),
+              Container(
+                width: 5,
+                height: 5,
+                decoration: const BoxDecoration(
+                  color: AppColors.primaryDark,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(height: 4),
+            ] else ...[
+              const SizedBox(height: 13),
+            ],
+            Text(
+              label,
+              style: GoogleFonts.mulish(
+                fontSize: 13,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                color: isActive ? AppColors.primaryDark : AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 13), // padding at bottom to align with center item
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMainStatusCard() {
+    String statusText = 'Belum Absen';
+    if (_hasCheckedIn && !_hasCheckedOut) statusText = 'Sedang Bekerja';
+    if (_hasCheckedOut) statusText = 'Selesai Bekerja';
+
+    String btnText = 'Clock In Sekarang';
+    if (_hasCheckedIn && !_hasCheckedOut) btnText = 'Clock Out Sekarang';
+    if (_hasCheckedOut) btnText = 'Sudah Selesai';
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: AppColors.primary.withOpacity(0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Status Badge
-          _buildStatusBadge(),
-          const SizedBox(height: 14),
+          // Dashed Circle with Clock Icon
+          SizedBox(
+            width: 80,
+            height: 80,
+            child: CustomPaint(
+              painter: DashedCirclePainter(
+                color: AppColors.primary.withOpacity(0.3),
+                strokeWidth: 2,
+                gap: 6,
+              ),
+              child: const Center(
+                child: Icon(Icons.access_time_filled, color: AppColors.primaryDark, size: 40),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
 
-          // Greeting
+          // Status & Date
           Text(
-            '${_getGreeting()}, Budi! 👋',
+            statusText,
             style: GoogleFonts.mulish(
               fontSize: 22,
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
-            '${_getTodayFormatted()} • ${_getStatusText()}',
+            _getTodayFormatted(),
             style: GoogleFonts.mulish(
-              fontSize: 13,
+              fontSize: 14,
               color: AppColors.textSecondary,
-              height: 1.4,
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 24),
 
           // Action Button
-          if (!_hasCheckedIn)
-            _buildActionButton(
-              icon: Icons.login_rounded,
-              label: 'Absen Hari Ini',
-              onTap: _navigateToCheckIn,
-            )
-          else if (!_hasCheckedOut)
-            _buildActionButton(
-              icon: Icons.logout_rounded,
-              label: 'Clock Out',
-              onTap: _navigateToCheckOut,
-            ),
-
-          if (_hasCheckedIn) ...[
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                const Icon(Icons.location_on, size: 14, color: AppColors.textMuted),
-                const SizedBox(width: 4),
-                Text(
-                  'Lokasi terdeteksi: Jakarta Selatan',
-                  style: GoogleFonts.mulish(
-                    fontSize: 11,
-                    color: AppColors.textMuted,
-                  ),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton.icon(
+              onPressed: _hasCheckedOut ? null : _handleAction,
+              icon: const Icon(Icons.fingerprint, size: 20, color: Colors.white),
+              label: Text(btnText),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryDark,
+                disabledBackgroundColor: AppColors.border,
+                foregroundColor: Colors.white,
+                disabledForegroundColor: AppColors.textMuted,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge() {
-    if (!_hasCheckedIn) {
-      return _badge(
-        icon: Icons.access_time,
-        text: 'Belum Absen Hari Ini',
-        bgColor: AppColors.divider,
-        textColor: AppColors.textSecondary,
-      );
-    }
-    if (_hasCheckedOut) {
-      return _badge(
-        icon: null,
-        dotColor: AppColors.success,
-        text: 'Sudah Selesai',
-        bgColor: AppColors.successLight,
-        textColor: AppColors.success,
-      );
-    }
-    return _badge(
-      icon: null,
-      dotColor: AppColors.primary,
-      text: 'Sedang Bekerja',
-      bgColor: AppColors.primaryLight,
-      textColor: AppColors.primary,
-    );
-  }
-
-  Widget _badge({
-    IconData? icon,
-    Color? dotColor,
-    required String text,
-    required Color bgColor,
-    required Color textColor,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: Icon(icon, size: 14, color: textColor),
-            ),
-          if (dotColor != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: dotColor,
-                  shape: BoxShape.circle,
+                textStyle: GoogleFonts.mulish(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
-          Text(
-            text,
-            style: GoogleFonts.mulish(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: textColor,
-            ),
           ),
         ],
       ),
     );
   }
 
-  String _getStatusText() {
-    if (!_hasCheckedIn) return 'Silakan lakukan Clock In untuk memulai aktivitas.';
-    if (_hasCheckedOut) return 'Anda sudah menyelesaikan hari kerja.';
-    return 'Anda sedang bekerja. Jangan lupa Clock Out nanti.';
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return SizedBox(
-      width: double.infinity,
-      height: 48,
-      child: ElevatedButton.icon(
-        onPressed: onTap,
-        icon: Icon(icon, size: 18),
-        label: Text(label),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          elevation: 4,
-          shadowColor: AppColors.primary.withValues(alpha: 0.3),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          textStyle: GoogleFonts.mulish(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildClockStatusCards() {
+  Widget _buildStatsCards() {
     return Row(
       children: [
-        // Clock In
         Expanded(
-          child: _StatusCard(
-            label: 'Clock In',
+          child: _StatCard(
+            title: 'CLOCK IN',
+            icon: Icons.login_outlined,
             value: _clockInTime ?? '--:--',
-            icon: Icons.login_rounded,
-            iconBgColor: AppColors.successLight,
-            iconColor: AppColors.success,
           ),
         ),
-        const SizedBox(width: 10),
-        // Clock Out
+        const SizedBox(width: 8),
         Expanded(
-          child: _StatusCard(
-            label: 'Clock Out',
+          child: _StatCard(
+            title: 'CLOCK OUT',
+            icon: Icons.logout_outlined,
             value: _clockOutTime ?? '--:--',
-            icon: Icons.logout_rounded,
-            iconBgColor: AppColors.dangerLight,
-            iconColor: AppColors.danger,
           ),
         ),
-        const SizedBox(width: 10),
-        // Total Durasi
+        const SizedBox(width: 8),
         Expanded(
-          child: _StatusCard(
-            label: 'Total Durasi',
-            value: _getTotalDuration(),
-            icon: Icons.schedule_rounded,
-            iconBgColor: AppColors.primaryLight,
-            iconColor: AppColors.primary,
+          child: _StatCardDuration(
+            title: 'DURASI',
+            icon: Icons.access_time,
+            valueStr: _getTotalDuration(),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildRecentActivitySection() {
+  Widget _buildHistoryCard(Map<String, String> record) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border.withOpacity(0.6)),
       ),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Aktivitas Terbaru',
-                  style: GoogleFonts.mulish(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                record['dateTitle']!,
+                style: GoogleFonts.mulish(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
                 ),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const HistoryPage()),
-                    );
-                  },
-                  child: Row(
-                    children: [
-                      Text(
-                        'Lihat Semua',
-                        style: GoogleFonts.mulish(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.arrow_forward, size: 14, color: AppColors.primary),
-                    ],
-                  ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                record['time']!,
+                style: GoogleFonts.mulish(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
                 ),
-              ],
+              ),
+            ],
+          ),
+          Text(
+            record['duration']!,
+            style: GoogleFonts.mulish(
+              fontSize: 14,
+              color: AppColors.textSecondary,
             ),
           ),
-          const Divider(height: 1, color: AppColors.divider),
-
-          // Activity List
-          ..._recentAttendances.map((record) => _ActivityTile(record: record)),
         ],
       ),
     );
   }
 }
 
-// ─── Status Card Widget ───────────────────────────────────────────────────
-
-class _StatusCard extends StatelessWidget {
-  final String label;
-  final String value;
+class _StatCard extends StatelessWidget {
+  final String title;
   final IconData icon;
-  final Color iconBgColor;
-  final Color iconColor;
+  final String value;
 
-  const _StatusCard({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.iconBgColor,
-    required this.iconColor,
-  });
+  const _StatCard({required this.title, required this.icon, required this.value});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border.withOpacity(0.6)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Icon(icon, size: 14, color: AppColors.textSecondary),
+              const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  label,
+                  title,
                   style: GoogleFonts.mulish(
                     fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textMuted,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textSecondary,
                     letterSpacing: 0.5,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: iconBgColor,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, size: 16, color: iconColor),
-              ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             value,
             style: GoogleFonts.mulish(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
             ),
           ),
@@ -566,120 +556,138 @@ class _StatusCard extends StatelessWidget {
   }
 }
 
-// ─── Activity Tile Widget ─────────────────────────────────────────────────
+class _StatCardDuration extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final String valueStr;
 
-class _ActivityTile extends StatelessWidget {
-  final Map<String, String> record;
-
-  const _ActivityTile({required this.record});
+  const _StatCardDuration({required this.title, required this.icon, required this.valueStr});
 
   @override
   Widget build(BuildContext context) {
-    final isComplete = record['status'] == 'Selesai';
+    // valueStr is like '0j 0m'
+    final parts = valueStr.split(' ');
+    String j = '0';
+    String m = '0';
+    if (parts.length == 2) {
+      j = parts[0].replaceAll('j', '');
+      m = parts[1].replaceAll('m', '');
+    }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.divider)),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border.withOpacity(0.6)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Date & Time column
-          Expanded(
-            flex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  record['date']!,
-                  style: GoogleFonts.mulish(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Text(
-                      '${record['clockIn']} - ${record['clockOut']}',
-                      style: GoogleFonts.mulish(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: isComplete ? AppColors.successLight : AppColors.warningLight,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 5,
-                            height: 5,
-                            decoration: BoxDecoration(
-                              color: isComplete ? AppColors.success : AppColors.warning,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            record['status']!,
-                            style: GoogleFonts.mulish(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: isComplete ? AppColors.success : AppColors.warning,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // Mode & Project column
-          Expanded(
-            flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppColors.infoLight,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    record['mode']!,
-                    style: GoogleFonts.mulish(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.info,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  record['project']!,
+          Row(
+            children: [
+              Icon(icon, size: 14, color: AppColors.textSecondary),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  title,
                   style: GoogleFonts.mulish(
                     fontSize: 10,
-                    color: AppColors.textMuted,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textSecondary,
+                    letterSpacing: 0.5,
                   ),
-                  textAlign: TextAlign.end,
                   overflow: TextOverflow.ellipsis,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                j,
+                style: GoogleFonts.mulish(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              Text(
+                'j ',
+                style: GoogleFonts.mulish(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              Text(
+                m,
+                style: GoogleFonts.mulish(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              Text(
+                'm',
+                style: GoogleFonts.mulish(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          )
         ],
       ),
     );
+  }
+}
+
+class DashedCirclePainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double gap;
+
+  DashedCirclePainter({
+    required this.color,
+    required this.strokeWidth,
+    required this.gap,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final radius = size.width / 2;
+    final center = Offset(radius, radius);
+    final circumference = 2 * math.pi * radius;
+    final dashCount = (circumference / (gap * 2)).floor();
+    final dashAngle = (2 * math.pi) / (dashCount * 2);
+
+    for (var i = 0; i < dashCount * 2; i++) {
+      if (i % 2 == 0) {
+        canvas.drawArc(
+          Rect.fromCircle(center: center, radius: radius),
+          i * dashAngle,
+          dashAngle,
+          false,
+          paint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant DashedCirclePainter oldDelegate) {
+    return oldDelegate.color != color ||
+        oldDelegate.strokeWidth != strokeWidth ||
+        oldDelegate.gap != gap;
   }
 }

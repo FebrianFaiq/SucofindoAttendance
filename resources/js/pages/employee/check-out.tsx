@@ -118,7 +118,7 @@ export default function CheckOut({
         return (
             <>
                 <Head title="Check Out" />
-                <div className="flex h-full flex-1 flex-col items-center justify-center gap-4 p-6">
+                <div className="flex h-full flex-1 flex-col items-center justify-center gap-4 p-6 bg-sucofindo-light">
                     <div className="rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center max-w-md">
                         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#FEF3C7]">
                             <LogInIcon className="h-8 w-8 text-[#D97706]" />
@@ -147,7 +147,7 @@ export default function CheckOut({
         return (
             <>
                 <Head title="Check Out" />
-                <div className="flex h-full flex-1 flex-col items-center justify-center gap-4 p-6">
+                <div className="flex h-full flex-1 flex-col items-center justify-center gap-4 p-6 bg-sucofindo-light">
                     <div className="rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center max-w-md">
                         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#D1FAE5]">
                             <LogOutIcon className="h-8 w-8 text-[#059669]" />
@@ -178,7 +178,7 @@ export default function CheckOut({
     return (
         <>
             <Head title="Check Out" />
-            <div className="flex h-full flex-1 flex-col gap-6 p-6">
+            <div className="flex h-full flex-1 flex-col gap-6 p-6 bg-sucofindo-light">
                 {/* Main Card */}
                 <div className="mx-auto w-full max-w-2xl rounded-2xl border border-[#E5E7EB] bg-white overflow-hidden">
                     {/* Header */}

@@ -58,6 +58,7 @@ interface AdminDashboardProps {
         id: number;
         name: string;
         employeeId: string;
+        role: string;
         avatar: string | null;
         avatarColor: string;
         project: string;
@@ -176,7 +177,7 @@ export default function AdminDashboard(props: AdminDashboardProps) {
         },
     ];
 
-// ─── Component ──────────────────────────────────────────────────────────────
+    // ─── Component ──────────────────────────────────────────────────────────────
 
 
     const attendanceChartConfig = {
@@ -384,7 +385,7 @@ export default function AdminDashboard(props: AdminDashboardProps) {
                             <thead>
                                 <tr className="border-b border-neutral-100 text-xs font-semibold uppercase tracking-wider text-neutral-500">
                                     <th className="px-6 py-3">Karyawan</th>
-                                    <th className="px-6 py-3">Projek</th>
+                                    <th className="px-6 py-3">Proyek / Bidang</th>
                                     <th className="px-6 py-3">Clock In</th>
                                     <th className="px-6 py-3">Clock Out</th>
                                     <th className="px-6 py-3">Status</th>
@@ -402,27 +403,44 @@ export default function AdminDashboard(props: AdminDashboardProps) {
                                         <td className="px-6 py-3.5">
                                             <div className="flex items-center gap-3">
                                                 <div
-                                                    className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white ${record.avatarColor}`}
+                                                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#E5F0F9] text-xs font-bold text-[#035EA9]"
                                                 >
                                                     {record.name
-                                                        .charAt(0)
+                                                        .split(' ')
+                                                        .filter(Boolean)
+                                                        .slice(0, 2)
+                                                        .map((n) => n[0])
+                                                        .join('')
                                                         .toUpperCase()}
                                                 </div>
                                                 <div>
                                                     <p className="font-medium text-neutral-800">
                                                         {record.name}
                                                     </p>
-                                                    <p className="text-xs text-neutral-400">
-                                                        Lorem ID:{' '}
-                                                        {record.employeeId}
+                                                    <p
+                                                        className={`text-xs font-medium ${record.role === 'intern'
+                                                                ? 'text-[#00A099]'
+                                                                : 'text-[#035EA9]'
+                                                            }`}
+                                                    >
+                                                        {record.role === 'intern'
+                                                            ? 'Mahasiswa Magang'
+                                                            : 'Karyawan PTT'}
                                                     </p>
                                                 </div>
                                             </div>
                                         </td>
 
                                         {/* Projek */}
-                                        <td className="px-6 py-3.5 text-neutral-600">
-                                            {record.project}
+                                        <td className="px-6 py-3.5">
+                                            <span
+                                                className={`inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold ${record.role === 'intern'
+                                                        ? 'bg-[#00A099]/10 text-[#00A099]'
+                                                        : 'bg-[#035EA9]/10 text-[#035EA9]'
+                                                    }`}
+                                            >
+                                                {record.project}
+                                            </span>
                                         </td>
 
                                         {/* Clock In */}

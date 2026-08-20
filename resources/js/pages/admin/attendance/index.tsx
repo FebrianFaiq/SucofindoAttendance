@@ -531,26 +531,25 @@ return false;
                                                         </div>
                                                         <div className="flex flex-col gap-0.5">
                                                             <span className="font-bold text-neutral-900">{item.employee?.user?.name}</span>
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-xs font-semibold text-neutral-500">NIK: {item.employee?.nik}</span>
-                                                                {isIntern && (
-                                                                    <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 border-none text-[10px] font-bold px-1.5 py-0">
-                                                                        Magang
-                                                                    </Badge>
+                                                            <span className="text-[11px] font-bold">
+                                                                {isIntern ? (
+                                                                    <span className="text-[#00A099]">Mahasiswa Magang</span>
+                                                                ) : (
+                                                                    <span className="text-[#035EA9]">Karyawan PTT</span>
                                                                 )}
-                                                            </div>
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-3 font-semibold text-neutral-600">
                                                     {isIntern ? (
-                                                        <Badge className="bg-purple-50 text-purple-700 border-none font-bold text-xs">
-                                                            Bidang: {item.employee?.division || '—'}
+                                                        <Badge variant="secondary" className="rounded-md border-none bg-[#00A099]/10 text-[#00A099] hover:bg-[#00A099]/20 px-2.5 py-1 text-[13px] font-bold">
+                                                            {item.employee?.division || '—'}
                                                         </Badge>
                                                     ) : (
-                                                        <span className="font-semibold text-neutral-800">
+                                                        <Badge variant="secondary" className="rounded-md border-none bg-[#035EA9]/10 text-[#035EA9] hover:bg-[#035EA9]/20 px-2.5 py-1 text-[13px] font-bold">
                                                             {item.employee?.projects?.[0]?.name ?? '—'}
-                                                        </span>
+                                                        </Badge>
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-3 text-center whitespace-nowrap">
@@ -685,7 +684,7 @@ return false;
                             const nik = selectedAttendance.employee?.nik ?? '—';
                             const isIntern = selectedAttendance.employee?.user?.role === 'intern';
                             const assignmentName = isIntern
-                                ? `Bidang: ${selectedAttendance.employee?.division || '—'}`
+                                ? (selectedAttendance.employee?.division || '—')
                                 : (selectedAttendance.employee?.projects?.[0]?.name ?? 'Belum Ditugaskan');
                             const mode = selectedAttendance.type?.toUpperCase() || 'WFO';
                             const isPresent = !!selectedAttendance.check_in_at;

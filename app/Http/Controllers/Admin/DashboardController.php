@@ -71,9 +71,12 @@ class DashboardController extends Controller
                 'id' => $attendance->id,
                 'name' => $attendance->employee->user->name ?? '-',
                 'employeeId' => $attendance->employee->nik ?? '-',
+                'role' => $attendance->employee->user->role ?? 'employee',
                 'avatar' => null,
                 'avatarColor' => 'bg-emerald-500',
-                'project' => $projectName,
+                'project' => $attendance->employee->user->role === 'intern' 
+                    ? preg_replace('/^Bidang:\s*/i', '', $attendance->employee->division ?? '-') 
+                    : preg_replace('/^Bidang:\s*/i', '', $projectName),
                 'clockIn' => $checkIn->format('H:i'),
                 'clockInLate' => $checkIn->format('H:i') > '08:00',
                 'clockOut' => $checkOut ? $checkOut->format('H:i') : '--:--',

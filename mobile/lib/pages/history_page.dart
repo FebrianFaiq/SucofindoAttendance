@@ -1,335 +1,316 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'profile_page.dart';
 import '../theme/app_colors.dart';
 
-class HistoryPage extends StatelessWidget {
+class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
 
-  // Static attendance history data
+  @override
+  State<HistoryPage> createState() => _HistoryPageState();
+}
+
+class _HistoryPageState extends State<HistoryPage> {
+  int _selectedNavIndex = 1; // Absensi active
+  int _visibleCount = 4;
+
   static final List<Map<String, String>> _historyData = [
     {
-      'date': 'Senin, 18 Agustus 2026',
-      'clockIn': '07:55',
-      'clockOut': '17:03',
-      'status': 'Selesai',
-      'mode': 'WFO',
-      'project': 'PT. Telkom Indonesia',
-      'duration': '9j 8m',
-    },
-    {
-      'date': 'Jumat, 15 Agustus 2026',
-      'clockIn': '08:02',
-      'clockOut': '17:10',
-      'status': 'Selesai',
-      'mode': 'WFA',
-      'project': 'PT. Pertamina',
-      'duration': '9j 8m',
-    },
-    {
-      'date': 'Kamis, 14 Agustus 2026',
-      'clockIn': '07:48',
-      'clockOut': '17:00',
-      'status': 'Selesai',
-      'mode': 'WFO',
-      'project': 'PT. Telkom Indonesia',
-      'duration': '9j 12m',
-    },
-    {
-      'date': 'Rabu, 13 Agustus 2026',
-      'clockIn': '08:15',
-      'clockOut': '17:22',
-      'status': 'Selesai',
-      'mode': 'WFO',
-      'project': 'PT. Telkom Indonesia',
-      'duration': '9j 7m',
-    },
-    {
-      'date': 'Selasa, 12 Agustus 2026',
-      'clockIn': '07:50',
-      'clockOut': '17:05',
-      'status': 'Selesai',
-      'mode': 'WFA',
-      'project': 'PT. PLN',
-      'duration': '9j 15m',
-    },
-    {
-      'date': 'Senin, 11 Agustus 2026',
+      'date': 'Senin, 20 Nov 2023',
       'clockIn': '07:45',
-      'clockOut': '17:30',
-      'status': 'Selesai',
-      'mode': 'WFO',
-      'project': 'PT. Telkom Indonesia',
-      'duration': '9j 45m',
+      'clockOut': '17:10',
+      'mode': 'WFA',
+      'duration': '9h 25m',
     },
     {
-      'date': 'Jumat, 8 Agustus 2026',
-      'clockIn': '08:10',
+      'date': 'Jumat, 17 Nov 2023',
+      'clockIn': '08:15',
+      'clockOut': '17:05',
+      'mode': 'WFO',
+      'duration': '8h 50m',
+    },
+    {
+      'date': 'Kamis, 16 Nov 2023',
+      'clockIn': '07:50',
+      'clockOut': '17:00',
+      'mode': 'WFA',
+      'duration': '9h 10m',
+    },
+    {
+      'date': 'Rabu, 15 Nov 2023',
+      'clockIn': '07:55',
+      'clockOut': '18:30',
+      'mode': 'WFA',
+      'duration': '10h 35m',
+    },
+    {
+      'date': 'Selasa, 14 Nov 2023',
+      'clockIn': '07:40',
+      'clockOut': '17:00',
+      'mode': 'WFO',
+      'duration': '9h 20m',
+    },
+    {
+      'date': 'Senin, 13 Nov 2023',
+      'clockIn': '08:00',
       'clockOut': '17:15',
-      'status': 'Selesai',
       'mode': 'WFO',
-      'project': 'PT. Pertamina',
-      'duration': '9j 5m',
+      'duration': '9h 15m',
     },
     {
-      'date': 'Kamis, 7 Agustus 2026',
+      'date': 'Jumat, 10 Nov 2023',
+      'clockIn': '07:50',
+      'clockOut': '17:20',
+      'mode': 'WFA',
+      'duration': '9h 30m',
+    },
+    {
+      'date': 'Kamis, 9 Nov 2023',
       'clockIn': '07:58',
       'clockOut': '17:02',
-      'status': 'Selesai',
       'mode': 'WFO',
-      'project': 'PT. Telkom Indonesia',
-      'duration': '9j 4m',
+      'duration': '9h 4m',
     },
   ];
 
+  void _loadMore() {
+    setState(() {
+      _visibleCount = (_visibleCount + 4).clamp(0, _historyData.length);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final visibleItems = _historyData.take(_visibleCount).toList();
+
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textSecondary),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          'Riwayat Kehadiran',
-          style: GoogleFonts.mulish(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+      backgroundColor: const Color(0xFFF9F9FF),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(70),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(16),
+              bottomRight: Radius.circular(16),
+            ),
           ),
-        ),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          // ── Summary Header ────────────────────────────────────
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            color: AppColors.surface,
+          child: SafeArea(
             child: Row(
               children: [
-                _SummaryChip(
-                  icon: Icons.calendar_today,
-                  iconColor: AppColors.primary,
-                  label: 'Total',
-                  value: '${_historyData.length} Hari',
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, color: AppColors.primaryDark),
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
-                const SizedBox(width: 12),
-                _SummaryChip(
-                  icon: Icons.check_circle_outline,
-                  iconColor: AppColors.success,
-                  label: 'Hadir',
-                  value: '${_historyData.length} Hari',
-                ),
-                const SizedBox(width: 12),
-                _SummaryChip(
-                  icon: Icons.cancel_outlined,
-                  iconColor: AppColors.danger,
-                  label: 'Absen',
-                  value: '0 Hari',
+                Expanded(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 48),
+                      child: Image.asset(
+                        'assets/images/logo-sucofindo.png',
+                        height: 44,
+                        errorBuilder: (ctx, err, stack) => const Icon(Icons.business, color: AppColors.primary),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1, color: AppColors.divider),
-
-          // ── History List ──────────────────────────────────────
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _historyData.length,
-              itemBuilder: (context, index) {
-                final record = _historyData[index];
-                return _HistoryCard(record: record);
-              },
+        ),
+      ),
+      floatingActionButton: SizedBox(
+        width: 64,
+        height: 64,
+        child: FloatingActionButton(
+          onPressed: () {},
+          backgroundColor: AppColors.primaryDark,
+          elevation: 4,
+          shape: const CircleBorder(),
+          child: const Icon(Icons.fingerprint, color: Colors.white, size: 34),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: BottomAppBar(
+        color: Colors.white,
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8,
+        padding: EdgeInsets.zero,
+        child: SizedBox(
+          height: 70,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              _buildBottomNavItem(
+                icon: Icons.access_time,
+                label: 'Lembur',
+                isActive: _selectedNavIndex == 0,
+                onTap: () => setState(() => _selectedNavIndex = 0),
+              ),
+              SizedBox(
+                width: 80,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    const SizedBox(height: 9), // 5 (dot) + 4 (spacing) = 9 to maintain alignment with active state
+                    Text(
+                      'Absensi',
+                      style: GoogleFonts.mulish(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary, // Inactive in design
+                      ),
+                    ),
+                    const SizedBox(height: 13),
+                  ],
+                ),
+              ),
+              _buildBottomNavItem(
+                icon: Icons.person_outline,
+                label: 'Profil',
+                isActive: _selectedNavIndex == 2,
+                onTap: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ProfilePage()),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        children: [
+          // Month Header
+          Text(
+            'NOVEMBER 2023',
+            style: GoogleFonts.mulish(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textSecondary,
+              letterSpacing: 0.5,
             ),
           ),
+          const SizedBox(height: 16),
+
+          // History Cards
+          ...visibleItems.map((record) => _buildHistoryCard(record)),
+
+          // Load More
+          if (_visibleCount < _historyData.length) ...[
+            const SizedBox(height: 8),
+            Center(
+              child: GestureDetector(
+                onTap: _loadMore,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    'Muat Lebih Banyak',
+                    style: GoogleFonts.mulish(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
         ],
       ),
     );
   }
-}
 
-// ─── Summary Chip ─────────────────────────────────────────────────────────
-
-class _SummaryChip extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String label;
-  final String value;
-
-  const _SummaryChip({
-    required this.icon,
-    required this.iconColor,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: 18, color: iconColor),
-            const SizedBox(height: 6),
-            Text(
-              value,
-              style: GoogleFonts.mulish(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            Text(
-              label,
-              style: GoogleFonts.mulish(
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textMuted,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── History Card ─────────────────────────────────────────────────────────
-
-class _HistoryCard extends StatelessWidget {
-  final Map<String, String> record;
-
-  const _HistoryCard({required this.record});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildHistoryCard(Map<String, String> record) {
     final isLate = int.parse(record['clockIn']!.split(':')[0]) >= 8 &&
         int.parse(record['clockIn']!.split(':')[1]) > 0;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border, width: 1.2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Date Row
+          // Date + Mode badge
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
                 record['date']!,
                 style: GoogleFonts.mulish(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary,
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.infoLight,
+                  color: record['mode'] == 'WFO'
+                      ? AppColors.primary.withOpacity(0.1)
+                      : AppColors.primaryDark.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: record['mode'] == 'WFO'
+                        ? AppColors.primary.withOpacity(0.3)
+                        : AppColors.primaryDark.withOpacity(0.3),
+                  ),
                 ),
                 child: Text(
                   record['mode']!,
                   style: GoogleFonts.mulish(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.info,
+                    color: AppColors.primaryDark,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+          const Divider(height: 1, color: AppColors.border),
+          const SizedBox(height: 16),
 
-          // Clock In / Clock Out / Duration Row
+          // Clock In / Clock Out / Duration
           Row(
             children: [
-              // Clock In
-              _TimeBlock(
-                label: 'Clock In',
-                value: record['clockIn']!,
-                icon: Icons.login_rounded,
-                iconColor: isLate ? AppColors.danger : AppColors.success,
-              ),
-              const SizedBox(width: 16),
-              // Clock Out
-              _TimeBlock(
-                label: 'Clock Out',
-                value: record['clockOut']!,
-                icon: Icons.logout_rounded,
-                iconColor: AppColors.textSecondary,
-              ),
-              const SizedBox(width: 16),
-              // Duration
-              _TimeBlock(
-                label: 'Durasi',
-                value: record['duration']!,
-                icon: Icons.schedule_rounded,
-                iconColor: AppColors.primary,
-              ),
-              const Spacer(),
-              // Status
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.successLight,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 5,
-                      height: 5,
-                      decoration: const BoxDecoration(
-                        color: AppColors.success,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      record['status']!,
-                      style: GoogleFonts.mulish(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.success,
-                      ),
-                    ),
-                  ],
+              Expanded(
+                child: _buildTimeColumn(
+                  'Clock In',
+                  record['clockIn']!,
+                  isLate ? AppColors.danger : AppColors.textPrimary,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          // Project
-          Row(
-            children: [
-              const Icon(Icons.folder_outlined, size: 13, color: AppColors.textMuted),
-              const SizedBox(width: 4),
-              Text(
-                record['project']!,
-                style: GoogleFonts.mulish(
-                  fontSize: 11,
-                  color: AppColors.textMuted,
+              Expanded(
+                child: _buildTimeColumn(
+                  'Clock Out',
+                  record['clockOut']!,
+                  AppColors.textPrimary,
+                ),
+              ),
+              Expanded(
+                child: _buildTimeColumn(
+                  'Durasi',
+                  record['duration']!,
+                  AppColors.primaryDark,
                 ),
               ),
             ],
@@ -338,54 +319,78 @@ class _HistoryCard extends StatelessWidget {
       ),
     );
   }
-}
 
-// ─── Time Block ───────────────────────────────────────────────────────────
-
-class _TimeBlock extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color iconColor;
-
-  const _TimeBlock({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.iconColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildTimeColumn(String label, String value, Color valueColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: GoogleFonts.mulish(
-            fontSize: 9,
+            fontSize: 11,
             fontWeight: FontWeight.w600,
-            color: AppColors.textMuted,
-            letterSpacing: 0.5,
+            color: AppColors.textSecondary,
           ),
         ),
-        const SizedBox(height: 3),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 13, color: iconColor),
-            const SizedBox(width: 4),
-            Text(
-              value,
-              style: GoogleFonts.mulish(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ],
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: GoogleFonts.mulish(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: valueColor,
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _buildBottomNavItem({
+    required IconData icon,
+    required String label,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 80,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Icon(
+              icon,
+              size: 26,
+              color: isActive ? AppColors.primaryDark : AppColors.textSecondary,
+            ),
+            if (isActive) ...[
+              const SizedBox(height: 4),
+              Container(
+                width: 5,
+                height: 5,
+                decoration: const BoxDecoration(
+                  color: AppColors.primaryDark,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(height: 4),
+            ] else ...[
+              const SizedBox(height: 13),
+            ],
+            Text(
+              label,
+              style: GoogleFonts.mulish(
+                fontSize: 13,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                color: isActive ? AppColors.primaryDark : AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 13),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -10,7 +10,7 @@ export default function OvertimeIndex() {
     return (
         <>
             <Head title="Lembur" />
-            <div className="flex h-full flex-1 flex-col gap-6 p-6">
+            <div className="flex h-full flex-1 flex-col gap-6 p-6 bg-sucofindo-light">
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">

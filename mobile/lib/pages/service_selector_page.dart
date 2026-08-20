@@ -70,12 +70,12 @@ class ServiceSelectorPage extends StatelessWidget {
 
                     // ── Greeting ────────────────────────────────────────
                     Text(
-                      'Selamat datang, Budi Santoso 👋',
+                      'Selamat datang, Lorem Ipsum 👋',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.mulish(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.primaryDark,
+                        color: AppColors.primary,
                         height: 1.3,
                       ),
                     ),
@@ -88,7 +88,7 @@ class ServiceSelectorPage extends StatelessWidget {
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 40),
 
                     // ── Absensi Card ────────────────────────────────────
                     _ServiceCard(
@@ -103,32 +103,18 @@ class ServiceSelectorPage extends StatelessWidget {
                         );
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
 
                     // ── Lembur Card ─────────────────────────────────────
                     _ServiceCard(
-                      icon: Icons.access_time,
+                      icon: Icons.timer_outlined,
                       title: 'Lembur',
                       description: 'Catat dan kelola pengajuan lembur Anda.',
                       buttonText: 'Buka Lembur',
-                      isPrimary: false,
+                      isPrimary: true,
                       onTap: () => _showComingSoon(context),
                     ),
                   ],
-                ),
-              ),
-            ),
-            
-            // ── Footer ──────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.only(bottom: 24),
-              child: Text(
-                'SUCOFINDO',
-                style: GoogleFonts.mulish(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 2,
-                  color: AppColors.textMuted,
                 ),
               ),
             ),
@@ -164,19 +150,26 @@ class _ServiceCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         children: [
           // Icon container
           Container(
-            width: 48,
-            height: 48,
+            width: 56,
+            height: 56,
             decoration: BoxDecoration(
               color: AppColors.primaryLight,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: AppColors.primary, size: 24),
+            child: Icon(icon, color: AppColors.primary, size: 28),
           ),
           const SizedBox(height: 16),
 
@@ -206,7 +199,7 @@ class _ServiceCard extends StatelessWidget {
           // Button
           SizedBox(
             width: double.infinity,
-            height: 44,
+            height: 48,
             child: isPrimary
                 ? ElevatedButton(
                     onPressed: onTap,
@@ -215,7 +208,7 @@ class _ServiceCard extends StatelessWidget {
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     child: Row(
@@ -239,7 +232,7 @@ class _ServiceCard extends StatelessWidget {
                       foregroundColor: AppColors.textPrimary,
                       side: const BorderSide(color: AppColors.border),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     child: Row(
