@@ -152,8 +152,8 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                 className="pl-10 h-10 border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9]"
                             />
                         </form>
-                        <Link href="/admin/employees/create" className="flex h-10 w-full items-center gap-2 rounded-md bg-[#035EA9] px-4 font-bold text-white shadow-sm hover:bg-[#035EA9]/90 sm:w-auto justify-center">
-                            <Plus className="h-5 w-5" />
+                        <Link href="/admin/employees/create" className="bg-[#035EA9] hover:bg-[#035EA9]/90 text-white font-bold h-11 px-5 flex items-center gap-2 shadow-sm rounded-xl text-xs sm:w-auto justify-center w-full whitespace-nowrap shrink-0">
+                            <Plus className="h-4 w-4 shrink-0" />
                             Tambah Karyawan
                         </Link>
                     </div>
@@ -168,7 +168,7 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                     <th className="px-6 py-4 font-bold tracking-wide">Karyawan</th>
                                     <th className="px-6 py-4 font-bold tracking-wide">NIK</th>
                                     <th className="px-6 py-4 font-bold tracking-wide">Email</th>
-                                    <th className="px-6 py-4 font-bold tracking-wide">Projek</th>
+                                    <th className="px-6 py-4 font-bold tracking-wide">Proyek / Bidang</th>
                                     <th className="px-6 py-4 font-bold tracking-wide">Status</th>
                                     <th className="px-6 py-4 font-bold tracking-wide text-right">Aksi</th>
                                 </tr>
@@ -192,11 +192,11 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                                         </div>
                                                         <div className="flex flex-col">
                                                             <span className="font-bold text-neutral-900">{emp.user?.name}</span>
-                                                            <span className="text-[11px] font-semibold text-neutral-500">
+                                                            <span className="text-[11px] font-bold">
                                                                 {emp.user?.role === 'intern' ? (
-                                                                    <span className="text-purple-600 font-bold">Mahasiswa Magang</span>
+                                                                    <span className="text-[#00A099]">Mahasiswa Magang</span>
                                                                 ) : (
-                                                                    'Karyawan PTT'
+                                                                    <span className="text-[#035EA9]">Karyawan PTT</span>
                                                                 )}
                                                             </span>
                                                         </div>
@@ -206,11 +206,11 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                                 <td className="px-6 py-4 font-semibold text-neutral-600">{emp.user?.email}</td>
                                                 <td className="px-6 py-4">
                                                     {emp.user?.role === 'intern' ? (
-                                                        <Badge variant="secondary" className="rounded-md border-none bg-purple-50 text-purple-700 hover:bg-purple-100 px-2.5 py-1 text-[13px] font-bold">
-                                                            Bidang: {emp.division || '—'}
+                                                        <Badge variant="secondary" className="rounded-md border-none bg-[#00A099]/10 text-[#00A099] hover:bg-[#00A099]/20 px-2.5 py-1 text-[13px] font-bold">
+                                                            {emp.division || '—'}
                                                         </Badge>
                                                     ) : (
-                                                        <Badge variant="secondary" className="rounded-md border-none bg-[#E5F0F9] text-[#035EA9] hover:bg-[#D6E4F0] px-2.5 py-1 text-[13px] font-bold">
+                                                        <Badge variant="secondary" className="rounded-md border-none bg-[#035EA9]/10 text-[#035EA9] hover:bg-[#035EA9]/20 px-2.5 py-1 text-[13px] font-bold">
                                                             {activeProject}
                                                         </Badge>
                                                     )}
@@ -284,8 +284,8 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                             href={link.url}
                                             preserveScroll
                                             className={`flex h-8 w-8 items-center justify-center rounded text-xs font-bold transition-colors ${link.active
-                                                    ? 'bg-[#035EA9] text-white'
-                                                    : 'text-neutral-600 hover:bg-neutral-100'
+                                                ? 'bg-[#035EA9] text-white'
+                                                : 'text-neutral-600 hover:bg-neutral-100'
                                                 }`}
                                         >
                                             {link.label}
@@ -338,8 +338,8 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
                                     </div>
                                     <div className="mt-1.5">
                                         <Badge className={`text-[11px] font-bold border-none ${selectedEmployee.user?.role === 'intern'
-                                                ? 'bg-purple-100 text-purple-700 hover:bg-purple-100'
-                                                : 'bg-[#E5F0F9] text-[#035EA9] hover:bg-[#E5F0F9]'
+                                            ? 'bg-[#00A099]/10 text-[#00A099] hover:bg-[#00A099]/20'
+                                            : 'bg-[#035EA9]/10 text-[#035EA9] hover:bg-[#035EA9]/20'
                                             }`}>
                                             {selectedEmployee.user?.role === 'intern' ? 'Mahasiswa Magang' : 'Karyawan PTT'}
                                         </Badge>
@@ -348,39 +348,46 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
 
                                 {/* Employee Info Card */}
                                 <div className="rounded-xl border border-neutral-200 bg-white p-3.5">
-                                    <div className="grid grid-cols-2 gap-y-4 gap-x-3">
-                                        <div className="flex flex-col gap-1">
-                                            <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">
-                                                {selectedEmployee.user?.role === 'intern' ? 'BIDANG' : 'PROJEK'}
-                                            </span>
-                                            <div className="border-b-2 border-[#035EA9] pb-1.5">
-                                                <span className="text-xs font-semibold text-neutral-900">
-                                                    {selectedEmployee.user?.role === 'intern'
-                                                        ? (selectedEmployee.division || '—')
-                                                        : (selectedEmployee.projects?.[0]?.name ?? 'Belum Ditugaskan')}
+                                    <div className="flex flex-col gap-y-5 box-border w-full">
+                                        {/* Row 1: Projek/Bidang & NIK */}
+                                        <div className="grid grid-cols-2 gap-x-3 w-full">
+                                            <div className="flex flex-col h-full w-full min-w-0">
+                                                <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">
+                                                    {selectedEmployee.user?.role === 'intern' ? 'BIDANG' : 'PROJEK'}
                                                 </span>
+                                                <div className="w-full border-b-2 border-[#035EA9] pb-1 mt-1 flex-1 flex flex-col justify-end">
+                                                    <span className="text-xs font-semibold text-neutral-900 break-words block">
+                                                        {selectedEmployee.user?.role === 'intern'
+                                                            ? (selectedEmployee.division || '—')
+                                                            : (selectedEmployee.projects?.[0]?.name ?? 'Belum Ditugaskan')}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col h-full w-full min-w-0">
+                                                <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">NIK</span>
+                                                <div className="w-full border-b-2 border-[#035EA9] pb-1 mt-1 flex-1 flex flex-col justify-end">
+                                                    <span className="text-xs font-semibold text-neutral-900 break-words block">{selectedEmployee.nik}</span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="flex flex-col gap-1">
-                                            <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">NIK</span>
-                                            <div className="border-b-2 border-[#035EA9] pb-1.5">
-                                                <span className="text-xs font-semibold text-neutral-900">{selectedEmployee.nik}</span>
+
+                                        {/* Row 2: Email & No Telepon */}
+                                        <div className="grid grid-cols-2 gap-x-3 w-full">
+                                            <div className="flex flex-col h-full w-full min-w-0">
+                                                <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">EMAIL</span>
+                                                <div className="w-full border-b-2 border-[#035EA9] pb-1 mt-1 flex-1 flex flex-col justify-end">
+                                                    <a href={`mailto:${selectedEmployee.user?.email}`} className="text-xs font-semibold text-[#035EA9] hover:underline break-all block">
+                                                        {selectedEmployee.user?.email}
+                                                    </a>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="flex flex-col gap-1">
-                                            <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">EMAIL</span>
-                                            <div className="border-b-2 border-[#035EA9] pb-1.5 truncate">
-                                                <a href={`mailto:${selectedEmployee.user?.email}`} className="text-xs font-semibold text-[#035EA9] hover:underline truncate block">
-                                                    {selectedEmployee.user?.email}
-                                                </a>
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col gap-1">
-                                            <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">NO. TELEPON</span>
-                                            <div className="border-b-2 border-[#035EA9] pb-1.5">
-                                                <span className="text-xs font-semibold text-neutral-900">
-                                                    {selectedEmployee.phone || '—'}
-                                                </span>
+                                            <div className="flex flex-col h-full w-full min-w-0">
+                                                <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">NO. TELEPON</span>
+                                                <div className="w-full border-b-2 border-[#035EA9] pb-1 mt-1 flex-1 flex flex-col justify-end">
+                                                    <span className="text-xs font-semibold text-neutral-900 break-words block">
+                                                        {selectedEmployee.phone || '—'}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
