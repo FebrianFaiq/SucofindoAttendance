@@ -4,6 +4,7 @@ import {
     LogIn as LogInIcon,
     LogOut as LogOutIcon,
     Clock,
+    AlertCircle,
 } from 'lucide-react';
 import { ServiceSelectorModal } from '@/components/service-selector-modal';
 import type { User } from '@/types';
@@ -69,20 +70,22 @@ export default function EmployeeDashboard({
     return (
         <>
             <Head title="Dashboard" />
-            <ServiceSelectorModal />
+            {user?.role !== 'intern' && <ServiceSelectorModal />}
 
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
                 {/* ── Greeting Card ─────────────────────────────────────── */}
                 <div className="relative overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-6 md:p-8 shadow-sm">
-                    {/* Decorative circles */}
-                    <div className="absolute -top-10 right-20 h-32 w-32 rounded-full bg-[#EFF6FF] blur-2xl" />
-                    <div className="absolute -top-5 right-48 h-24 w-24 rounded-full bg-[#EFF6FF] blur-2xl" />
+                    {/* Decorative Bubbles - Right Side (Asymmetrical & Clipped) */}
+                    <div className="absolute -top-20 -right-12 h-72 w-72 rounded-full bg-[#035EA9] opacity-[0.03]" />
+                    <div className="absolute top-1/2 -translate-y-1/2 -right-24 h-56 w-56 rounded-full bg-[#0781C4] opacity-[0.05]" />
+                    <div className="absolute -bottom-16 right-20 h-48 w-48 rounded-full bg-[#139FDA] opacity-[0.04]" />
+                    <div className="absolute top-8 right-40 h-16 w-16 rounded-full bg-[#035EA9] opacity-[0.06]" />
 
                     <div className="relative z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div className="flex-1">
                             {/* Status badge */}
                             {!hasCheckedIn ? (
-                                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F3F4F6] px-3 py-1 text-xs font-semibold text-[#6B7280] mb-3">
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FEF2F2] px-3 py-1 text-xs font-semibold text-[#DC2626] mb-3">
                                     <Clock className="h-4 w-4" />
                                     Belum Absen Hari Ini
                                 </span>
@@ -128,10 +131,12 @@ export default function EmployeeDashboard({
                                     <LogOutIcon className="h-4 w-4" />
                                     Clock Out
                                 </Link>
-                            ) : null}
-                            <p className="text-xs text-[#9CA3AF]">
-                                Lokasi terdeteksi: {detectedLocation}
-                            </p>
+                            ) : (
+                                <div className="inline-flex items-center gap-2 rounded-xl bg-neutral-100 px-6 py-3.5 text-sm font-semibold text-neutral-500 cursor-not-allowed border-2 border-neutral-300">
+                                    <AlertCircle className="h-4 w-4" />
+                                    Sudah Absen Hari Ini
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -195,7 +200,7 @@ export default function EmployeeDashboard({
                     {/* Header */}
                     <div className="flex items-center justify-between border-b border-[#F3F4F6] px-6 py-4">
                         <h2 className="text-base font-bold text-[#14141A] font-['Mulish',sans-serif]">
-                            Aktivitas Terbaru
+                            Riwayat Terbaru
                         </h2>
                         <Link
                             href="/employee/history"
@@ -221,11 +226,13 @@ export default function EmployeeDashboard({
                                         Clock Out
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
-                                        Status
+                                        Mode
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
-                                        Mode & Proyek
-                                    </th>
+                                    {user?.role !== 'intern' && (
+                                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
+                                            Proyek
+                                        </th>
+                                    )}
                                 </tr>
                             </thead>
                             <tbody>
@@ -245,37 +252,23 @@ export default function EmployeeDashboard({
                                                 {record.clock_out ?? '--:--'}
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span
-                                                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                                        record.status === 'Belum Clock Out'
-                                                            ? 'bg-[#FEF3C7] text-[#D97706]'
-                                                            : 'bg-[#D1FAE5] text-[#059669]'
-                                                    }`}
-                                                >
-                                                    <span
-                                                        className={`h-1.5 w-1.5 rounded-full ${
-                                                            record.status === 'Belum Clock Out'
-                                                                ? 'bg-[#D97706]'
-                                                                : 'bg-[#059669]'
-                                                        }`}
-                                                    />
-                                                    {record.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4">
                                                 <div className="text-sm font-medium text-[#14141A]">
                                                     {record.type}
                                                 </div>
-                                                <div className="text-xs text-[#9CA3AF]">
-                                                    {record.project_name}
-                                                </div>
                                             </td>
+                                            {user?.role !== 'intern' && (
+                                                <td className="px-6 py-4">
+                                                    <div className="text-sm text-[#374151]">
+                                                        {record.project_name || '-'}
+                                                    </div>
+                                                </td>
+                                            )}
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
                                         <td
-                                            colSpan={5}
+                                            colSpan={user?.role === 'intern' ? 4 : 5}
                                             className="px-6 py-12 text-center text-sm text-[#9CA3AF]"
                                         >
                                             Belum ada data aktivitas kehadiran.

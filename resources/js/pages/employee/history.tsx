@@ -1,4 +1,30 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage, Link } from '@inertiajs/react';
+import type { User } from '@/types';
+
+interface AttendanceRecord {
+    id: number;
+    date: string;
+    clock_in: string | null;
+    clock_out: string | null;
+    type: string;
+    project_name: string;
+}
+
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+interface PaginatedAttendances {
+    data: AttendanceRecord[];
+    links: PaginationLink[];
+    current_page: number;
+    last_page: number;
+    total: number;
+    from: number;
+    to: number;
+}
 
 /**
  * Riwayat Kehadiran Karyawan (FR-ATT-03)
@@ -6,11 +32,13 @@ import { Head } from '@inertiajs/react';
  * Menampilkan riwayat kehadiran karyawan:
  * - Tanggal
  * - Jam Masuk / Keluar
+ * - Mode
  * - Proyek
- * - Status WFO/WFA
- * - Catatan kerjaan
  */
-export default function History() {
+export default function History({ attendances }: { attendances: PaginatedAttendances }) {
+    const page = usePage();
+    const user = page.props.auth?.user as User | undefined;
+
     return (
         <>
             <Head title="Riwayat Kehadiran" />
@@ -24,11 +52,101 @@ export default function History() {
                     </p>
                 </div>
 
-                {/* TODO: Implement attendance history table */}
-                <div className="flex-1 rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-950">
-                    <p className="text-center text-sm text-neutral-400">
-                        Tabel riwayat kehadiran akan ditampilkan di sini.
-                    </p>
+                <div className="rounded-xl border border-[#E5E7EB] bg-white overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-[#F3F4F6] bg-neutral-50">
+                                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
+                                        Tanggal
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
+                                        Clock In
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
+                                        Clock Out
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
+                                        Mode
+                                    </th>
+                                    {user?.role !== 'intern' && (
+                                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
+                                            Proyek
+                                        </th>
+                                    )}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {attendances.data.length > 0 ? (
+                                    attendances.data.map((record) => (
+                                        <tr
+                                            key={record.id}
+                                            className="border-b border-[#F9FAFB] last:border-0 transition-colors hover:bg-[#FAFBFC]"
+                                        >
+                                            <td className="px-6 py-4 text-sm font-medium text-[#14141A]">
+                                                {record.date}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-[#374151]">
+                                                {record.clock_in ?? '--:--'}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-[#374151]">
+                                                {record.clock_out ?? '--:--'}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm font-medium text-[#14141A]">
+                                                    {record.type}
+                                                </div>
+                                            </td>
+                                            {user?.role !== 'intern' && (
+                                                <td className="px-6 py-4">
+                                                    <div className="text-sm text-[#374151]">
+                                                        {record.project_name || '-'}
+                                                    </div>
+                                                </td>
+                                            )}
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td
+                                            colSpan={user?.role === 'intern' ? 4 : 5}
+                                            className="px-6 py-12 text-center text-sm text-[#9CA3AF]"
+                                        >
+                                            Belum ada data aktivitas kehadiran.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Pagination */}
+                    {attendances.links.length > 3 && (
+                        <div className="flex flex-col sm:flex-row items-center justify-between border-t border-[#F3F4F6] px-6 py-4 gap-4">
+                            <p className="text-sm text-neutral-500">
+                                Menampilkan <span className="font-medium">{attendances.from ?? 0}</span> sampai{' '}
+                                <span className="font-medium">{attendances.to ?? 0}</span> dari{' '}
+                                <span className="font-medium">{attendances.total}</span> data
+                            </p>
+                            <div className="flex gap-1 overflow-x-auto max-w-full pb-2 sm:pb-0">
+                                {attendances.links.map((link, i) => (
+                                    <Link
+                                        key={i}
+                                        href={link.url ?? '#'}
+                                        preserveScroll
+                                        className={`flex h-8 min-w-[2rem] items-center justify-center rounded-md px-2 text-sm font-medium transition-colors ${
+                                            link.active
+                                                ? 'bg-[#035EA9] text-white'
+                                                : link.url
+                                                  ? 'text-neutral-600 hover:bg-neutral-100'
+                                                  : 'text-neutral-400 cursor-not-allowed'
+                                        }`}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </>
@@ -37,7 +155,7 @@ export default function History() {
 
 History.layout = () => ({
     breadcrumbs: [
-        { title: 'Dashboard', href: '/employee/dashboard' },
+        { title: 'Absensi', href: '/employee/dashboard' },
         { title: 'Riwayat Kehadiran', href: '/employee/history' },
     ],
 });
