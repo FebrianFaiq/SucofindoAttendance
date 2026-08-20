@@ -12,17 +12,14 @@ class CheckInPage extends StatefulWidget {
 }
 
 class _CheckInPageState extends State<CheckInPage> {
-  // Live clock
   late Timer _timer;
   String _liveTime = '';
 
-  // Form state
   String _workMode = 'WFO';
   bool _photoTaken = false;
   bool _isSubmitting = false;
 
-  // Simulated location
-  final String _locationAddress = 'Jl. Raya Pasar Minggu Kav.34, Pancoran, Jakarta Selatan, DKI Jakarta, 12780';
+  final String _locationAddress = 'Jl. Raya Pasar Minggu No. 34, Pancoran, Kota Jakarta Selatan, Daerah Khusus Ibukota Jakarta 12780';
   final bool _inRadius = true;
 
   @override
@@ -33,9 +30,11 @@ class _CheckInPageState extends State<CheckInPage> {
   }
 
   void _updateTime() {
-    setState(() {
-      _liveTime = IdDateHelper.formatTime(DateTime.now());
-    });
+    if (mounted) {
+      setState(() {
+        _liveTime = IdDateHelper.formatTime(DateTime.now());
+      });
+    }
   }
 
   @override
@@ -139,7 +138,7 @@ class _CheckInPageState extends State<CheckInPage> {
               child: ElevatedButton(
                 onPressed: () {
                   Navigator.of(ctx).pop();
-                  Navigator.of(context).pop(true); // Return true to dashboard
+                  Navigator.of(context).pop(true);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
@@ -164,160 +163,149 @@ class _CheckInPageState extends State<CheckInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textSecondary),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          'Check In',
-          style: GoogleFonts.mulish(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+      backgroundColor: const Color(0xFFF9F9FF),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(70),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(16),
+              bottomRight: Radius.circular(16),
+            ),
+          ),
+          child: SafeArea(
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, color: AppColors.primaryDark),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                Expanded(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 48),
+                      child: Image.asset(
+                        'assets/images/logo-sucofindo.png',
+                        height: 44,
+                        errorBuilder: (ctx, err, stack) => const Icon(Icons.business, color: AppColors.primary),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // ── Clock Card ──────────────────────────────────────
-            _buildClockCard(),
-            const SizedBox(height: 14),
-
-            // ── Mode Kerja Card ─────────────────────────────────
-            _buildWorkModeCard(),
-            const SizedBox(height: 14),
-
-            // ── Lokasi Card ─────────────────────────────────────
-            _buildLocationCard(),
-            const SizedBox(height: 14),
-
-            // ── Foto Verifikasi Card ────────────────────────────
-            _buildPhotoCard(),
-            const SizedBox(height: 20),
-
-            // ── Submit Button ───────────────────────────────────
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton.icon(
-                onPressed: _isSubmitting ? null : _handleSubmit,
-                icon: _isSubmitting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          valueColor: AlwaysStoppedAnimation(Colors.white),
-                        ),
-                      )
-                    : const Icon(Icons.fingerprint, size: 22),
-                label: Text(
-                  _isSubmitting ? 'Memproses...' : 'Konfirmasi Clock In',
-                  style: GoogleFonts.mulish(fontWeight: FontWeight.w700),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
-                  disabledForegroundColor: Colors.white70,
-                  elevation: 4,
-                  shadowColor: AppColors.primary.withValues(alpha: 0.3),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.all(24),
+        color: const Color(0xFFF9F9FF),
+        child: SafeArea(
+          child: SizedBox(
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: _isSubmitting ? null : _handleSubmit,
+              icon: _isSubmitting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        valueColor: AlwaysStoppedAnimation(Colors.white),
+                      ),
+                    )
+                  : const Icon(Icons.fingerprint, size: 20, color: Colors.white),
+              label: Text(
+                _isSubmitting ? 'Memproses...' : 'Konfirmasi Clock In',
+                style: GoogleFonts.mulish(fontWeight: FontWeight.w700, fontSize: 14),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryDark,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: AppColors.border,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            // Time Section
+            const SizedBox(height: 8),
+            Text(
+              _liveTime,
+              style: GoogleFonts.mulish(
+                fontSize: 48,
+                fontWeight: FontWeight.w800,
+                color: AppColors.primaryDark,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _getTodayFormatted(),
+              style: GoogleFonts.mulish(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // Mode Kerja
+            _buildWorkModeCard(),
+            const SizedBox(height: 24),
+
+            // Verifikasi Wajah
+            _buildPhotoCard(),
+            const SizedBox(height: 24),
+
+            // Lokasi Saat Ini
+            _buildLocationCard(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildClockCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 28),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        children: [
-          Text(
-            _liveTime,
-            style: GoogleFonts.mulish(
-              fontSize: 52,
-              fontWeight: FontWeight.w800,
-              color: AppColors.primary,
-              letterSpacing: 2,
-            ),
+  Widget _buildWorkModeCard() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Mode Kerja',
+          style: GoogleFonts.mulish(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
           ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+        ),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF0F4FA),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+          ),
+          child: Row(
             children: [
-              const Icon(Icons.calendar_today, size: 14, color: AppColors.textSecondary),
-              const SizedBox(width: 6),
-              Text(
-                _getTodayFormatted(),
-                style: GoogleFonts.mulish(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
-                ),
-              ),
+              _modeTab('WFO', _workMode == 'WFO'),
+              _modeTab('WFA', _workMode == 'WFA'),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWorkModeCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Pilihan Mode Kerja',
-            style: GoogleFonts.mulish(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.divider,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            padding: const EdgeInsets.all(3),
-            child: Row(
-              children: [
-                _modeTab('WFO', _workMode == 'WFO'),
-                _modeTab('WFA', _workMode == 'WFA'),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -325,26 +313,19 @@ class _CheckInPageState extends State<CheckInPage> {
     return Expanded(
       child: GestureDetector(
         onTap: () => setState(() => _workMode = mode),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+        child: Container(
+          margin: const EdgeInsets.all(4),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isActive ? AppColors.primary : Colors.transparent,
+            color: isActive ? AppColors.primaryDark : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
-            boxShadow: isActive
-                ? [BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.2),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  )]
-                : null,
           ),
           child: Text(
             mode,
             textAlign: TextAlign.center,
             style: GoogleFonts.mulish(
               fontSize: 13,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
               color: isActive ? Colors.white : AppColors.textSecondary,
             ),
           ),
@@ -353,304 +334,241 @@ class _CheckInPageState extends State<CheckInPage> {
     );
   }
 
-  Widget _buildLocationCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Lokasi Saat Ini',
-            style: GoogleFonts.mulish(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
+  Widget _buildPhotoCard() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Verifikasi Wajah',
+          style: GoogleFonts.mulish(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
           ),
-          const SizedBox(height: 14),
-
-          // Map Placeholder
-          Container(
-            height: 120,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFFD6E4F0), Color(0xFFE8F0FE)],
-              ),
-            ),
-            child: const Center(
-              child: Icon(
-                Icons.location_on,
-                size: 36,
-                color: AppColors.primary,
-              ),
-            ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border.withOpacity(0.5)),
           ),
-          const SizedBox(height: 14),
-
-          // Address
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Column(
             children: [
-              const Icon(Icons.location_on, size: 18, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              CustomPaint(
+                painter: DashedRectPainter(
+                  color: AppColors.textSecondary.withOpacity(0.5),
+                  strokeWidth: 2,
+                  gap: 6,
+                ),
+                child: Container(
+                  height: 220,
+                  width: double.infinity,
+                  color: AppColors.primary.withOpacity(0.1),
+                  child: Center(
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1.5),
+                      ),
+                      child: Icon(Icons.face, size: 40, color: AppColors.textSecondary.withOpacity(0.8)),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Posisikan wajah Anda di dalam bingkai untuk verifikasi biometrik otomatis.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.mulish(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _simulateCapturePhoto,
+                  icon: const Icon(Icons.camera_alt_outlined, size: 18),
+                  label: const Text('Ambil Foto'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFE2E8F0),
+                    foregroundColor: AppColors.textSecondary,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLocationCard() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Lokasi Saat Ini',
+              style: GoogleFonts.mulish(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            if (_inRadius)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
                   children: [
+                    const Icon(Icons.check_circle_outline, size: 12, color: AppColors.primaryDark),
+                    const SizedBox(width: 4),
                     Text(
-                      'LOKASI TERDETEKSI',
+                      'Dalam Radius',
                       style: GoogleFonts.mulish(
-                        fontSize: 9,
+                        fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textMuted,
-                        letterSpacing: 1,
+                        color: AppColors.primaryDark,
                       ),
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      _locationAddress,
-                      style: GoogleFonts.mulish(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                        height: 1.4,
+                  ],
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border.withOpacity(0.5)),
+          ),
+          child: Column(
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                child: Container(
+                  height: 120,
+                  width: double.infinity,
+                  color: const Color(0xFFE8F0FE),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: GridView.builder(
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 6),
+                          itemBuilder: (ctx, i) => Icon(Icons.map, size: 40, color: Colors.blue.withOpacity(0.05)),
+                        ),
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                      const Center(
+                        child: Icon(Icons.location_on, size: 40, color: AppColors.primaryDark),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.location_on_outlined, size: 20, color: AppColors.primaryDark),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _locationAddress,
+                            style: GoogleFonts.mulish(
+                              fontSize: 12,
+                              color: AppColors.textPrimary,
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Akurasi: ± 5 Meter',
+                            style: GoogleFonts.mulish(
+                              fontSize: 11,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-
-          if (_inRadius) ...[
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.successLight,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: AppColors.success,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'DALAM RADIUS',
-                    style: GoogleFonts.mulish(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.success,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
+        ),
+      ],
     );
   }
+}
 
-  Widget _buildPhotoCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Verifikasi Wajah',
-            style: GoogleFonts.mulish(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 14),
+class DashedRectPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double gap;
 
-          // Camera Area
-          Container(
-            height: 220,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: AppColors.primaryLight,
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.2),
-                width: 2,
-                strokeAlign: BorderSide.strokeAlignInside,
-              ),
-            ),
-            child: _photoTaken
-                ? Stack(
-                    children: [
-                      // Simulated photo
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              AppColors.primarySurface,
-                              AppColors.primary.withValues(alpha: 0.1),
-                            ],
-                          ),
-                        ),
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 80,
-                                height: 80,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primarySurface,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 2),
-                                ),
-                                child: const Icon(Icons.person, size: 44, color: AppColors.primary),
-                              ),
-                              const SizedBox(height: 12),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.black54,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  '✓ Foto berhasil diambil',
-                                  style: GoogleFonts.mulish(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.success,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      // Retake button
-                      Positioned(
-                        bottom: 14,
-                        left: 0,
-                        right: 0,
-                        child: Center(
-                          child: Material(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            elevation: 4,
-                            child: InkWell(
-                              onTap: () => setState(() => _photoTaken = false),
-                              borderRadius: BorderRadius.circular(24),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.camera_alt, size: 16, color: AppColors.textPrimary),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      'Ambil Ulang',
-                                      style: GoogleFonts.mulish(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.border),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 8,
-                            ),
-                          ],
-                        ),
-                        child: const Icon(Icons.person_outline, size: 36, color: AppColors.textMuted),
-                      ),
-                      const SizedBox(height: 14),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32),
-                        child: Text(
-                          'Posisikan wajah Anda di dalam bingkai untuk verifikasi biometrik otomatis.',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.mulish(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                            height: 1.5,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: _simulateCapturePhoto,
-                        icon: const Icon(Icons.camera_alt, size: 16),
-                        label: Text(
-                          'BUKA KAMERA',
-                          style: GoogleFonts.mulish(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          elevation: 2,
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
-        ],
-      ),
-    );
+  DashedRectPainter({
+    required this.color,
+    required this.strokeWidth,
+    required this.gap,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    _drawDashedLine(canvas, const Offset(0, 0), Offset(size.width, 0), paint); // top
+    _drawDashedLine(canvas, Offset(size.width, 0), Offset(size.width, size.height), paint); // right
+    _drawDashedLine(canvas, Offset(size.width, size.height), Offset(0, size.height), paint); // bottom
+    _drawDashedLine(canvas, Offset(0, size.height), const Offset(0, 0), paint); // left
+  }
+
+  void _drawDashedLine(Canvas canvas, Offset p1, Offset p2, Paint paint) {
+    final distance = (p2 - p1).distance;
+    final direction = (p2 - p1) / distance;
+    double currentDistance = 0.0;
+    while (currentDistance < distance) {
+      final start = p1 + direction * currentDistance;
+      currentDistance += gap;
+      if (currentDistance > distance) currentDistance = distance;
+      final end = p1 + direction * currentDistance;
+      canvas.drawLine(start, end, paint);
+      currentDistance += gap;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant DashedRectPainter oldDelegate) {
+    return oldDelegate.color != color ||
+        oldDelegate.strokeWidth != strokeWidth ||
+        oldDelegate.gap != gap;
   }
 }
