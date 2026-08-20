@@ -219,7 +219,7 @@ export default function CheckIn({ alreadyCheckedIn }: CheckInProps) {
         return (
             <>
                 <Head title="Check In" />
-                <div className="flex h-full flex-1 flex-col items-center justify-center gap-4 p-6">
+                <div className="flex h-full flex-1 flex-col items-center justify-center gap-4 p-6 bg-sucofindo-light">
                     <div className="rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center max-w-md">
                         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#D1FAE5]">
                             <Fingerprint className="h-8 w-8 text-[#059669]" />
@@ -246,7 +246,7 @@ export default function CheckIn({ alreadyCheckedIn }: CheckInProps) {
     return (
         <>
             <Head title="Check In" />
-            <form onSubmit={handleSubmit} className="flex h-full flex-1 flex-col gap-6 p-6">
+            <form onSubmit={handleSubmit} className="flex h-full flex-1 flex-col gap-6 p-6 bg-sucofindo-light">
                 {/* Error display */}
                 {combinedErrors.length > 0 && (
                     <div className="rounded-xl border border-[#FCA5A5] bg-[#FEF2F2] p-4">

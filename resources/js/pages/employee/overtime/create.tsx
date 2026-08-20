@@ -17,7 +17,7 @@ export default function OvertimeCreate() {
     return (
         <>
             <Head title="Input Lembur" />
-            <div className="flex h-full flex-1 flex-col gap-6 p-6">
+            <div className="flex h-full flex-1 flex-col gap-6 p-6 bg-sucofindo-light">
                 <div>
                     <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
                         Input Lembur
