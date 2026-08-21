@@ -35,7 +35,7 @@ class ForceChangePasswordController extends Controller
         // 1. Update password
         $user->update([
             'password' => Hash::make($request->validated('password')),
-            'must_change_password' => true,
+            'must_change_password' => false,
         ]);
 
         // 2. Catat ke audit log

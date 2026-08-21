@@ -85,8 +85,7 @@ Route::prefix('employee')
 // Admin Routes (Web Admin)
 // ───────────────────────────────────────────
 Route::prefix('admin')
-    // ->middleware(['auth', EnsurePasswordChanged::class, 'role:admin'])
-    ->middleware(['auth', 'role:admin'])
+    ->middleware(['auth', EnsurePasswordChanged::class, 'role:admin'])
     ->group(function () {
         // Dashboard
         Route::get('dashboard', Admin\DashboardController::class)
