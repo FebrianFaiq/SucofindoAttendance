@@ -18,7 +18,7 @@ class AssignmentController extends Controller
     public function store(AssignmentRequest $request): RedirectResponse
     {
         $projectId = $request->validated('project_id');
-        $employeeIds = $request->validated('employee_ids');
+        $employeeIds = $request->validated('employee_ids') ?? [];
 
         foreach ($employeeIds as $employeeId) {
             EmployeeProject::create([

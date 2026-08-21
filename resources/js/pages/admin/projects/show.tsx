@@ -1,5 +1,5 @@
 import AdminLayout from '@/layouts/admin-layout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,7 @@ type Employee = {
         is_active: boolean;
     };
     pivot?: {
+        id?: number;
         status: string;
     };
 };
@@ -129,8 +130,17 @@ export default function ProjectShow({ project, availableEmployees = [] }: Props)
         return nameMatch || nikMatch;
     });
 
-    const isAssigned = (emp: AvailableEmployee) => {
-        return emp.projects && emp.projects.length > 0;
+    const isAssignedToOtherProject = (emp: AvailableEmployee) => {
+        return emp.projects && emp.projects.some(p => p.id !== project.id);
+    };
+
+    const isAssignedToThisProject = (emp: AvailableEmployee) => {
+        return emp.projects && emp.projects.some(p => p.id === project.id);
+    };
+
+    const openAssignModal = () => {
+        setAssignData('employee_ids', []);
+        setIsAssignModalOpen(true);
     };
 
     const handleToggleEmployee = (empId: number) => {
@@ -141,20 +151,6 @@ export default function ProjectShow({ project, availableEmployees = [] }: Props)
             setAssignData('employee_ids', [...current, empId]);
         }
     };
-
-    const handleSelectAll = (checked: boolean) => {
-        if (checked) {
-            const allUnassignedIds = filteredAssignEmployees
-                .filter(emp => !isAssigned(emp))
-                .map(emp => emp.id);
-            setAssignData('employee_ids', allUnassignedIds);
-        } else {
-            setAssignData('employee_ids', []);
-        }
-    };
-
-    const allUnassigned = filteredAssignEmployees.filter(emp => !isAssigned(emp));
-    const isAllSelected = allUnassigned.length > 0 && allUnassigned.every(emp => assignData.employee_ids.includes(emp.id));
 
     const handleAssignSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -223,19 +219,8 @@ export default function ProjectShow({ project, availableEmployees = [] }: Props)
                                     <span className="text-[22px] font-extrabold text-[#14141A]">Tidak Aktif</span>
                                 </>
                             )}
-                        </div>
-                        <div className="mt-auto pt-2 flex flex-col gap-2">
-                            <div className="h-2 w-full bg-neutral-100 rounded-full overflow-hidden">
-                                <div 
-                                    className="h-full bg-[#035EA9] rounded-full transition-all duration-500" 
-                                    style={{ width: `${progress}%` }}
-                                ></div>
-                            </div>
-                            <span className="text-xs font-bold text-neutral-500 text-right">
-                                {progress}% Selesai
-                            </span>
-                        </div>
                     </div>
+                </div>
 
                     {/* Card 3: Durasi & Timeline */}
                     <div className="bg-white rounded-2xl p-6 border border-neutral-200 shadow-sm flex flex-col gap-3">
@@ -278,7 +263,7 @@ export default function ProjectShow({ project, availableEmployees = [] }: Props)
                                 />
                             </div>
                             <Button 
-                                onClick={() => setIsAssignModalOpen(true)}
+                                onClick={openAssignModal}
                                 className="bg-[#035EA9] hover:bg-[#035EA9]/90 text-white font-bold h-11 px-5 rounded-lg flex items-center gap-2 shadow-sm whitespace-nowrap"
                             >
                                 <UserPlus className="h-4 w-4" />
@@ -294,14 +279,15 @@ export default function ProjectShow({ project, availableEmployees = [] }: Props)
                                 <tr>
                                     <th className="px-6 py-4 font-bold text-[#434654] tracking-wide w-[30%]">Karyawan</th>
                                     <th className="px-6 py-4 font-bold text-[#434654] tracking-wide w-[20%]">Employee ID</th>
-                                    <th className="px-6 py-4 font-bold text-[#434654] tracking-wide w-[30%]">Email</th>
-                                    <th className="px-6 py-4 font-bold text-[#434654] tracking-wide w-[20%]">Status Assignment</th>
+                                    <th className="px-6 py-4 font-bold text-[#434654] tracking-wide w-[25%]">Email</th>
+                                    <th className="px-6 py-4 font-bold text-[#434654] tracking-wide w-[15%]">Status Assignment</th>
+                                    <th className="px-6 py-4 font-bold text-[#434654] tracking-wide w-[10%] text-right">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-neutral-100">
                                 {paginatedEmployees.length === 0 ? (
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-12 text-center text-neutral-500 font-medium">
+                                        <td colSpan={5} className="px-6 py-12 text-center text-neutral-500 font-medium">
                                             Tidak ada karyawan yang ditugaskan di proyek ini.
                                         </td>
                                     </tr>
@@ -332,6 +318,22 @@ export default function ProjectShow({ project, availableEmployees = [] }: Props)
                                                         {emp.pivot?.status === 'ended' ? 'Released' : 'Pending Release'}
                                                     </Badge>
                                                 )}
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                {(emp.pivot?.status === 'active' || !emp.pivot?.status) && emp.pivot?.id ? (
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            if (confirm('Apakah Anda yakin ingin melepas karyawan ini dari proyek?')) {
+                                                                router.delete(`/admin/assignments/${emp.pivot?.id}`);
+                                                            }
+                                                        }}
+                                                        className="text-red-500 hover:text-red-600 hover:bg-red-50 font-semibold text-xs h-8 px-3"
+                                                    >
+                                                        Lepas
+                                                    </Button>
+                                                ) : null}
                                             </td>
                                         </tr>
                                     ))
@@ -424,8 +426,10 @@ export default function ProjectShow({ project, availableEmployees = [] }: Props)
                                         </tr>
                                     ) : (
                                         filteredAssignEmployees.map((emp) => {
-                                            const assigned = isAssigned(emp);
-                                            const checked = assigned || assignData.employee_ids.includes(emp.id);
+                                            const otherProject = isAssignedToOtherProject(emp);
+                                            const thisProject = isAssignedToThisProject(emp);
+                                            const assigned = otherProject || thisProject;
+                                            const checked = thisProject || assignData.employee_ids.includes(emp.id);
                                             
                                             return (
                                                 <tr key={emp.id} className={`hover:bg-neutral-50 transition-colors ${assigned ? 'opacity-60 bg-neutral-50/50' : ''}`}>
@@ -444,9 +448,14 @@ export default function ProjectShow({ project, availableEmployees = [] }: Props)
                                                             </div>
                                                             <div className="flex items-center gap-2">
                                                                 <span className="font-bold text-[#14141A]">{emp.user?.name}</span>
-                                                                {assigned && (
+                                                                {otherProject && (
                                                                     <Badge className="bg-[#F1F5F9] text-neutral-500 hover:bg-[#F1F5F9] px-2 border-none shadow-none text-[10px]">
-                                                                        Sudah Ditugaskan
+                                                                        Di Proyek Lain
+                                                                    </Badge>
+                                                                )}
+                                                                {thisProject && (
+                                                                    <Badge className="bg-[#E6F4EA] text-[#00A099] px-2 border-none shadow-none text-[10px]">
+                                                                        Di Proyek Ini
                                                                     </Badge>
                                                                 )}
                                                             </div>
