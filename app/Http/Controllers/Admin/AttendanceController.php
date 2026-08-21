@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Holiday;
 use App\Models\User;
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -55,7 +56,7 @@ class AttendanceController extends Controller
             });
         }
 
-        // Search nama, NIK, atau nama Proyek / Bidang
+        // Search nama, NIK
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->whereHas('employee', function ($q) use ($search) {
@@ -63,11 +64,15 @@ class AttendanceController extends Controller
                     ->orWhere('division', 'like', "%{$search}%")
                     ->orWhereHas('user', function ($uq) use ($search) {
                         $uq->where('name', 'like', "%{$search}%");
-                    })
-                    ->orWhereHas('projects', function ($pq) use ($search) {
-                        $pq->where('name', 'like', "%{$search}%")
-                            ->orWhere('code', 'like', "%{$search}%");
                     });
+            });
+        }
+
+        // Filter project
+        if ($request->filled('project_id')) {
+            $projectId = $request->input('project_id');
+            $query->whereHas('employee.projects', function ($q) use ($projectId) {
+                $q->where('projects.id', $projectId)->where('employee_projects.status', 'active');
             });
         }
 
@@ -114,9 +119,13 @@ class AttendanceController extends Controller
         $todayClockOutCount = Attendance::whereDate('check_in_at', $today)->whereNotNull('check_out_at')->count();
         $totalEmployees = User::whereIn('role', ['employee', 'intern'])->where('is_active', true)->count();
 
+        // 5. Daftar Proyek
+        $projects = Project::orderBy('name')->get(['id', 'name', 'code']);
+
         return Inertia::render('admin/attendance/index', [
             'attendances' => $attendances,
             'holidays' => $holidays,
+            'projects' => $projects,
             'todayInfo' => [
                 'date' => $today->toDateString(),
                 'date_formatted' => $today->isoFormat('dddd, D MMMM Y'),
@@ -137,6 +146,7 @@ class AttendanceController extends Controller
                 'type' => $request->input('type', ''),
                 'role' => $request->input('role', ''),
                 'search' => $request->input('search', ''),
+                'project_id' => $request->input('project_id', ''),
                 'per_page' => $perPage,
             ],
         ]);

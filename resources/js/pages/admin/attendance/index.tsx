@@ -27,6 +27,13 @@ import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import AppLayout from '@/layouts/app-layout';
 
@@ -102,10 +109,16 @@ interface AttendanceIndexProps {
         clockOutToday: number;
         totalEmployees: number;
     };
+    projects: {
+        id: number;
+        name: string;
+        code: string;
+    }[];
     filters?: {
         start_date?: string;
         end_date?: string;
         search?: string;
+        project_id?: string;
         per_page?: string | number;
     };
 }
@@ -113,6 +126,7 @@ interface AttendanceIndexProps {
 export default function AttendanceIndex({
     attendances,
     holidays = [],
+    projects = [],
     todayInfo,
     kpi,
     filters
@@ -120,6 +134,7 @@ export default function AttendanceIndex({
     const [startDate, setStartDate] = useState(filters?.start_date || '');
     const [endDate, setEndDate] = useState(filters?.end_date || '');
     const [searchTerm, setSearchTerm] = useState(filters?.search || '');
+    const [projectFilter, setProjectFilter] = useState(filters?.project_id || '');
     const [perPage, setPerPage] = useState(filters?.per_page || 10);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [selectedAttendance, setSelectedAttendance] = useState<AttendanceItem | null>(null);
@@ -139,12 +154,12 @@ export default function AttendanceIndex({
 
     const handleFilter = (e?: React.FormEvent) => {
         if (e) {
-e.preventDefault();
-}
+            e.preventDefault();
+        }
 
         router.get(
             '/admin/attendance',
-            { start_date: startDate || undefined, end_date: endDate || undefined, search: searchTerm || undefined, per_page: perPage },
+            { start_date: startDate || undefined, end_date: endDate || undefined, search: searchTerm || undefined, project_id: projectFilter || undefined, per_page: perPage },
             { preserveState: true, replace: true }
         );
     };
@@ -153,7 +168,7 @@ e.preventDefault();
         setPerPage(e.target.value);
         router.get(
             '/admin/attendance',
-            { start_date: startDate || undefined, end_date: endDate || undefined, search: searchTerm || undefined, per_page: e.target.value },
+            { start_date: startDate || undefined, end_date: endDate || undefined, search: searchTerm || undefined, project_id: projectFilter || undefined, per_page: e.target.value },
             { preserveState: true, replace: true }
         );
     };
@@ -162,6 +177,7 @@ e.preventDefault();
         setStartDate('');
         setEndDate('');
         setSearchTerm('');
+        setProjectFilter('');
         router.get('/admin/attendance', {}, { preserveState: true, replace: true });
     };
 
@@ -289,6 +305,7 @@ return false;
         ...(startDate ? { start_date: startDate } : {}),
         ...(endDate ? { end_date: endDate } : {}),
         ...(searchTerm ? { search: searchTerm } : {}),
+        ...(projectFilter ? { project_id: projectFilter } : {}),
     }).toString()}`;
 
     // Ekstrak bulan dan tahun dari startDate jika ada, jika tidak gunakan bulan/tahun saat ini
@@ -409,6 +426,41 @@ return false;
                 {/* ── Filter Bar ────────────────────────────── */}
                 <div className="rounded-xl border border-neutral-200 bg-white px-6 py-5 shadow-sm">
                     <form onSubmit={handleFilter} className="flex flex-col lg:flex-row lg:items-end gap-4 lg:gap-5">
+                        {/* Karyawan */}
+                        <div className="flex-1 min-w-0 lg:max-w-[300px]">
+                            <label className="mb-1.5 block text-sm font-bold text-neutral-800">Karyawan</label>
+                            <div className="relative">
+                                <UserSearch className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-neutral-400 pointer-events-none" />
+                                <Input
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    placeholder="Cari Nama atau NIK..."
+                                    className="pl-10 h-[42px] w-full rounded-lg border border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9] text-sm font-medium"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Proyek */}
+                        <div className="w-full lg:w-[220px] shrink-0">
+                            <label className="mb-1.5 block text-sm font-bold text-neutral-800">Proyek</label>
+                            <Select 
+                                value={projectFilter || 'all'} 
+                                onValueChange={(value) => setProjectFilter(value === 'all' ? '' : value)}
+                            >
+                                <SelectTrigger className="h-[42px] w-full rounded-lg border border-neutral-300 bg-white shadow-sm focus:ring-[#035EA9] text-sm font-medium text-neutral-700 px-3 data-[size=default]:h-[42px] data-[state=open]:ring-1 data-[state=open]:ring-[#035EA9]">
+                                    <SelectValue placeholder="Semua Proyek" />
+                                </SelectTrigger>
+                                <SelectContent className="font-mulish">
+                                    <SelectItem value="all" className="font-medium">Semua Proyek</SelectItem>
+                                    {projects.map((proj) => (
+                                        <SelectItem key={proj.id} value={proj.id.toString()} className="font-medium">
+                                            {proj.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
                         {/* Start Date */}
                         <div className="w-full lg:w-[200px] shrink-0">
                             <label className="mb-1.5 block text-sm font-bold text-neutral-800">Start Date</label>
@@ -416,7 +468,7 @@ return false;
                                 date={startDate ? parseISO(startDate) : undefined}
                                 setDate={(d) => setStartDate(d ? format(d, 'yyyy-MM-dd') : '')}
                                 placeholder="Pilih Start Date"
-                                className="w-full h-[42px] rounded-lg border-neutral-300 bg-white shadow-sm font-medium text-neutral-600 px-3"
+                                className="w-full h-[42px] rounded-lg border border-neutral-300 bg-white shadow-sm font-medium text-neutral-600 px-3 data-[size=default]:h-[42px]"
                             />
                         </div>
 
@@ -427,22 +479,8 @@ return false;
                                 date={endDate ? parseISO(endDate) : undefined}
                                 setDate={(d) => setEndDate(d ? format(d, 'yyyy-MM-dd') : '')}
                                 placeholder="Pilih End Date"
-                                className="w-full h-[42px] rounded-lg border-neutral-300 bg-white shadow-sm font-medium text-neutral-600 px-3"
+                                className="w-full h-[42px] rounded-lg border border-neutral-300 bg-white shadow-sm font-medium text-neutral-600 px-3 data-[size=default]:h-[42px]"
                             />
-                        </div>
-
-                        {/* Karyawan / Proyek */}
-                        <div className="flex-1 min-w-0">
-                            <label className="mb-1.5 block text-sm font-bold text-neutral-800">Karyawan / Proyek</label>
-                            <div className="relative">
-                                <UserSearch className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-neutral-400 pointer-events-none" />
-                                <Input
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    placeholder="Cari Nama, NIK, atau Proyek..."
-                                    className="pl-10 h-[42px] w-full rounded-lg border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9] text-sm"
-                                />
-                            </div>
                         </div>
 
                         {/* Buttons */}

@@ -4,6 +4,13 @@ import { Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Project = {
     id: number;
@@ -106,24 +113,32 @@ export default function ProjectsIndex({ projects, filters }: Props) {
                             />
                         </form>
                         <div className="flex items-center gap-3 w-full sm:w-auto ml-auto">
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => handleFilterChange('status', e.target.value)}
-                                className="h-11 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-700 shadow-sm outline-none focus:border-[#035EA9] focus:ring-1 focus:ring-[#035EA9] w-full sm:w-40"
+                            <Select 
+                                value={statusFilter || 'all'} 
+                                onValueChange={(value) => handleFilterChange('status', value === 'all' ? '' : value)}
                             >
-                                <option value="">Semua Status</option>
-                                <option value="1">Aktif</option>
-                                <option value="0">Tidak Aktif</option>
-                            </select>
-                            <select
-                                value={durationFilter}
-                                onChange={(e) => handleFilterChange('duration', e.target.value)}
-                                className="h-11 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-700 shadow-sm outline-none focus:border-[#035EA9] focus:ring-1 focus:ring-[#035EA9] w-full sm:w-40"
+                                <SelectTrigger className="h-11 w-full sm:w-[160px] rounded-lg border-neutral-300 bg-white shadow-sm focus:ring-[#035EA9] font-medium text-neutral-700">
+                                    <SelectValue placeholder="Semua Status" />
+                                </SelectTrigger>
+                                <SelectContent className="font-mulish">
+                                    <SelectItem value="all" className="font-medium">Semua Status</SelectItem>
+                                    <SelectItem value="1" className="font-medium">Aktif</SelectItem>
+                                    <SelectItem value="0" className="font-medium">Tidak Aktif</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Select 
+                                value={durationFilter || 'all'} 
+                                onValueChange={(value) => handleFilterChange('duration', value === 'all' ? '' : value)}
                             >
-                                <option value="">Durasi</option>
-                                <option value="asc">Terpendek</option>
-                                <option value="desc">Terlama</option>
-                            </select>
+                                <SelectTrigger className="h-11 w-full sm:w-[160px] rounded-lg border-neutral-300 bg-white shadow-sm focus:ring-[#035EA9] font-medium text-neutral-700">
+                                    <SelectValue placeholder="Durasi" />
+                                </SelectTrigger>
+                                <SelectContent className="font-mulish">
+                                    <SelectItem value="all" className="font-medium">Durasi</SelectItem>
+                                    <SelectItem value="asc" className="font-medium">Terpendek</SelectItem>
+                                    <SelectItem value="desc" className="font-medium">Terlama</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
 
