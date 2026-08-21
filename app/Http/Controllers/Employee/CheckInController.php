@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Employee;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Employee\CheckInRequest;
 use App\Models\Attendance;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,7 +20,7 @@ class CheckInController extends Controller
      */
     public function create(): Response
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
         $employee = $user->employee;
 
@@ -36,12 +38,27 @@ class CheckInController extends Controller
      */
     public function store(CheckInRequest $request): RedirectResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
         $employee = $user->employee;
 
         // Simpan foto bukti check-in
-        $photoPath = $request->file('photo')->store('attendance/check-in', 'public');
+        // Menggunakan move() agar kompatibel dengan PHP 8.4
+        // (store() memakai fopen(getRealPath()) yang throw ValueError jika path kosong)
+        $photo = $request->file('photo');
+        if (! $photo || ! $photo->isValid()) {
+            return back()->withErrors(['photo' => 'Foto gagal diunggah. Silakan coba lagi.']);
+        }
+
+        $targetDir = storage_path('app/public/attendance/check-in');
+        if (! is_dir($targetDir)) {
+            mkdir($targetDir, 0755, true);
+        }
+
+        $extension = $photo->getClientOriginalExtension() ?: 'jpg';
+        $fileName = Str::uuid().'.'.$extension;
+        $photo->move($targetDir, $fileName);
+        $photoPath = 'attendance/check-in/'.$fileName;
 
         Attendance::create([
             'employee_id' => $employee->id,

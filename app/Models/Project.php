@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -74,8 +75,8 @@ class Project extends Model
     /**
      * Scope: hanya proyek aktif.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<Project> $query
-     * @return \Illuminate\Database\Eloquent\Builder<Project>
+     * @param  Builder<Project>  $query
+     * @return Builder<Project>
      */
     public function scopeActive($query)
     {

@@ -1,4 +1,5 @@
 import { Head, router } from '@inertiajs/react';
+import React, { useEffect, useState } from 'react';
 import {
     Building2,
     CalendarCheck,
@@ -77,13 +78,58 @@ interface AdminDashboardProps {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export default function AdminDashboard({
-    kpi,
-    attendanceTrendData,
-    workModeData,
-    attendanceRecords,
-    filters,
-}: AdminDashboardProps) {
+export default function AdminDashboard(props: AdminDashboardProps) {
+    const [liveData, setLiveData] = useState({
+        kpi: props.kpi,
+        attendanceTrendData: props.attendanceTrendData,
+        workModeData: props.workModeData,
+        attendanceRecords: props.attendanceRecords,
+    });
+
+    useEffect(() => {
+        // Update local state if props change from Inertia navigation
+        setLiveData({
+            kpi: props.kpi,
+            attendanceTrendData: props.attendanceTrendData,
+            workModeData: props.workModeData,
+            attendanceRecords: props.attendanceRecords,
+        });
+    }, [props]);
+
+    useEffect(() => {
+        // Buat koneksi EventSource ke endpoint stream kita
+        const eventSource = new EventSource('/admin/dashboard/stream');
+
+        eventSource.onmessage = (event) => {
+            try {
+                const newData = JSON.parse(event.data);
+                if (newData && newData.kpi) {
+                    setLiveData((prev) => ({
+                        ...prev,
+                        kpi: newData.kpi,
+                        attendanceTrendData: newData.attendanceTrendData,
+                        workModeData: newData.workModeData,
+                        attendanceRecords: newData.attendanceRecords,
+                    }));
+                }
+            } catch (error) {
+                console.error("Gagal mem-parsing SSE data", error);
+            }
+        };
+
+        eventSource.onerror = (error) => {
+            console.error("EventSource error, mencoba reconnect otomatis...", error);
+            // Klien browser modern otomatis me-reconnect jika terputus
+        };
+
+        return () => {
+            eventSource.close(); // Tutup koneksi saat komponen unmount
+        };
+    }, []);
+
+    const { kpi, attendanceTrendData, workModeData, attendanceRecords } = liveData;
+    const { filters } = props;
+
     const handlePerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         router.get(
             '/admin/dashboard',

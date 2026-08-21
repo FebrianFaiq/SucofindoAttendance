@@ -8,7 +8,6 @@ import {
     Users,
 } from 'lucide-react';
 import { NavMain } from '@/components/nav-main';
-import { logout } from '@/routes';
 import {
     Sidebar,
     SidebarContent,
@@ -19,6 +18,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { logout } from '@/routes';
 import type { NavItem, User } from '@/types';
 
 export function AppSidebar() {
@@ -46,6 +46,7 @@ export function AppSidebar() {
         if (role === 'intern') {
             return item.internAllowed;
         }
+
         return true;
     });
 

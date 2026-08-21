@@ -46,6 +46,6 @@ class EmployeePasswordController extends Controller
         });
 
         return redirect()->back()
-            ->with('success', 'Password karyawan berhasil di-reset. Password default: ' . self::DEFAULT_PASSWORD);
+            ->with('success', 'Password karyawan berhasil di-reset. Password default: '.self::DEFAULT_PASSWORD);
     }
 }

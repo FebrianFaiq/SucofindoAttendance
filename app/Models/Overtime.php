@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -106,8 +107,8 @@ class Overtime extends Model
     /**
      * Scope: hanya entri berstatus pending.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<Overtime> $query
-     * @return \Illuminate\Database\Eloquent\Builder<Overtime>
+     * @param  Builder<Overtime>  $query
+     * @return Builder<Overtime>
      */
     public function scopePending($query)
     {
@@ -117,8 +118,8 @@ class Overtime extends Model
     /**
      * Scope: filter berdasarkan employee.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<Overtime> $query
-     * @return \Illuminate\Database\Eloquent\Builder<Overtime>
+     * @param  Builder<Overtime>  $query
+     * @return Builder<Overtime>
      */
     public function scopeForEmployee($query, int $employeeId)
     {

@@ -1,9 +1,9 @@
 <?php
 
-use App\Http\Controllers\Auth\ForceChangePasswordController;
-use App\Http\Controllers\Web\AuthController;
-use App\Http\Controllers\Employee;
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\Auth\ForceChangePasswordController;
+use App\Http\Controllers\Employee;
+use App\Http\Controllers\Web\AuthController;
 use App\Http\Middleware\EnsurePasswordChanged;
 use Illuminate\Support\Facades\Route;
 
@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 |
 | Rute untuk Web Admin dan Web User (Employee).
-| Semua rute di sini dimuat oleh RouteServiceProvider dan masuk 
+| Semua rute di sini dimuat oleh RouteServiceProvider dan masuk
 | ke grup middleware "web" (session, CSRF, dll).
 |
 */
@@ -85,12 +85,13 @@ Route::prefix('employee')
 // Admin Routes (Web Admin)
 // ───────────────────────────────────────────
 Route::prefix('admin')
-    // ->middleware(['auth', EnsurePasswordChanged::class, 'role:admin'])
-    ->middleware(['auth', 'role:admin'])
+    ->middleware(['auth', EnsurePasswordChanged::class, 'role:admin'])
     ->group(function () {
         // Dashboard
         Route::get('dashboard', Admin\DashboardController::class)
             ->name('admin.dashboard');
+        Route::get('dashboard/stream', Admin\DashboardStreamController::class)
+            ->name('admin.dashboard.stream');
 
         // Manajemen Karyawan (Employee Management)
         Route::resource('employees', Admin\EmployeeController::class)
@@ -125,6 +126,8 @@ Route::prefix('admin')
             ->name('admin.reports.index');
         Route::get('reports/export', [Admin\ReportController::class, 'export'])
             ->name('admin.reports.export');
+        Route::get('reports/export-excel', [Admin\ReportController::class, 'exportExcel'])
+            ->name('admin.reports.export-excel');
 
         // Master Hari Libur (Holiday Management)
         Route::post('holidays', [Admin\HolidayController::class, 'store'])

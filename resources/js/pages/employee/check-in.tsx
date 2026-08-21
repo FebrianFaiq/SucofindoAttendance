@@ -54,6 +54,7 @@ export default function CheckIn({ alreadyCheckedIn }: CheckInProps) {
                 }),
             );
         }, 1000);
+
         return () => clearInterval(interval);
     }, []);
 
@@ -90,6 +91,7 @@ export default function CheckIn({ alreadyCheckedIn }: CheckInProps) {
         if (!navigator.geolocation) {
             setLocationLoading(false);
             setLocationAddress('Browser tidak mendukung geolokasi.');
+
             return;
         }
 
@@ -107,8 +109,10 @@ export default function CheckIn({ alreadyCheckedIn }: CheckInProps) {
                 // Fetch human-readable address
                 try {
                     const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+
                     if (response.ok) {
                         const data = await response.json();
+
                         if (data && data.display_name) {
                             setLocationAddress(data.display_name);
                         }
@@ -119,6 +123,7 @@ export default function CheckIn({ alreadyCheckedIn }: CheckInProps) {
             },
             (error) => {
                 setLocationLoading(false);
+
                 if (error.code === error.PERMISSION_DENIED) {
                     setLocationAddress('Izin lokasi ditolak oleh browser.');
                 } else if (error.code === error.POSITION_UNAVAILABLE) {
@@ -141,6 +146,7 @@ export default function CheckIn({ alreadyCheckedIn }: CheckInProps) {
     const startCamera = useCallback(async () => {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             alert('Browser Anda tidak mendukung akses kamera atau koneksi tidak aman (butuh HTTPS/localhost).');
+
             return;
         }
 
@@ -164,13 +170,20 @@ export default function CheckIn({ alreadyCheckedIn }: CheckInProps) {
     }, [cameraActive]);
 
     const capturePhoto = useCallback(() => {
-        if (!videoRef.current || !canvasRef.current) return;
+        if (!videoRef.current || !canvasRef.current) {
+return;
+}
+
         const canvas = canvasRef.current;
         const video = videoRef.current;
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         const ctx = canvas.getContext('2d');
-        if (!ctx) return;
+
+        if (!ctx) {
+return;
+}
+
         ctx.drawImage(video, 0, 0);
 
         canvas.toBlob((blob) => {
@@ -204,7 +217,7 @@ export default function CheckIn({ alreadyCheckedIn }: CheckInProps) {
     // Submit
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/employee/check-in');
+        post('/employee/check-in', { forceFormData: true });
     };
 
     // Get all errors as array

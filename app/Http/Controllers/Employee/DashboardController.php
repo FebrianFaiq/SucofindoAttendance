@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -16,7 +17,7 @@ class DashboardController extends Controller
      */
     public function __invoke(Request $request): Response
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
         $employee = $user->employee;
 
@@ -40,11 +41,16 @@ class DashboardController extends Controller
                     $duration = null;
                     if ($checkIn && $checkOut) {
                         $diff = $checkIn->diff($checkOut);
-                        $duration = $diff->h . 'j ' . $diff->i . 'm';
+                        $duration = $diff->h.'j '.$diff->i.'m';
                     }
 
                     // Ambil proyek aktif saat itu (gunakan proyek aktif saat ini sebagai fallback)
                     $project = $employee->activeProject();
+
+                    $isIntern = $employee->user?->role === 'intern';
+                    $projectName = $isIntern
+                        ? 'Bidang: '.($employee->division ?? '-')
+                        : ($project?->name ?? '-');
 
                     return [
                         'id' => $attendance->id,
@@ -55,7 +61,7 @@ class DashboardController extends Controller
                         'status' => $status,
                         'is_late' => false, // deprecated
                         'type' => strtoupper($attendance->type ?? 'WFO'),
-                        'project_name' => $project?->name ?? '-',
+                        'project_name' => $projectName,
                         'duration' => $duration,
                     ];
                 })
@@ -69,10 +75,10 @@ class DashboardController extends Controller
         $totalDuration = '0j 0m';
         if ($todayAttendance?->check_in_at && $todayAttendance?->check_out_at) {
             $diff = $todayAttendance->check_in_at->diff($todayAttendance->check_out_at);
-            $totalDuration = $diff->h . 'j ' . $diff->i . 'm';
+            $totalDuration = $diff->h.'j '.$diff->i.'m';
         } elseif ($todayAttendance?->check_in_at) {
             $diff = $todayAttendance->check_in_at->diff(now());
-            $totalDuration = $diff->h . 'j ' . $diff->i . 'm';
+            $totalDuration = $diff->h.'j '.$diff->i.'m';
         }
 
         return Inertia::render('employee/dashboard', [

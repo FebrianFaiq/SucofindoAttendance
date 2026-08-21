@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Employee;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -11,7 +12,7 @@ class OvertimeStoreRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        /** @var \App\Models\User|null $user */
+        /** @var User|null $user */
         $user = $this->user();
 
         return $user !== null && $user->canOvertime();

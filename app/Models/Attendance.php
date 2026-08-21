@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -76,8 +77,8 @@ class Attendance extends Model
     /**
      * Scope: hanya record hari ini.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<Attendance> $query
-     * @return \Illuminate\Database\Eloquent\Builder<Attendance>
+     * @param  Builder<Attendance>  $query
+     * @return Builder<Attendance>
      */
     public function scopeToday($query)
     {
@@ -87,8 +88,8 @@ class Attendance extends Model
     /**
      * Scope: filter berdasarkan employee.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<Attendance> $query
-     * @return \Illuminate\Database\Eloquent\Builder<Attendance>
+     * @param  Builder<Attendance>  $query
+     * @return Builder<Attendance>
      */
     public function scopeForEmployee($query, int $employeeId)
     {

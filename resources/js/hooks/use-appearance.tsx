@@ -77,6 +77,7 @@ export function initializeTheme(): void {
 
     // Paksa light mode: reset jika stored value adalah 'system' atau 'dark'
     const stored = localStorage.getItem('appearance');
+
     if (!stored || stored === 'system' || stored === 'dark') {
         localStorage.setItem('appearance', 'light');
         setCookie('appearance', 'light');

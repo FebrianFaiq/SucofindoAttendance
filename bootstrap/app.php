@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
@@ -31,8 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         // Mencegah infinite redirect saat user yang sudah login mengakses /login
-        $middleware->redirectUsersTo(fn (Request $request) =>
-            $request->user()?->isAdmin()
+        $middleware->redirectUsersTo(fn (Request $request) => $request->user()?->isAdmin()
                 ? route('admin.dashboard')
                 : route('employee.dashboard')
         );

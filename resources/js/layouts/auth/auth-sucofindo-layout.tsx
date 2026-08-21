@@ -1,5 +1,5 @@
-import type { PropsWithChildren } from 'react';
 import { motion } from 'framer-motion';
+import type { PropsWithChildren } from 'react';
 
 /**
  * Auth layout khas SUCOFINDO — split layout:
