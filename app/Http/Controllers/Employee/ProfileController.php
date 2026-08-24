@@ -23,10 +23,12 @@ class ProfileController extends Controller
         $user = Auth::user();
         $employee = $user->employee;
         $activeProject = $employee?->activeProject();
+        $activeSalary = $employee?->activeSalary();
 
         return Inertia::render('employee/profile', [
             'employee' => $employee,
             'activeProject' => $activeProject,
+            'activeSalary' => $activeSalary,
         ]);
     }
 }

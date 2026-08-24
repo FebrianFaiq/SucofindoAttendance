@@ -38,9 +38,14 @@ interface EmployeeData {
 interface EmployeesEditProps {
     employee: EmployeeData;
     projects: Project[];
+    activeSalary: {
+        id: number;
+        base_salary: string;
+        effective_date: string;
+    } | null;
 }
 
-export default function EmployeesEdit({ employee, projects }: EmployeesEditProps) {
+export default function EmployeesEdit({ employee, projects, activeSalary }: EmployeesEditProps) {
     const activeProjectId = employee.projects?.[0]?.id ? String(employee.projects[0].id) : '';
 
     const { data, setData, put, processing, errors } = useForm({
@@ -52,6 +57,7 @@ export default function EmployeesEdit({ employee, projects }: EmployeesEditProps
         division: employee.division || 'BIT',
         project_id: activeProjectId,
         is_active: employee.user?.is_active ?? true,
+        base_salary: activeSalary ? Number(activeSalary.base_salary).toString() : '',
     });
 
     // Dialog states
@@ -242,6 +248,26 @@ export default function EmployeesEdit({ employee, projects }: EmployeesEditProps
                                             ))}
                                         </select>
                                         {errors.project_id && <p className="text-xs text-red-500 font-semibold">{errors.project_id}</p>}
+                                    </div>
+                                )}
+
+                                {/* Gaji Pokok (hanya untuk karyawan PTT) */}
+                                {data.role === 'employee' && (
+                                    <div className="flex flex-col gap-2">
+                                        <label className="text-[14px] font-bold text-[#1E293B]">
+                                            Gaji Pokok (Bulanan) <span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 font-semibold text-sm">Rp</span>
+                                            <Input
+                                                type="number"
+                                                value={data.base_salary}
+                                                onChange={(e) => setData('base_salary', e.target.value)}
+                                                placeholder="Contoh: 4500000"
+                                                className="h-11 pl-10 bg-[#F8FAFC] border-neutral-200 text-[#1E293B] font-semibold focus-visible:ring-[#035EA9]"
+                                            />
+                                        </div>
+                                        {errors.base_salary && <p className="text-xs text-red-500 font-semibold">{errors.base_salary}</p>}
                                     </div>
                                 )}
 

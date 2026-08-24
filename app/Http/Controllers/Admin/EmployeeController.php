@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreEmployeeRequest;
 use App\Http\Requests\Admin\UpdateEmployeeRequest;
 use App\Models\Employee;
 use App\Models\EmployeeProject;
+use App\Models\EmployeeSalary;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -35,6 +36,8 @@ class EmployeeController extends Controller
 
         $employees = Employee::with(['user', 'projects' => function ($query) {
             $query->wherePivot('status', 'active');
+        }, 'salaries' => function ($query) {
+            $query->active();
         }])
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -111,6 +114,17 @@ class EmployeeController extends Controller
                     'assigned_by' => Auth::id(),
                 ]);
             }
+
+            // 4. Buat record gaji awal jika role employee dan base_salary diisi
+            if ($role === 'employee' && ! empty($validated['base_salary'])) {
+                EmployeeSalary::create([
+                    'employee_id' => $employee->id,
+                    'base_salary' => $validated['base_salary'],
+                    'effective_date' => today(),
+                    'notes' => 'Gaji awal saat pendaftaran',
+                    'created_by' => Auth::id(),
+                ]);
+            }
         });
 
         return redirect()->route('admin.employees.index')
@@ -142,9 +156,13 @@ class EmployeeController extends Controller
 
         $projects = Project::active()->orderBy('name')->get(['id', 'name', 'code']);
 
+        // Ambil gaji aktif
+        $activeSalary = $employee->activeSalary();
+
         return Inertia::render('admin/employees/edit', [
             'employee' => $employee,
             'projects' => $projects,
+            'activeSalary' => $activeSalary,
         ]);
     }
 
@@ -216,6 +234,29 @@ class EmployeeController extends Controller
                     $currentActiveAssignment->update([
                         'status' => 'ended',
                         'ended_at' => today(),
+                    ]);
+                }
+            }
+
+            // 4. Handle salary update (hanya untuk employee)
+            if ($role === 'employee' && isset($validated['base_salary'])) {
+                $currentSalary = $employee->activeSalary();
+                $newSalary = (float) $validated['base_salary'];
+
+                // Hanya buat record baru jika gaji berubah atau belum ada
+                if (! $currentSalary || (float) $currentSalary->base_salary !== $newSalary) {
+                    // Akhiri gaji lama
+                    if ($currentSalary) {
+                        $currentSalary->update(['ended_at' => today()]);
+                    }
+
+                    // Buat record gaji baru
+                    EmployeeSalary::create([
+                        'employee_id' => $employee->id,
+                        'base_salary' => $newSalary,
+                        'effective_date' => today(),
+                        'notes' => $currentSalary ? 'Perubahan gaji' : 'Gaji awal',
+                        'created_by' => Auth::id(),
                     ]);
                 }
             }

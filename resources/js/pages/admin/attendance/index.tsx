@@ -60,15 +60,6 @@ interface AttendanceItem {
     };
 }
 
-interface HolidayItem {
-    id: number;
-    date: string;
-    date_formatted: string;
-    name: string;
-    is_national: boolean;
-    description: string | null;
-}
-
 interface PaginatedData<T> {
     data: T[];
     current_page: number;
@@ -88,7 +79,7 @@ interface PaginatedData<T> {
 
 interface AttendanceIndexProps {
     attendances: PaginatedData<AttendanceItem>;
-    holidays: HolidayItem[];
+
     todayInfo: {
         date: string;
         date_formatted: string;
@@ -112,7 +103,7 @@ interface AttendanceIndexProps {
 
 export default function AttendanceIndex({
     attendances,
-    holidays = [],
+
     todayInfo,
     kpi,
     filters
@@ -123,19 +114,6 @@ export default function AttendanceIndex({
     const [perPage, setPerPage] = useState(filters?.per_page || 10);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [selectedAttendance, setSelectedAttendance] = useState<AttendanceItem | null>(null);
-
-    // Holiday dialog states
-    const [isHolidayListOpen, setIsHolidayListOpen] = useState(false);
-    const [isAddHolidayOpen, setIsAddHolidayOpen] = useState(false);
-    const [holidayToDelete, setHolidayToDelete] = useState<HolidayItem | null>(null);
-
-    // Holiday Form
-    const { data: holidayData, setData: setHolidayData, post: postHoliday, processing: holidayProcessing, reset: resetHoliday, errors: holidayErrors } = useForm({
-        date: '',
-        name: '',
-        is_national: true,
-        description: '',
-    });
 
     const handleFilter = (e?: React.FormEvent) => {
         if (e) {
@@ -163,28 +141,6 @@ e.preventDefault();
         setEndDate('');
         setSearchTerm('');
         router.get('/admin/attendance', {}, { preserveState: true, replace: true });
-    };
-
-    const handleCreateHoliday = (e: React.FormEvent) => {
-        e.preventDefault();
-        postHoliday('/admin/holidays', {
-            onSuccess: () => {
-                setIsAddHolidayOpen(false);
-                resetHoliday();
-            },
-        });
-    };
-
-    const handleDeleteHoliday = () => {
-        if (!holidayToDelete) {
-return;
-}
-
-        router.delete(`/admin/holidays/${holidayToDelete.id}`, {
-            onSuccess: () => {
-                setHolidayToDelete(null);
-            },
-        });
     };
 
     const openDetails = (item: AttendanceItem) => {
@@ -323,25 +279,6 @@ return false;
                         </p>
                     </div>
 
-                    {/* Action Buttons (Daftar Hari Libur & Tambah Hari Libur) */}
-                    <div className="flex items-center gap-3">
-                        <Button
-                            variant="outline"
-                            onClick={() => setIsHolidayListOpen(true)}
-                            className="border-neutral-300 bg-white hover:bg-neutral-50 font-bold h-11 px-4 text-neutral-700 flex items-center gap-2 rounded-xl text-xs shadow-sm"
-                        >
-                            <Calendar className="h-4 w-4 text-[#035EA9]" />
-                            Daftar Hari Libur ({holidays.length})
-                        </Button>
-
-                        <Button
-                            onClick={() => setIsAddHolidayOpen(true)}
-                            className="bg-[#035EA9] hover:bg-[#035EA9]/90 text-white font-bold h-11 px-5 flex items-center gap-2 shadow-sm rounded-xl text-xs"
-                        >
-                            <Plus className="h-4 w-4" />
-                            Tambah Hari Libur
-                        </Button>
-                    </div>
                 </div>
 
                 {/* ── KPI Summary Cards ──────────────────────────────── */}
@@ -887,230 +824,7 @@ return false;
                     </SheetContent>
                 </Sheet>
 
-                {/* ── Dialog 1: Modal Daftar Hari Libur (Full List) ──── */}
-                <Dialog open={isHolidayListOpen} onOpenChange={setIsHolidayListOpen}>
-                    <DialogContent className="sm:max-w-[720px] p-6 font-mulish max-h-[85vh] flex flex-col">
-                        <DialogHeader className="border-b border-neutral-200 pb-3">
-                            <div className="flex items-center justify-between pr-6">
-                                <div>
-                                    <DialogTitle className="text-xl font-bold text-[#1E293B] flex items-center gap-2">
-                                        <Calendar className="h-5 w-5 text-[#035EA9]" />
-                                        Daftar Hari Libur ({holidays.length})
-                                    </DialogTitle>
-                                    <DialogDescription className="text-xs text-neutral-500 mt-1">
-                                        Daftar hari libur nasional (SKB 3 Menteri) dan libur khusus perusahaan tahun 2026.
-                                    </DialogDescription>
-                                </div>
 
-                                <Button
-                                    size="sm"
-                                    onClick={() => {
-                                        setIsHolidayListOpen(false);
-                                        setIsAddHolidayOpen(true);
-                                    }}
-                                    className="bg-[#035EA9] hover:bg-[#035EA9]/90 text-white font-bold text-xs h-9 px-3 flex items-center gap-1.5 rounded-lg"
-                                >
-                                    <Plus className="h-3.5 w-3.5" />
-                                    Tambah Libur
-                                </Button>
-                            </div>
-                        </DialogHeader>
-
-                        <div className="flex-1 overflow-y-auto mt-3">
-                            <table className="w-full text-left text-xs">
-                                <thead className="bg-[#F8FAFC] border-b border-neutral-200 text-neutral-500 font-bold uppercase sticky top-0">
-                                    <tr>
-                                        <th className="px-4 py-2.5">Tanggal</th>
-                                        <th className="px-4 py-2.5">Nama Hari Libur</th>
-                                        <th className="px-4 py-2.5">Kategori</th>
-                                        <th className="px-4 py-2.5 text-right">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-neutral-100">
-                                    {holidays.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={4} className="px-4 py-8 text-center text-neutral-500">
-                                                Belum ada data hari libur terdaftar.
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        holidays.map((h) => (
-                                            <tr key={h.id} className="hover:bg-neutral-50/60">
-                                                <td className="px-4 py-3 font-bold text-[#035EA9] whitespace-nowrap">
-                                                    {h.date_formatted}
-                                                </td>
-                                                <td className="px-4 py-3 font-semibold text-neutral-900">
-                                                    {h.name}
-                                                    {h.description && (
-                                                        <p className="text-[11px] text-neutral-400 font-normal mt-0.5">{h.description}</p>
-                                                    )}
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    {h.is_national ? (
-                                                        <Badge className="bg-blue-50 text-blue-700 border-none font-bold text-[10px]">
-                                                            Libur Nasional
-                                                        </Badge>
-                                                    ) : (
-                                                        <Badge className="bg-amber-50 text-amber-700 border-none font-bold text-[10px]">
-                                                            Libur Perusahaan
-                                                        </Badge>
-                                                    )}
-                                                </td>
-                                                <td className="px-4 py-3 text-right">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setIsHolidayListOpen(false);
-                                                            setHolidayToDelete(h);
-                                                        }}
-                                                        className="p-1.5 rounded-lg text-red-600 hover:bg-red-50"
-                                                        title="Hapus Hari Libur"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <DialogFooter className="border-t border-neutral-200 pt-3">
-                            <DialogClose asChild>
-                                <Button variant="outline" className="text-xs font-bold h-9">
-                                    Tutup
-                                </Button>
-                            </DialogClose>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-
-                {/* ── Dialog 2: Modal Tambah Hari Libur ──────────────── */}
-                <Dialog open={isAddHolidayOpen} onOpenChange={setIsAddHolidayOpen}>
-                    <DialogContent className="sm:max-w-[480px] p-6 font-mulish">
-                        <DialogHeader>
-                            <DialogTitle className="text-xl font-bold text-[#1E293B]">
-                                Tambah Hari Libur Baru
-                            </DialogTitle>
-                            <DialogDescription className="text-xs text-neutral-500">
-                                Tambahkan tanggal libur nasional atau libur khusus perusahaan ke kalender sistem absensi.
-                            </DialogDescription>
-                        </DialogHeader>
-
-                        <form onSubmit={handleCreateHoliday} className="flex flex-col gap-4 mt-2">
-                            {/* Tanggal */}
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-bold text-neutral-700">
-                                    Tanggal Libur <span className="text-red-500">*</span>
-                                </label>
-                                <DatePicker
-                                    date={holidayData.date ? parseISO(holidayData.date) : undefined}
-                                    setDate={(d) => setHolidayData('date', d ? format(d, 'yyyy-MM-dd') : '')}
-                                    placeholder="Pilih Tanggal Libur"
-                                    className="w-full h-10 border-neutral-200 text-xs font-semibold px-3"
-                                />
-                                {holidayErrors.date && <p className="text-xs text-red-500 font-semibold">{holidayErrors.date}</p>}
-                            </div>
-
-                            {/* Nama Libur */}
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-bold text-neutral-700">
-                                    Nama Hari Libur <span className="text-red-500">*</span>
-                                </label>
-                                <Input
-                                    value={holidayData.name}
-                                    onChange={(e) => setHolidayData('name', e.target.value)}
-                                    placeholder="Contoh: HUT SUCOFINDO ke-70"
-                                    required
-                                    className="h-10 bg-[#F8FAFC] border-neutral-200 text-xs font-semibold"
-                                />
-                                {holidayErrors.name && <p className="text-xs text-red-500 font-semibold">{holidayErrors.name}</p>}
-                            </div>
-
-                            {/* Kategori */}
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-bold text-neutral-700">Kategori</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setHolidayData('is_national', true)}
-                                        className={`p-2.5 rounded-lg border text-xs font-bold text-center transition-all ${holidayData.is_national
-                                                ? 'bg-[#E5F0F9] border-[#035EA9] text-[#035EA9]'
-                                                : 'border-neutral-200 bg-[#F8FAFC] text-neutral-600 hover:bg-neutral-100'
-                                            }`}
-                                    >
-                                        Libur Nasional
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setHolidayData('is_national', false)}
-                                        className={`p-2.5 rounded-lg border text-xs font-bold text-center transition-all ${!holidayData.is_national
-                                                ? 'bg-amber-50 border-amber-500 text-amber-700'
-                                                : 'border-neutral-200 bg-[#F8FAFC] text-neutral-600 hover:bg-neutral-100'
-                                            }`}
-                                    >
-                                        Libur Perusahaan
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Keterangan */}
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-bold text-neutral-700">Keterangan (Opsional)</label>
-                                <Input
-                                    value={holidayData.description}
-                                    onChange={(e) => setHolidayData('description', e.target.value)}
-                                    placeholder="Contoh: Libur khusus cuti bersama internal kantor"
-                                    className="h-10 bg-[#F8FAFC] border-neutral-200 text-xs font-semibold"
-                                />
-                            </div>
-
-                            <DialogFooter className="flex justify-end gap-2 mt-4">
-                                <DialogClose asChild>
-                                    <Button type="button" variant="outline" className="h-10 text-xs font-bold">
-                                        Batal
-                                    </Button>
-                                </DialogClose>
-                                <Button
-                                    type="submit"
-                                    disabled={holidayProcessing}
-                                    className="h-10 bg-[#0B3B8B] hover:bg-[#0B3B8B]/90 text-white font-bold text-xs"
-                                >
-                                    {holidayProcessing ? 'Menyimpan...' : 'Simpan Hari Libur'}
-                                </Button>
-                            </DialogFooter>
-                        </form>
-                    </DialogContent>
-                </Dialog>
-
-                {/* ── Dialog 3: Konfirmasi Hapus Hari Libur ──────────── */}
-                <Dialog open={!!holidayToDelete} onOpenChange={(open) => !open && setHolidayToDelete(null)}>
-                    <DialogContent className="sm:max-w-[400px] p-6 font-mulish text-center border-none">
-                        <DialogHeader className="flex flex-col items-center">
-                            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50 mb-3">
-                                <Trash2 className="h-7 w-7 text-red-600" />
-                            </div>
-                            <DialogTitle className="text-xl font-bold text-neutral-900">Hapus Hari Libur?</DialogTitle>
-                            <DialogDescription className="text-xs text-neutral-500 mt-2 text-center leading-relaxed">
-                                Apakah Anda yakin ingin menghapus hari libur <b>"{holidayToDelete?.name}"</b> ({holidayToDelete?.date})? Karyawan akan dapat melakukan absensi pada tanggal tersebut.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <DialogFooter className="flex flex-col sm:flex-col gap-2 mt-4">
-                            <Button
-                                onClick={handleDeleteHoliday}
-                                className="w-full bg-[#C81E1E] hover:bg-[#B91C1C] text-white font-bold h-10 text-xs"
-                            >
-                                Ya, Hapus Hari Libur
-                            </Button>
-                            <DialogClose asChild>
-                                <Button variant="outline" className="w-full border-neutral-300 font-bold text-neutral-700 h-10 text-xs">
-                                    Batal
-                                </Button>
-                            </DialogClose>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
 
             </div>
         </>

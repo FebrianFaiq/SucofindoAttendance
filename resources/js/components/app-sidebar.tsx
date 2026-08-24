@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
     CalendarCheck,
+    CalendarX2,
     Clock,
     FolderKanban,
     LayoutGrid,
@@ -71,6 +72,11 @@ export function AppSidebar() {
             title: 'Lembur',
             href: '/admin/overtime',
             icon: Clock,
+        },
+        {
+            title: 'Hari Libur',
+            href: '/admin/holidays',
+            icon: CalendarX2,
         },
         {
             title: 'Projek',

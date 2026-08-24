@@ -27,6 +27,7 @@ export default function EmployeesCreate({ projects }: EmployeesCreateProps) {
         division: 'BIT',
         project_id: '',
         is_active: true,
+        base_salary: '',
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -196,6 +197,26 @@ export default function EmployeesCreate({ projects }: EmployeesCreateProps) {
                                             ))}
                                         </select>
                                         {errors.project_id && <p className="text-xs text-red-500 font-semibold">{errors.project_id}</p>}
+                                    </div>
+                                )}
+
+                                {/* Gaji Pokok (hanya untuk karyawan PTT) */}
+                                {data.role === 'employee' && (
+                                    <div className="flex flex-col gap-2">
+                                        <label className="text-[14px] font-bold text-[#1E293B]">
+                                            Gaji Pokok (Bulanan) <span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 font-semibold text-sm">Rp</span>
+                                            <Input
+                                                type="number"
+                                                value={data.base_salary}
+                                                onChange={(e) => setData('base_salary', e.target.value)}
+                                                placeholder="Contoh: 4500000"
+                                                className="h-11 pl-10 bg-[#F8FAFC] border-neutral-200 text-[#1E293B] font-semibold focus-visible:ring-[#035EA9]"
+                                            />
+                                        </div>
+                                        {errors.base_salary && <p className="text-xs text-red-500 font-semibold">{errors.base_salary}</p>}
                                     </div>
                                 )}
 

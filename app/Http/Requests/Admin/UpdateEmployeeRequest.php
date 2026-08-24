@@ -32,6 +32,7 @@ class UpdateEmployeeRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:20'],
             'project_id' => ['nullable', 'exists:projects,id'],
             'is_active' => ['nullable', 'boolean'],
+            'base_salary' => ['nullable', 'required_if:role,employee', 'numeric', 'min:0'],
         ];
     }
 
@@ -46,6 +47,9 @@ class UpdateEmployeeRequest extends FormRequest
             'email.unique' => 'Email sudah terdaftar.',
             'nik.required' => 'NIK wajib diisi.',
             'nik.unique' => 'NIK sudah terdaftar.',
+            'base_salary.required_if' => 'Gaji pokok wajib diisi untuk karyawan PTT.',
+            'base_salary.numeric' => 'Gaji pokok harus berupa angka.',
+            'base_salary.min' => 'Gaji pokok tidak boleh negatif.',
         ];
     }
 }

@@ -10,7 +10,13 @@ import { Head } from '@inertiajs/react';
  *
  * Edit profil mandiri belum termasuk scope v1.0.
  */
-export default function Profile() {
+interface ProfileProps {
+    employee: any;
+    activeProject: any;
+    activeSalary: any;
+}
+
+export default function Profile({ employee, activeProject, activeSalary }: ProfileProps) {
     return (
         <>
             <Head title="Profil" />
@@ -24,14 +30,42 @@ export default function Profile() {
                     </p>
                 </div>
 
-                {/* TODO: Implement profile display */}
-                <div className="mx-auto w-full max-w-lg rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-950">
-                    <div className="space-y-4">
-                        <div className="rounded-lg bg-neutral-50 p-4 text-sm text-neutral-400 dark:bg-neutral-900">
-                            <p><span className="font-medium text-neutral-500">Nama:</span> —</p>
-                            <p className="mt-2"><span className="font-medium text-neutral-500">Email:</span> —</p>
-                            <p className="mt-2"><span className="font-medium text-neutral-500">Proyek Aktif:</span> —</p>
+                <div className="mx-auto w-full max-w-lg rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+                    <div className="space-y-4 text-sm text-neutral-700">
+                        <div className="grid grid-cols-[120px_1fr] gap-2 border-b border-neutral-100 pb-3">
+                            <span className="font-semibold text-neutral-500 uppercase text-[10px] tracking-wider self-center">Nama</span>
+                            <span className="font-medium text-neutral-900">{employee?.user?.name || '—'}</span>
                         </div>
+                        <div className="grid grid-cols-[120px_1fr] gap-2 border-b border-neutral-100 pb-3">
+                            <span className="font-semibold text-neutral-500 uppercase text-[10px] tracking-wider self-center">Email</span>
+                            <span className="font-medium text-neutral-900">{employee?.user?.email || '—'}</span>
+                        </div>
+                        <div className="grid grid-cols-[120px_1fr] gap-2 border-b border-neutral-100 pb-3">
+                            <span className="font-semibold text-neutral-500 uppercase text-[10px] tracking-wider self-center">NIK</span>
+                            <span className="font-medium text-neutral-900">{employee?.nik || '—'}</span>
+                        </div>
+                        <div className="grid grid-cols-[120px_1fr] gap-2 border-b border-neutral-100 pb-3">
+                            <span className="font-semibold text-neutral-500 uppercase text-[10px] tracking-wider self-center">Telepon</span>
+                            <span className="font-medium text-neutral-900">{employee?.phone || '—'}</span>
+                        </div>
+                        <div className="grid grid-cols-[120px_1fr] gap-2 border-b border-neutral-100 pb-3">
+                            <span className="font-semibold text-neutral-500 uppercase text-[10px] tracking-wider self-center">
+                                {employee?.user?.role === 'intern' ? 'Bidang' : 'Proyek Aktif'}
+                            </span>
+                            <span className="font-medium text-neutral-900">
+                                {employee?.user?.role === 'intern' 
+                                    ? (employee?.division || '—') 
+                                    : (activeProject?.name || 'Belum Ditugaskan')}
+                            </span>
+                        </div>
+                        {employee?.user?.role === 'employee' && (
+                            <div className="grid grid-cols-[120px_1fr] gap-2 pb-1">
+                                <span className="font-semibold text-neutral-500 uppercase text-[10px] tracking-wider self-center">Gaji Pokok</span>
+                                <span className="font-bold text-[#035EA9]">
+                                    {activeSalary ? `Rp ${Number(activeSalary.base_salary).toLocaleString('id-ID')}` : 'Belum Diset'}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

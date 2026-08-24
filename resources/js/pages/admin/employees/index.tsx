@@ -29,6 +29,11 @@ interface EmployeeItem {
             status: string;
         };
     }[];
+    salaries?: {
+        id: number;
+        base_salary: string;
+        effective_date: string;
+    }[];
 }
 
 interface PaginatedData<T> {
@@ -181,6 +186,7 @@ return 'EM';
                                     <th className="px-6 py-4 font-bold tracking-wide">NIK</th>
                                     <th className="px-6 py-4 font-bold tracking-wide">Email</th>
                                     <th className="px-6 py-4 font-bold tracking-wide">Proyek / Bidang</th>
+                                    <th className="px-6 py-4 font-bold tracking-wide">Gaji Pokok</th>
                                     <th className="px-6 py-4 font-bold tracking-wide">Status</th>
                                     <th className="px-6 py-4 font-bold tracking-wide text-right">Aksi</th>
                                 </tr>
@@ -188,7 +194,7 @@ return 'EM';
                             <tbody className="divide-y divide-neutral-200 text-neutral-700">
                                 {employees.data.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-12 text-center text-neutral-500 font-medium">
+                                        <td colSpan={7} className="px-6 py-12 text-center text-neutral-500 font-medium">
                                             Tidak ada data karyawan ditemukan.
                                         </td>
                                     </tr>
@@ -226,6 +232,15 @@ return 'EM';
                                                         <Badge variant="secondary" className="rounded-md border-none bg-[#035EA9]/10 text-[#035EA9] hover:bg-[#035EA9]/20 px-2.5 py-1 text-[13px] font-bold">
                                                             {activeProject}
                                                         </Badge>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 font-semibold text-neutral-600 whitespace-nowrap">
+                                                    {emp.user?.role === 'intern' ? (
+                                                        <span className="text-neutral-400">—</span>
+                                                    ) : emp.salaries && emp.salaries.length > 0 ? (
+                                                        `Rp ${Number(emp.salaries[0].base_salary).toLocaleString('id-ID')}`
+                                                    ) : (
+                                                        <span className="text-neutral-400">Belum Diset</span>
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -403,6 +418,31 @@ return 'EM';
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {/* Row 3: Gaji Pokok (hanya PTT) */}
+                                        {selectedEmployee.user?.role !== 'intern' && (
+                                            <div className="grid grid-cols-1 w-full mt-2">
+                                                <div className="flex flex-col h-full w-full min-w-0">
+                                                    <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">GAJI POKOK</span>
+                                                    <div className="w-full border-b-2 border-[#035EA9] pb-1 mt-1 flex-1 flex flex-col justify-end">
+                                                        <span className="text-xs font-semibold text-neutral-900 break-words block">
+                                                            {selectedEmployee.salaries && selectedEmployee.salaries.length > 0 ? (
+                                                                <>
+                                                                    Rp {Number(selectedEmployee.salaries[0].base_salary).toLocaleString('id-ID')}{' '}
+                                                                    <span className="text-neutral-500 font-medium ml-1">
+                                                                        (Sejak {new Intl.DateTimeFormat('id-ID', {
+                                                                            day: 'numeric',
+                                                                            month: 'short',
+                                                                            year: 'numeric'
+                                                                        }).format(new Date(selectedEmployee.salaries[0].effective_date))})
+                                                                    </span>
+                                                                </>
+                                                            ) : 'Belum Diset'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 

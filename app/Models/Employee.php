@@ -75,6 +75,16 @@ class Employee extends Model
     }
 
     /**
+     * Riwayat gaji karyawan ini.
+     *
+     * @return HasMany<EmployeeSalary, $this>
+     */
+    public function salaries(): HasMany
+    {
+        return $this->hasMany(EmployeeSalary::class);
+    }
+
+    /**
      * Proyek-proyek yang ditugaskan ke karyawan ini.
      *
      * @return BelongsToMany<Project, $this>
@@ -107,5 +117,13 @@ class Employee extends Model
     public function todayAttendance(): ?Attendance
     {
         return $this->attendances()->today()->first();
+    }
+
+    /**
+     * Dapatkan gaji aktif saat ini (jika ada).
+     */
+    public function activeSalary(): ?EmployeeSalary
+    {
+        return $this->salaries()->active()->latest('effective_date')->first();
     }
 }

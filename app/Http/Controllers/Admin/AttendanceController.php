@@ -92,18 +92,6 @@ class AttendanceController extends Controller
             return $attendance;
         });
 
-        // 2. Daftar Hari Libur (Seluruh tahun 2026)
-        $holidays = Holiday::orderBy('date')->get()->map(function ($h) {
-            return [
-                'id' => $h->id,
-                'date' => $h->date->format('Y-m-d'),
-                'date_formatted' => $h->date->isoFormat('D MMMM Y'),
-                'name' => $h->name,
-                'is_national' => (bool) $h->is_national,
-                'description' => $h->description,
-            ];
-        });
-
         // 3. Status Hari Ini (Kerja vs Libur/Weekend)
         $todayHoliday = Holiday::getHolidayDetails($today);
         $isTodayWeekend = $today->isWeekend();
@@ -116,7 +104,6 @@ class AttendanceController extends Controller
 
         return Inertia::render('admin/attendance/index', [
             'attendances' => $attendances,
-            'holidays' => $holidays,
             'todayInfo' => [
                 'date' => $today->toDateString(),
                 'date_formatted' => $today->isoFormat('dddd, D MMMM Y'),
