@@ -19,7 +19,9 @@ class ProjectController extends Controller
      */
     public function index(): Response
     {
-        $projects = Project::withCount('employees')
+        $projects = Project::withCount(['employees' => function ($query) {
+            $query->where('employee_projects.status', 'active');
+        }])
             ->orderByDesc('created_at')
             ->paginate(15);
 
