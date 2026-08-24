@@ -128,6 +128,8 @@ Route::prefix('admin')
             ->name('admin.reports.export');
         Route::get('reports/export-excel', [Admin\ReportController::class, 'exportExcel'])
             ->name('admin.reports.export-excel');
+        Route::get('reports/overtime-export-excel', [Admin\ReportController::class, 'exportOvertimeExcel'])
+            ->name('admin.reports.overtime-export-excel');
 
         // Master Hari Libur (Holiday Management)
         Route::get('holidays', [Admin\HolidayController::class, 'index'])

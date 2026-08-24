@@ -64,8 +64,25 @@ class OvertimeController extends Controller
         $user = Auth::user();
         $employee = $user->employee;
 
+        $date = \Carbon\Carbon::parse($request->validated('date'));
+
+        $count = Overtime::whereYear('date', $date->year)
+            ->whereMonth('date', $date->month)
+            ->count();
+            
+        $sequence = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+        
+        $romanMonths = [
+            1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI',
+            7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'
+        ];
+        $romanMonth = $romanMonths[$date->month];
+        
+        $spklNumber = "{$sequence}/SBA-{$romanMonth}/LEMBUR/{$date->year}";
+
         Overtime::create([
             'employee_id' => $employee->id,
+            'spkl_number' => $spklNumber,
             'date' => $request->validated('date'),
             'start_time' => $request->validated('start_time'),
             'end_time' => $request->validated('end_time'),

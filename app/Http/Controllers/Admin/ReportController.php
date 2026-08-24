@@ -254,4 +254,31 @@ class ReportController extends Controller
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ])->deleteFileAfterSend(true);
     }
+    /**
+     * Export rekap lembur ke Excel menggunakan format template HRD.
+     */
+    public function exportOvertimeExcel(Request $request, \App\Services\Overtime\OvertimeExportService $exportService)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        try {
+            $tempFile = $exportService->export($startDate, $endDate);
+            
+            $monthName = \Carbon\Carbon::parse($startDate)->format('F_Y');
+            $filename = "Rekap_Lembur_HRD_{$monthName}.xlsx";
+
+            return response()->download($tempFile, $filename, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])->deleteFileAfterSend(true);
+            
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal melakukan export: ' . $e->getMessage());
+        }
+    }
 }
