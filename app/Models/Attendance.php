@@ -40,6 +40,9 @@ class Attendance extends Model
         'check_in_latitude',
         'check_in_longitude',
         'check_out_at',
+        'check_out_evidence',
+        'check_out_latitude',
+        'check_out_longitude',
         'work_notes',
     ];
 
@@ -53,6 +56,8 @@ class Attendance extends Model
             'check_out_at' => 'datetime',
             'check_in_latitude' => 'decimal:7',
             'check_in_longitude' => 'decimal:7',
+            'check_out_latitude' => 'decimal:7',
+            'check_out_longitude' => 'decimal:7',
         ];
     }
 

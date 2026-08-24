@@ -29,6 +29,7 @@ class CheckOutController extends Controller
             'alreadyCheckedOut' => $todayAttendance?->check_out_at !== null,
             'todayAttendance' => $todayAttendance ? [
                 'id' => $todayAttendance->id,
+                'type' => $todayAttendance->type,
                 'check_in_at' => $todayAttendance->check_in_at?->toIso8601String(),
                 'check_out_at' => $todayAttendance->check_out_at?->toIso8601String(),
             ] : null,
@@ -37,7 +38,7 @@ class CheckOutController extends Controller
 
     /**
      * Proses Check Out.
-     * Menyimpan catatan kerjaan harian (wajib).
+     * Menyimpan catatan kerjaan harian, foto, dan lokasi GPS (wajib).
      */
     public function store(CheckOutRequest $request): RedirectResponse
     {
@@ -47,9 +48,17 @@ class CheckOutController extends Controller
 
         $todayAttendance = $employee->todayAttendance();
 
+        $photoPath = null;
+        if ($request->hasFile('photo')) {
+            $photoPath = $request->file('photo')->store('attendances/checkout', 'public');
+        }
+
         $todayAttendance->update([
             'check_out_at' => now(),
             'work_notes' => $request->validated('work_notes'),
+            'check_out_evidence' => $photoPath,
+            'check_out_latitude' => $request->validated('gps_lat'),
+            'check_out_longitude' => $request->validated('gps_lng'),
         ]);
 
         return redirect()->route('employee.dashboard')
