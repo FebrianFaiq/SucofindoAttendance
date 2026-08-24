@@ -22,7 +22,7 @@ class AssignmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'employee_ids' => ['required', 'array', 'min:1'],
+            'employee_ids' => ['nullable', 'array'],
             'employee_ids.*' => ['exists:employees,id'],
             'project_id' => ['required', 'exists:projects,id'],
         ];
@@ -36,13 +36,29 @@ class AssignmentRequest extends FormRequest
         return [
             function (Validator $validator): void {
                 $employeeIds = $this->input('employee_ids', []);
+                $projectId = $this->input('project_id');
 
-                if (empty($employeeIds)) {
+                if (empty($employeeIds) || empty($projectId)) {
                     return;
                 }
 
+                // Karyawan yang saat ini aktif di proyek ini
+                $currentEmployeeIds = DB::table('employee_projects')
+                    ->where('project_id', $projectId)
+                    ->where('status', 'active')
+                    ->pluck('employee_id')
+                    ->toArray();
+
+                // Karyawan yang baru akan ditambahkan
+                $toAdd = array_diff($employeeIds, $currentEmployeeIds);
+
+                if (empty($toAdd)) {
+                    return;
+                }
+
+                // Cek apakah karyawan yang akan ditambahkan punya proyek aktif lain
                 $activeEmployees = DB::table('employee_projects')
-                    ->whereIn('employee_id', $employeeIds)
+                    ->whereIn('employee_id', $toAdd)
                     ->where('status', 'active')
                     ->pluck('employee_id')
                     ->toArray();
@@ -50,7 +66,7 @@ class AssignmentRequest extends FormRequest
                 if (count($activeEmployees) > 0) {
                     $validator->errors()->add(
                         'employee_ids',
-                        'Satu atau lebih karyawan yang dipilih sudah memiliki proyek aktif.'
+                        'Satu atau lebih karyawan yang baru ditugaskan sudah memiliki proyek aktif di tempat lain.'
                     );
                 }
             },

@@ -20,7 +20,26 @@ class AssignmentController extends Controller
         $projectId = $request->validated('project_id');
         $employeeIds = $request->validated('employee_ids') ?? [];
 
-        foreach ($employeeIds as $employeeId) {
+        $currentAssignments = EmployeeProject::where('project_id', $projectId)
+            ->where('status', 'active')
+            ->get();
+            
+        $currentEmployeeIds = $currentAssignments->pluck('employee_id')->toArray();
+
+        $toAdd = array_diff($employeeIds, $currentEmployeeIds);
+        $toRemove = array_diff($currentEmployeeIds, $employeeIds);
+
+        if (!empty($toRemove)) {
+            EmployeeProject::where('project_id', $projectId)
+                ->whereIn('employee_id', $toRemove)
+                ->where('status', 'active')
+                ->update([
+                    'status' => 'ended',
+                    'ended_at' => today(),
+                ]);
+        }
+
+        foreach ($toAdd as $employeeId) {
             EmployeeProject::create([
                 'employee_id' => $employeeId,
                 'project_id' => $projectId,
@@ -31,7 +50,7 @@ class AssignmentController extends Controller
         }
 
         return redirect()->back()
-            ->with('success', 'Karyawan berhasil ditugaskan ke proyek.');
+            ->with('success', 'Penugasan karyawan berhasil diperbarui.');
     }
 
     /**

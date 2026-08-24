@@ -234,7 +234,7 @@ export default function EmployeesEdit({ employee, projects }: EmployeesEditProps
                                             onChange={(e) => setData('project_id', e.target.value)}
                                             className="h-11 w-full rounded-md border border-neutral-200 bg-[#F8FAFC] px-3 font-semibold text-neutral-800 shadow-sm focus:border-[#035EA9] focus:outline-none focus:ring-1 focus:ring-[#035EA9]"
                                         >
-                                            <option value="">-- Pilih Proyek (Opsional) --</option>
+                                            <option value="">-- Tidak Ada Proyek (Unassign) --</option>
                                             {projects.map((proj) => (
                                                 <option key={proj.id} value={proj.id}>
                                                     {proj.name} ({proj.code})

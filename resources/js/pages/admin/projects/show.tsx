@@ -123,13 +123,6 @@ export default function ProjectShow({ project, availableEmployees = [] }: Props)
         employee_ids: [] as number[],
     });
 
-    const filteredAssignEmployees = availableEmployees.filter(emp => {
-        const term = assignSearchTerm.toLowerCase();
-        const nameMatch = emp.user?.name.toLowerCase().includes(term) ?? false;
-        const nikMatch = emp.nik.toLowerCase().includes(term);
-        return nameMatch || nikMatch;
-    });
-
     const isAssignedToOtherProject = (emp: AvailableEmployee) => {
         return emp.projects && emp.projects.some(p => p.id !== project.id);
     };
@@ -138,8 +131,25 @@ export default function ProjectShow({ project, availableEmployees = [] }: Props)
         return emp.projects && emp.projects.some(p => p.id === project.id);
     };
 
+    const filteredAssignEmployees = availableEmployees.filter(emp => {
+        const isAssignedToThis = isAssignedToThisProject(emp);
+        const hasNoProjects = !emp.projects || emp.projects.length === 0;
+
+        if (!isAssignedToThis && !hasNoProjects) {
+            return false;
+        }
+
+        const term = assignSearchTerm.toLowerCase();
+        const nameMatch = emp.user?.name.toLowerCase().includes(term) ?? false;
+        const nikMatch = emp.nik.toLowerCase().includes(term);
+        return nameMatch || nikMatch;
+    });
+
     const openAssignModal = () => {
-        setAssignData('employee_ids', []);
+        const currentlyAssignedIds = availableEmployees
+            .filter(emp => isAssignedToThisProject(emp))
+            .map(emp => emp.id);
+        setAssignData('employee_ids', currentlyAssignedIds);
         setIsAssignModalOpen(true);
     };
 
@@ -278,16 +288,15 @@ export default function ProjectShow({ project, availableEmployees = [] }: Props)
                             <thead className="bg-[#F8FAFC] border-b border-neutral-200">
                                 <tr>
                                     <th className="px-6 py-4 font-bold text-[#434654] tracking-wide w-[30%]">Karyawan</th>
-                                    <th className="px-6 py-4 font-bold text-[#434654] tracking-wide w-[20%]">Employee ID</th>
-                                    <th className="px-6 py-4 font-bold text-[#434654] tracking-wide w-[25%]">Email</th>
-                                    <th className="px-6 py-4 font-bold text-[#434654] tracking-wide w-[15%]">Status Assignment</th>
-                                    <th className="px-6 py-4 font-bold text-[#434654] tracking-wide w-[10%] text-right">Aksi</th>
+                                    <th className="px-6 py-4 font-bold text-[#434654] tracking-wide w-[25%]">Employee ID</th>
+                                    <th className="px-6 py-4 font-bold text-[#434654] tracking-wide w-[30%]">Email</th>
+                                    <th className="px-6 py-4 font-bold text-[#434654] tracking-wide w-[15%] text-right">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-neutral-100">
                                 {paginatedEmployees.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center text-neutral-500 font-medium">
+                                        <td colSpan={4} className="px-6 py-12 text-center text-neutral-500 font-medium">
                                             Tidak ada karyawan yang ditugaskan di proyek ini.
                                         </td>
                                     </tr>
@@ -308,19 +317,8 @@ export default function ProjectShow({ project, availableEmployees = [] }: Props)
                                             <td className="px-6 py-4 font-semibold text-neutral-600">
                                                 {emp.user?.email}
                                             </td>
-                                            <td className="px-6 py-4">
-                                                {emp.pivot?.status === 'active' || !emp.pivot?.status ? (
-                                                    <Badge className="rounded-md border-none bg-[#E6F4EA] text-[#00A099] hover:bg-[#E6F4EA]/80 px-2.5 py-1 text-xs font-bold shadow-none">
-                                                        Assigned
-                                                    </Badge>
-                                                ) : (
-                                                    <Badge className="rounded-md border-none bg-[#FEF3C7] text-[#D97706] hover:bg-[#FEF3C7]/80 px-2.5 py-1 text-xs font-bold shadow-none">
-                                                        {emp.pivot?.status === 'ended' ? 'Released' : 'Pending Release'}
-                                                    </Badge>
-                                                )}
-                                            </td>
                                             <td className="px-6 py-4 text-right">
-                                                {(emp.pivot?.status === 'active' || !emp.pivot?.status) && emp.pivot?.id ? (
+                                                {emp.pivot?.id && (
                                                     <Button 
                                                         variant="ghost" 
                                                         size="sm"
@@ -333,7 +331,7 @@ export default function ProjectShow({ project, availableEmployees = [] }: Props)
                                                     >
                                                         Lepas
                                                     </Button>
-                                                ) : null}
+                                                )}
                                             </td>
                                         </tr>
                                     ))
@@ -428,22 +426,20 @@ export default function ProjectShow({ project, availableEmployees = [] }: Props)
                                         filteredAssignEmployees.map((emp) => {
                                             const otherProject = isAssignedToOtherProject(emp);
                                             const thisProject = isAssignedToThisProject(emp);
-                                            const assigned = otherProject || thisProject;
-                                            const checked = thisProject || assignData.employee_ids.includes(emp.id);
+                                            const checked = assignData.employee_ids.includes(emp.id);
                                             
                                             return (
-                                                <tr key={emp.id} className={`hover:bg-neutral-50 transition-colors ${assigned ? 'opacity-60 bg-neutral-50/50' : ''}`}>
+                                                <tr key={emp.id} className="hover:bg-neutral-50 transition-colors">
                                                     <td className="px-6 py-4">
                                                         <Checkbox 
                                                             checked={checked}
                                                             onCheckedChange={() => handleToggleEmployee(emp.id)}
-                                                            disabled={assigned}
                                                             className="border-neutral-300 data-[state=checked]:bg-[#035EA9] data-[state=checked]:border-[#035EA9]"
                                                         />
                                                     </td>
                                                     <td className="px-4 py-4">
                                                         <div className="flex items-center gap-3">
-                                                            <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-bold text-white text-xs ${assigned ? 'bg-neutral-400' : 'bg-[#035EA9]'}`}>
+                                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-bold text-white text-xs bg-[#035EA9]">
                                                                 {getInitials(emp.user?.name)}
                                                             </div>
                                                             <div className="flex items-center gap-2">
@@ -494,7 +490,7 @@ export default function ProjectShow({ project, availableEmployees = [] }: Props)
                                 </Button>
                                 <Button 
                                     onClick={handleAssignSubmit}
-                                    disabled={assignData.employee_ids.length === 0 || assignProcessing}
+                                    disabled={assignProcessing}
                                     className="h-10 px-5 bg-[#035EA9] hover:bg-[#035EA9]/90 text-white font-bold shadow-sm"
                                 >
                                     {assignProcessing ? 'Menyimpan...' : 'Simpan Penugasan'}

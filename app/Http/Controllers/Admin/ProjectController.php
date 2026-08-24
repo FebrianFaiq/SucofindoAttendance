@@ -54,7 +54,8 @@ class ProjectController extends Controller
     {
         $project->load([
             'employees' => function ($query) {
-                $query->with('user:id,name,email,role,is_active');
+                $query->wherePivot('status', 'active')
+                      ->with('user:id,name,email,role,is_active');
             }
         ]);
 
