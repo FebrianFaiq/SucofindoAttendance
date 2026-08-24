@@ -40,176 +40,7 @@ import {
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import AppLayout from '@/layouts/app-layout';
 
-// ─── Static Dummy Data ─────────────────────────────────────────────────────
-
-const dummyOvertimeData = [
-    {
-        id: 1,
-        spkl_no: '0024/SBA-X/LEMBUR/2026',
-        employee: { nik: 'PTT-001', name: 'Ahmad Fauzan', role: 'employee', division: null, project: 'Audit Energi PLN' },
-        project: 'Audit Energi PLN',
-        location_client: 'Kantor Pusat - PT PLN',
-        date: '2026-08-20',
-        day_name: 'Rabu',
-        start_time: '17:00',
-        end_time: '20:00',
-        duration_hours: 3,
-        mode: 'WFO',
-        status: 'pending' as const,
-        work_notes: 'Melanjutkan audit laporan energi Q3 2026 untuk wilayah Jawa Timur. Termasuk review data konsumsi listrik dan gas.',
-        gaji_pokok: 8500000,
-    },
-    {
-        id: 2,
-        spkl_no: '0025/SBA-X/LEMBUR/2026',
-        employee: { nik: 'PTT-002', name: 'Siti Rahmawati', role: 'employee', division: null, project: 'Inspeksi Pipa Gas' },
-        project: 'Inspeksi Pipa Gas',
-        location_client: 'Site Gresik - PT PGN',
-        date: '2026-08-20',
-        day_name: 'Rabu',
-        start_time: '18:00',
-        end_time: '20:30',
-        duration_hours: 2.5,
-        mode: 'WFO',
-        status: 'approved' as const,
-        work_notes: 'Penyusunan laporan hasil inspeksi pipa gas distribusi area Surabaya Barat. Finalisasi dan submission ke supervisor.',
-        gaji_pokok: 9000000,
-    },
-    {
-        id: 3,
-        spkl_no: '0026/SBA-X/LEMBUR/2026',
-        employee: { nik: 'INT-001', name: 'Budi Santoso', role: 'intern', division: 'IT', project: null },
-        project: null,
-        location_client: 'Graha Sucofindo',
-        date: '2026-08-19',
-        day_name: 'Selasa',
-        start_time: '17:30',
-        end_time: '19:30',
-        duration_hours: 2,
-        mode: 'WFA',
-        status: 'approved' as const,
-        work_notes: 'Deployment fitur baru ke staging server dan monitoring performa setelah release. Bug fixing critical issue.',
-        gaji_pokok: 4500000,
-    },
-    {
-        id: 4,
-        spkl_no: '0027/SBA-X/LEMBUR/2026',
-        employee: { nik: 'PTT-003', name: 'Dewi Anggraeni', role: 'employee', division: null, project: 'Sertifikasi ISO 9001' },
-        project: 'Sertifikasi ISO 9001',
-        location_client: 'Site Bekasi - PT Pertamina',
-        date: '2026-08-18',
-        day_name: 'Senin',
-        start_time: '22:00',
-        end_time: '02:00',
-        duration_hours: 4,
-        mode: 'WFO',
-        status: 'canceled' as const,
-        work_notes: 'Melakukan supervisi pengecoran struktur dermaga zona A dan koordinasi dengan vendor logistik.',
-        gaji_pokok: 8500000,
-    },
-    {
-        id: 5,
-        spkl_no: '0028/SBA-X/LEMBUR/2026',
-        employee: { nik: 'PTT-004', name: 'Rina Kusuma', role: 'employee', division: null, project: 'Audit Energi PLN' },
-        project: 'Audit Energi PLN',
-        location_client: 'Kantor Pusat - PT PLN',
-        date: '2026-08-21',
-        day_name: 'Kamis',
-        start_time: '17:00',
-        end_time: '21:00',
-        duration_hours: 4,
-        mode: 'WFO',
-        status: 'pending' as const,
-        work_notes: 'Review final laporan audit energi sebelum diserahkan ke klien. Termasuk cross-check data dan validasi kalkulasi.',
-        gaji_pokok: 7500000,
-    },
-    {
-        id: 6,
-        spkl_no: '0029/SBA-X/LEMBUR/2026',
-        employee: { nik: 'PTT-005', name: 'Hendra Wijaya', role: 'employee', division: null, project: 'Inspeksi Pipa Gas' },
-        project: 'Inspeksi Pipa Gas',
-        location_client: 'Site Gresik - PT PGN',
-        date: '2026-08-21',
-        day_name: 'Kamis',
-        start_time: '18:00',
-        end_time: '22:00',
-        duration_hours: 4,
-        mode: 'WFO',
-        status: 'approved' as const,
-        work_notes: 'Dokumentasi hasil inspeksi visual pipa gas distribusi. Pembuatan checklist temuan dan rekomendasi perbaikan.',
-        gaji_pokok: 8000000,
-    },
-    {
-        id: 7,
-        spkl_no: '0030/SBA-X/LEMBUR/2026',
-        employee: { nik: 'INT-002', name: 'Maya Putri', role: 'intern', division: 'HR', project: null },
-        project: null,
-        location_client: 'Graha Sucofindo',
-        date: '2026-08-22',
-        day_name: 'Jumat',
-        start_time: '17:00',
-        end_time: '19:00',
-        duration_hours: 2,
-        mode: 'WFA',
-        status: 'pending' as const,
-        work_notes: 'Pembuatan template onboarding baru untuk karyawan magang batch September 2026.',
-        gaji_pokok: 4500000,
-    },
-    {
-        id: 8,
-        spkl_no: '0031/SBA-X/LEMBUR/2026',
-        employee: { nik: 'PTT-006', name: 'Agus Pratama', role: 'employee', division: null, project: 'Sertifikasi ISO 9001' },
-        project: 'Sertifikasi ISO 9001',
-        location_client: 'Site Bekasi - PT Pertamina',
-        date: '2026-08-22',
-        day_name: 'Jumat',
-        start_time: '17:00',
-        end_time: '20:00',
-        duration_hours: 3,
-        mode: 'WFO',
-        status: 'canceled' as const,
-        work_notes: 'Lembur dibatalkan atas permintaan manajer proyek.',
-        gaji_pokok: 8500000,
-    },
-    {
-        id: 9,
-        spkl_no: '0032/SBA-X/LEMBUR/2026',
-        employee: { nik: 'PTT-001', name: 'Ahmad Fauzan', role: 'employee', division: null, project: 'Audit Energi PLN' },
-        project: 'Audit Energi PLN',
-        location_client: 'Kantor Pusat - PT PLN',
-        date: '2026-08-23',
-        day_name: 'Sabtu',
-        start_time: '17:00',
-        end_time: '21:30',
-        duration_hours: 4.5,
-        mode: 'WFO',
-        status: 'approved' as const,
-        work_notes: 'Finalisasi presentasi hasil audit untuk meeting klien besok pagi. Pembuatan slide dan executive summary.',
-        gaji_pokok: 8500000,
-    },
-    {
-        id: 10,
-        spkl_no: '0033/SBA-X/LEMBUR/2026',
-        employee: { nik: 'PTT-007', name: 'Nurul Hidayah', role: 'employee', division: null, project: 'Audit Energi PLN' },
-        project: 'Audit Energi PLN',
-        location_client: 'Kantor Pusat - PT PLN',
-        date: '2026-08-23',
-        day_name: 'Sabtu',
-        start_time: '18:00',
-        end_time: '20:00',
-        duration_hours: 2,
-        mode: 'WFA',
-        status: 'pending' as const,
-        work_notes: 'Remote review data konsumsi energi dari klien. Cross-validation dengan benchmark nasional.',
-        gaji_pokok: 7000000,
-    },
-];
-
-const dummyProjects = [
-    { id: 1, name: 'Audit Energi PLN', code: 'AEP' },
-    { id: 2, name: 'Inspeksi Pipa Gas', code: 'IPG' },
-    { id: 3, name: 'Sertifikasi ISO 9001', code: 'SIO' },
-];
+// Data diisi secara dinamis dari database
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -286,7 +117,7 @@ function getDrawerStatusBadge(status: OvertimeStatus) {
 
 // ─── Component ─────────────────────────────────────────────────────────────
 
-export default function AdminOvertimeIndex() {
+export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours }: any) {
     // Filter states
     const [searchTerm, setSearchTerm] = useState('');
     const [projectFilter, setProjectFilter] = useState('');
@@ -294,17 +125,16 @@ export default function AdminOvertimeIndex() {
     const [endDate, setEndDate] = useState('');
     const [statusFilter, setStatusFilter] = useState<OvertimeStatus | 'all'>('all');
 
-    // Drawer
     const [isSheetOpen, setIsSheetOpen] = useState(false);
-    const [selectedOvertime, setSelectedOvertime] = useState<typeof dummyOvertimeData[0] | null>(null);
+    const [selectedOvertime, setSelectedOvertime] = useState<any | null>(null);
 
     // KPI counts
-    const pendingCount = dummyOvertimeData.filter((d) => d.status === 'pending').length;
-    const approvedCount = dummyOvertimeData.filter((d) => d.status === 'approved').length;
-    const canceledCount = dummyOvertimeData.filter((d) => d.status === 'canceled').length;
+    const pendingCount = overtimes.data.filter((d: any) => d.status === 'pending').length;
+    const approvedCount = overtimes.data.filter((d: any) => d.status === 'approved').length;
+    const canceledCount = overtimes.data.filter((d: any) => d.status === 'canceled').length;
 
     // Filter data
-    const filteredData = dummyOvertimeData.filter((item) => {
+    const filteredData = overtimes.data.filter((item: any) => {
         if (statusFilter !== 'all' && item.status !== statusFilter) return false;
         if (searchTerm) {
             const search = searchTerm.toLowerCase();
@@ -328,7 +158,7 @@ export default function AdminOvertimeIndex() {
         setEndDate('');
     };
 
-    const openDetails = (item: typeof dummyOvertimeData[0]) => {
+    const openDetails = (item: any) => {
         setSelectedOvertime(item);
         setIsSheetOpen(true);
     };
@@ -453,7 +283,7 @@ export default function AdminOvertimeIndex() {
                                 </SelectTrigger>
                                 <SelectContent className="font-mulish">
                                     <SelectItem value="all" className="font-medium">Semua Proyek</SelectItem>
-                                    {dummyProjects.map((proj) => (
+                                    {projects.map((proj: any) => (
                                         <SelectItem key={proj.id} value={proj.name} className="font-medium">
                                             {proj.name}
                                         </SelectItem>
@@ -509,12 +339,16 @@ export default function AdminOvertimeIndex() {
                     <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
                         <h2 className="text-xl font-bold text-neutral-900 tracking-tight">Data Karyawan Lembur</h2>
                         <div className="flex gap-2">
-                            {statusFilter === 'approved' && (
+                            <a 
+                                href={`/admin/reports/overtime-export-excel?start_date=${startDate || new Date().toISOString().split('T')[0]}&end_date=${endDate || new Date().toISOString().split('T')[0]}`} 
+                                target="_blank" 
+                                rel="noreferrer"
+                            >
                                 <Button variant="outline" className="h-9 border-neutral-300 font-bold text-neutral-700 shadow-sm hover:bg-neutral-50 flex gap-2">
                                     <Download className="h-4 w-4" />
-                                    Export
+                                    Export Excel
                                 </Button>
-                            )}
+                            </a>
                         </div>
                     </div>
                     <div className="overflow-x-auto">
