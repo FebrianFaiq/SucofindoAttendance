@@ -51,6 +51,10 @@ interface AttendanceItem {
     check_in_evidence_url: string | null;
     check_in_latitude: number | null;
     check_in_longitude: number | null;
+    check_out_evidence: string | null;
+    check_out_evidence_url: string | null;
+    check_out_latitude: number | null;
+    check_out_longitude: number | null;
     work_notes: string | null;
     employee: {
         nik: string;
@@ -138,6 +142,7 @@ export default function AttendanceIndex({
     const [perPage, setPerPage] = useState(filters?.per_page || 10);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [selectedAttendance, setSelectedAttendance] = useState<AttendanceItem | null>(null);
+    const [activeVerificationTab, setActiveVerificationTab] = useState<'in' | 'out'>('in');
 
     // Holiday dialog states
     const [isHolidayListOpen, setIsHolidayListOpen] = useState(false);
@@ -205,6 +210,7 @@ return;
 
     const openDetails = (item: AttendanceItem) => {
         setSelectedAttendance(item);
+        setActiveVerificationTab('in');
         setIsSheetOpen(true);
     };
 
@@ -799,14 +805,17 @@ return false;
 
                                         <div className="flex flex-col gap-0">
                                             {/* Timeline: Clock In */}
-                                            <div className="flex gap-3">
-                                                <div className="flex flex-col items-center">
-                                                    <div className="h-3 w-3 rounded-full bg-[#035EA9] shrink-0 mt-0.5" />
+                                            <div className="flex gap-3 relative">
+                                                <div className="flex flex-col items-center relative z-10">
+                                                    <div className={`h-3 w-3 rounded-full shrink-0 mt-0.5 transition-colors ${activeVerificationTab === 'in' ? 'bg-[#035EA9] ring-2 ring-[#035EA9]/20' : 'bg-neutral-300'}`} />
                                                     <div className="w-px flex-1 bg-neutral-200" />
                                                 </div>
-                                                <div className="flex-1 pb-5">
+                                                <div 
+                                                    onClick={() => setActiveVerificationTab('in')}
+                                                    className={`flex-1 pb-5 cursor-pointer rounded-lg -mt-1.5 p-1.5 px-3 transition-colors ${activeVerificationTab === 'in' ? 'bg-[#EEF4FC]' : 'hover:bg-neutral-50'}`}
+                                                >
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-sm font-bold text-neutral-900">Clock In Recorded</span>
+                                                        <span className={`text-sm font-bold ${activeVerificationTab === 'in' ? 'text-[#035EA9]' : 'text-neutral-900'}`}>Clock In Recorded</span>
                                                         <span className="text-xs font-bold text-neutral-500">{clockInTime}</span>
                                                     </div>
                                                     <div className="flex items-center gap-1.5 mt-1">
@@ -817,16 +826,21 @@ return false;
                                             </div>
 
                                             {/* Timeline: Clock Out */}
-                                            <div className="flex gap-3">
-                                                <div className="flex flex-col items-center">
-                                                    <div className="h-3 w-3 rounded-full bg-neutral-300 shrink-0 mt-0.5" />
+                                            <div className="flex gap-3 relative">
+                                                <div className="flex flex-col items-center relative z-10">
+                                                    <div className={`h-3 w-3 rounded-full shrink-0 mt-0.5 transition-colors ${activeVerificationTab === 'out' ? 'bg-[#035EA9] ring-2 ring-[#035EA9]/20' : 'bg-neutral-300'}`} />
                                                 </div>
-                                                <div className="flex-1">
+                                                <div 
+                                                    onClick={() => selectedAttendance.check_out_at && setActiveVerificationTab('out')}
+                                                    className={`flex-1 rounded-lg -mt-1.5 p-1.5 px-3 transition-colors ${selectedAttendance.check_out_at ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'} ${activeVerificationTab === 'out' ? 'bg-[#EEF4FC]' : (selectedAttendance.check_out_at ? 'hover:bg-neutral-50' : '')}`}
+                                                >
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-sm font-bold text-neutral-900">Clock Out Recorded</span>
+                                                        <span className={`text-sm font-bold ${activeVerificationTab === 'out' ? 'text-[#035EA9]' : 'text-neutral-900'}`}>Clock Out Recorded</span>
                                                         <span className="text-xs font-bold text-neutral-500">{clockOutTime}</span>
                                                     </div>
-                                                    <span className="text-xs font-medium text-neutral-500 mt-1 block">Summary available</span>
+                                                    <span className="text-xs font-medium text-neutral-500 mt-1 block">
+                                                        {selectedAttendance.check_out_at ? 'Summary available' : 'Belum Clock Out'}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
@@ -834,7 +848,11 @@ return false;
 
                                     {/* ── Section: Verification ── */}
                                     <div className="px-6 pb-5">
-                                        <h4 className="text-[11px] font-extrabold text-neutral-500 uppercase tracking-wider mb-3">Verification</h4>
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h4 className="text-[11px] font-extrabold text-neutral-500 uppercase tracking-wider">
+                                                Verification ({activeVerificationTab === 'in' ? 'Clock In' : 'Clock Out'})
+                                            </h4>
+                                        </div>
                                         <div className="grid grid-cols-2 gap-3">
                                             {/* Map / Location */}
                                             <div className="rounded-xl border border-neutral-200 overflow-hidden">
@@ -843,9 +861,9 @@ return false;
                                                     <MapPin className="h-7 w-7 text-[#035EA9] relative z-10 drop-shadow-md" />
                                                 </div>
                                                 <div className="px-3 py-2">
-                                                    {selectedAttendance.check_in_latitude && selectedAttendance.check_in_longitude ? (
+                                                    {(activeVerificationTab === 'in' ? selectedAttendance.check_in_latitude : selectedAttendance.check_out_latitude) && (activeVerificationTab === 'in' ? selectedAttendance.check_in_longitude : selectedAttendance.check_out_longitude) ? (
                                                         <a
-                                                            href={`https://www.google.com/maps?q=${selectedAttendance.check_in_latitude},${selectedAttendance.check_in_longitude}`}
+                                                            href={`https://www.google.com/maps?q=${activeVerificationTab === 'in' ? selectedAttendance.check_in_latitude : selectedAttendance.check_out_latitude},${activeVerificationTab === 'in' ? selectedAttendance.check_in_longitude : selectedAttendance.check_out_longitude}`}
                                                             target="_blank"
                                                             rel="noreferrer"
                                                             className="text-xs font-semibold text-[#035EA9] hover:underline flex items-center gap-1"
@@ -861,10 +879,10 @@ return false;
                                             {/* Biometric / Selfie */}
                                             <div className="rounded-xl border border-neutral-200 overflow-hidden">
                                                 <div className="h-[100px] bg-neutral-100 relative flex items-center justify-center">
-                                                    {(selectedAttendance.check_in_evidence_url || selectedAttendance.check_in_evidence) ? (
+                                                    {((activeVerificationTab === 'in' ? selectedAttendance.check_in_evidence_url : selectedAttendance.check_out_evidence_url) || (activeVerificationTab === 'in' ? selectedAttendance.check_in_evidence : selectedAttendance.check_out_evidence)) ? (
                                                         <img
-                                                            src={selectedAttendance.check_in_evidence_url || `/storage/${selectedAttendance.check_in_evidence}`}
-                                                            alt="Foto Bukti"
+                                                            src={(activeVerificationTab === 'in' ? selectedAttendance.check_in_evidence_url : selectedAttendance.check_out_evidence_url) || `/storage/${activeVerificationTab === 'in' ? selectedAttendance.check_in_evidence : selectedAttendance.check_out_evidence}`}
+                                                            alt={`Foto ${activeVerificationTab === 'in' ? 'Clock In' : 'Clock Out'}`}
                                                             className="h-full w-full object-cover"
                                                             onError={(e) => {
                                                                 (e.target as HTMLImageElement).style.display = 'none';

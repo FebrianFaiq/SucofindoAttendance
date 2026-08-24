@@ -93,6 +93,9 @@ class AttendanceController extends Controller
             $attendance->check_in_evidence_url = $attendance->check_in_evidence
                 ? '/storage/'.$attendance->check_in_evidence
                 : null;
+            $attendance->check_out_evidence_url = $attendance->check_out_evidence
+                ? '/storage/'.$attendance->check_out_evidence
+                : null;
 
             return $attendance;
         });
