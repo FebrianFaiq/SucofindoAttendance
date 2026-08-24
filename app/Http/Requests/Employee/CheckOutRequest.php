@@ -24,6 +24,9 @@ class CheckOutRequest extends FormRequest
     {
         return [
             'work_notes' => ['required', 'string', 'min:10'],
+            'photo' => ['required', 'image', 'max:2048'], // Maksimal 2MB
+            'gps_lat' => ['required', 'numeric', 'between:-90,90'],
+            'gps_lng' => ['required', 'numeric', 'between:-180,180'],
         ];
     }
 

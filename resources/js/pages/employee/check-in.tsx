@@ -11,6 +11,38 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import InputError from '@/components/input-error';
+import { MapContainer, TileLayer, Marker, Circle, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix leaflet default icon
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+// Constants for Radius
+const SUCOFINDO_LAT = -7.254776;
+const SUCOFINDO_LNG = 112.717212;
+const RADIUS_LIMIT = 200; // in meters
+
+// Haversine formula to calculate distance between two coordinates in meters
+function getDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371e3; // metres
+    const φ1 = lat1 * Math.PI/180;
+    const φ2 = lat2 * Math.PI/180;
+    const Δφ = (lat2-lat1) * Math.PI/180;
+    const Δλ = (lon2-lon1) * Math.PI/180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c;
+}
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -101,7 +133,10 @@ export default function CheckIn({ alreadyCheckedIn }: CheckInProps) {
                 const lng = position.coords.longitude;
                 setData((prev) => ({ ...prev, gps_lat: lat.toString(), gps_lng: lng.toString() }));
                 setLocationLoading(false);
-                setInRadius(true);
+                
+                // Calculate distance
+                const distance = getDistance(lat, lng, SUCOFINDO_LAT, SUCOFINDO_LNG);
+                setInRadius(distance <= RADIUS_LIMIT);
                 
                 // Fallback coordinates first
                 setLocationAddress(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
@@ -324,14 +359,29 @@ return;
                             </h3>
 
                             {/* Map placeholder */}
-                            <div className="relative mb-4 h-40 overflow-hidden rounded-xl bg-[#EFF6FF]">
+                            <div className="relative mb-4 h-52 overflow-hidden rounded-xl bg-[#EFF6FF] border border-[#E5E7EB]">
                                 {data.gps_lat && data.gps_lng ? (
-                                    <iframe
-                                        title="Map Location"
-                                        className="h-full w-full border-0"
-                                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${Number(data.gps_lng) - 0.005}%2C${Number(data.gps_lat) - 0.003}%2C${Number(data.gps_lng) + 0.005}%2C${Number(data.gps_lat) + 0.003}&layer=mapnik&marker=${data.gps_lat}%2C${data.gps_lng}`}
-                                        loading="lazy"
-                                    />
+                                    <MapContainer 
+                                        center={[Number(data.gps_lat), Number(data.gps_lng)]} 
+                                        zoom={16} 
+                                        style={{ height: '100%', width: '100%', zIndex: 0 }}
+                                    >
+                                        <TileLayer
+                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                                        />
+                                        <Marker position={[Number(data.gps_lat), Number(data.gps_lng)]}>
+                                            <Popup>Lokasi Anda</Popup>
+                                        </Marker>
+                                        <Circle 
+                                            center={[SUCOFINDO_LAT, SUCOFINDO_LNG]} 
+                                            radius={RADIUS_LIMIT} 
+                                            pathOptions={{ color: '#035EA9', fillColor: '#035EA9', fillOpacity: 0.1 }} 
+                                        />
+                                        <Marker position={[SUCOFINDO_LAT, SUCOFINDO_LNG]}>
+                                            <Popup>Graha Sucofindo</Popup>
+                                        </Marker>
+                                    </MapContainer>
                                 ) : (
                                     <div className="flex h-full items-center justify-center">
                                         <div className="flex flex-col items-center gap-2">
@@ -368,11 +418,26 @@ return;
                                 </div>
                             </div>
 
-                            {inRadius && (
+                            {data.gps_lat && data.type === 'WFO' && (
                                 <div className="mt-3">
-                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#D1FAE5] px-3 py-1 text-xs font-semibold text-[#059669]">
-                                        <span className="h-1.5 w-1.5 rounded-full bg-[#059669]" />
-                                        DALAM RADIUS
+                                    {inRadius ? (
+                                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#D1FAE5] px-3 py-1 text-xs font-semibold text-[#059669]">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-[#059669]" />
+                                            DALAM RADIUS
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-600">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-red-600" />
+                                            LUAR RADIUS KANTOR
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                            {data.type === 'WFA' && (
+                                <div className="mt-3">
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-[#035EA9]">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-[#035EA9]" />
+                                        BEBAS RADIUS (WFA)
                                     </span>
                                 </div>
                             )}
@@ -468,7 +533,7 @@ return;
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            disabled={processing || !data.photo || !data.gps_lat}
+                            disabled={processing || !data.photo || !data.gps_lat || (data.type === 'WFO' && !inRadius)}
                             className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#035EA9] py-4 text-sm font-semibold text-white transition-all hover:bg-[#024a87] disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {processing ? (
@@ -476,7 +541,7 @@ return;
                             ) : (
                                 <Fingerprint className="h-5 w-5" />
                             )}
-                            {processing ? 'Memproses...' : 'Konfirmasi Clock In'}
+                            {processing ? 'Memproses...' : (data.type === 'WFO' && !inRadius && data.gps_lat ? 'Luar Radius (Tidak Bisa Check In)' : 'Konfirmasi Clock In')}
                         </button>
                     </div>
                 </div>

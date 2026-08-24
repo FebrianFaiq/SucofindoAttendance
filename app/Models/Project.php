@@ -64,7 +64,7 @@ class Project extends Model
     public function employees(): BelongsToMany
     {
         return $this->belongsToMany(Employee::class, 'employee_projects')
-            ->withPivot('status', 'assigned_at', 'ended_at', 'assigned_by')
+            ->withPivot('id', 'status', 'assigned_at', 'ended_at', 'assigned_by')
             ->withTimestamps();
     }
 

@@ -17,16 +17,40 @@ class AssignmentController extends Controller
      */
     public function store(AssignmentRequest $request): RedirectResponse
     {
-        EmployeeProject::create([
-            'employee_id' => $request->validated('employee_id'),
-            'project_id' => $request->validated('project_id'),
-            'status' => 'active',
-            'assigned_at' => today(),
-            'assigned_by' => Auth::id(),
-        ]);
+        $projectId = $request->validated('project_id');
+        $employeeIds = $request->validated('employee_ids') ?? [];
+
+        $currentAssignments = EmployeeProject::where('project_id', $projectId)
+            ->where('status', 'active')
+            ->get();
+            
+        $currentEmployeeIds = $currentAssignments->pluck('employee_id')->toArray();
+
+        $toAdd = array_diff($employeeIds, $currentEmployeeIds);
+        $toRemove = array_diff($currentEmployeeIds, $employeeIds);
+
+        if (!empty($toRemove)) {
+            EmployeeProject::where('project_id', $projectId)
+                ->whereIn('employee_id', $toRemove)
+                ->where('status', 'active')
+                ->update([
+                    'status' => 'ended',
+                    'ended_at' => today(),
+                ]);
+        }
+
+        foreach ($toAdd as $employeeId) {
+            EmployeeProject::create([
+                'employee_id' => $employeeId,
+                'project_id' => $projectId,
+                'status' => 'active',
+                'assigned_at' => today(),
+                'assigned_by' => Auth::id(),
+            ]);
+        }
 
         return redirect()->back()
-            ->with('success', 'Karyawan berhasil ditugaskan ke proyek.');
+            ->with('success', 'Penugasan karyawan berhasil diperbarui.');
     }
 
     /**

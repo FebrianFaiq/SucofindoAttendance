@@ -19,7 +19,9 @@ class ProjectController extends Controller
      */
     public function index(): Response
     {
-        $projects = Project::withCount('employees')
+        $projects = Project::withCount(['employees' => function ($query) {
+            $query->where('employee_projects.status', 'active');
+        }])
             ->orderByDesc('created_at')
             ->paginate(15);
 
@@ -45,6 +47,31 @@ class ProjectController extends Controller
 
         return redirect()->route('admin.projects.index')
             ->with('success', 'Proyek berhasil ditambahkan.');
+    }
+
+    /**
+     * Tampilkan detail proyek.
+     */
+    public function show(Project $project): Response
+    {
+        $project->load([
+            'employees' => function ($query) {
+                $query->wherePivot('status', 'active')
+                      ->with('user:id,name,email,role,is_active');
+            }
+        ]);
+
+        $availableEmployees = \App\Models\Employee::with(['user:id,name,email,role', 'projects' => function($q) {
+            $q->where('employee_projects.status', 'active');
+        }])
+        ->whereHas('user', function($q) {
+            $q->where('is_active', true)->where('role', 'employee');
+        })->get();
+
+        return Inertia::render('admin/projects/show', [
+            'project' => $project,
+            'availableEmployees' => $availableEmployees,
+        ]);
     }
 
     /**

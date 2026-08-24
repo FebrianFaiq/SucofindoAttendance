@@ -22,7 +22,8 @@ class AssignmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'employee_id' => ['required', 'exists:employees,id'],
+            'employee_ids' => ['nullable', 'array'],
+            'employee_ids.*' => ['exists:employees,id'],
             'project_id' => ['required', 'exists:projects,id'],
         ];
     }
@@ -34,21 +35,38 @@ class AssignmentRequest extends FormRequest
     {
         return [
             function (Validator $validator): void {
-                $employeeId = $this->input('employee_id');
+                $employeeIds = $this->input('employee_ids', []);
+                $projectId = $this->input('project_id');
 
-                if (! $employeeId) {
+                if (empty($employeeIds) || empty($projectId)) {
                     return;
                 }
 
-                $hasActive = DB::table('employee_projects')
-                    ->where('employee_id', $employeeId)
+                // Karyawan yang saat ini aktif di proyek ini
+                $currentEmployeeIds = DB::table('employee_projects')
+                    ->where('project_id', $projectId)
                     ->where('status', 'active')
-                    ->exists();
+                    ->pluck('employee_id')
+                    ->toArray();
 
-                if ($hasActive) {
+                // Karyawan yang baru akan ditambahkan
+                $toAdd = array_diff($employeeIds, $currentEmployeeIds);
+
+                if (empty($toAdd)) {
+                    return;
+                }
+
+                // Cek apakah karyawan yang akan ditambahkan punya proyek aktif lain
+                $activeEmployees = DB::table('employee_projects')
+                    ->whereIn('employee_id', $toAdd)
+                    ->where('status', 'active')
+                    ->pluck('employee_id')
+                    ->toArray();
+
+                if (count($activeEmployees) > 0) {
                     $validator->errors()->add(
-                        'employee_id',
-                        'Karyawan ini sudah memiliki proyek aktif. Akhiri penugasan saat ini terlebih dahulu.'
+                        'employee_ids',
+                        'Satu atau lebih karyawan yang baru ditugaskan sudah memiliki proyek aktif di tempat lain.'
                     );
                 }
             },
