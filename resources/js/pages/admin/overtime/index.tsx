@@ -255,7 +255,7 @@ export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours
                 <div className="rounded-xl border border-neutral-200 bg-white px-6 py-5 shadow-sm">
                     <form
                         onSubmit={(e) => e.preventDefault()}
-                        className="flex flex-col lg:flex-row lg:items-end gap-4 lg:gap-5"
+                        className="flex flex-col lg:flex-row lg:flex-wrap lg:items-end gap-4 lg:gap-5"
                     >
                         {/* Karyawan */}
                         <div className="flex-1 min-w-0 lg:max-w-[300px]">

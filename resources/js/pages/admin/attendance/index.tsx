@@ -368,7 +368,7 @@ return false;
 
                 {/* ── Filter Bar ────────────────────────────── */}
                 <div className="rounded-xl border border-neutral-200 bg-white px-6 py-5 shadow-sm">
-                    <form onSubmit={handleFilter} className="flex flex-col lg:flex-row lg:items-end gap-4 lg:gap-5">
+                    <form onSubmit={handleFilter} className="flex flex-col lg:flex-row lg:flex-wrap lg:items-end gap-4 lg:gap-5">
                         {/* Karyawan */}
                         <div className="flex-1 min-w-0 lg:max-w-[300px]">
                             <label className="mb-1.5 block text-sm font-bold text-neutral-800">Karyawan</label>
