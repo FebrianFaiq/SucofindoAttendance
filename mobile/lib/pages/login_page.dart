@@ -223,6 +223,9 @@ class _LoginPageState extends State<LoginPage>
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
+                          keyboardType: TextInputType.visiblePassword,
+                          enableSuggestions: false,
+                          autocorrect: false,
                           textInputAction: TextInputAction.done,
                           onFieldSubmitted: (_) => _handleLogin(),
                           style: GoogleFonts.mulish(
