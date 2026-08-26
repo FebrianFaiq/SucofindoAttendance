@@ -29,11 +29,49 @@ class OvertimeController extends Controller
         $employee = $user->employee;
 
         $overtimes = Overtime::forEmployee($employee->id)
+            ->with(['employee.projects'])
             ->orderByDesc('date')
             ->paginate(15);
 
+        $statusMap = [
+            'pending' => 'Belum Direview',
+            'approved' => 'Sudah Direview',
+            'rejected' => 'Canceled',
+        ];
+
+        $overtimes->getCollection()->transform(function ($overtime) use ($employee, $statusMap) {
+            $durationHours = intval($overtime->duration);
+            $durationMinutes = round(($overtime->duration - $durationHours) * 60);
+            $durationFormatted = "{$durationHours} Jam {$durationMinutes} Menit";
+
+            return [
+                'id' => $overtime->id,
+                'date' => \Carbon\Carbon::parse($overtime->date)->translatedFormat('d M Y'),
+                'location' => 'Kantor', 
+                'client' => $employee->activeProject()?->name ?? 'Internal',
+                'duration' => $durationFormatted,
+                'status' => $statusMap[$overtime->status] ?? 'Unknown',
+            ];
+        });
+
+        $totalDurationMTD = Overtime::forEmployee($employee->id)
+            ->whereMonth('date', now()->month)
+            ->whereYear('date', now()->year)
+            ->where('status', 'approved')
+            ->get()
+            ->sum('duration');
+        
+        $totalHours = intval($totalDurationMTD);
+        $totalMinutes = round(($totalDurationMTD - $totalHours) * 60);
+        $totalDurationFormatted = "{$totalHours}h {$totalMinutes}m";
+
+        $lastOvertime = Overtime::forEmployee($employee->id)->orderByDesc('created_at')->first();
+        $lastStatus = $lastOvertime ? ($statusMap[$lastOvertime->status] ?? '-') : '-';
+
         return Inertia::render('employee/overtime/index', [
             'overtimes' => $overtimes,
+            'totalDurationMtd' => $totalDurationFormatted,
+            'lastStatus' => $lastStatus,
         ]);
     }
 

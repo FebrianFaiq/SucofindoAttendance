@@ -22,10 +22,10 @@ class OvertimeCalculationService
             $end->addDay();
         }
 
-        $diffInMinutes = $end->diffInMinutes($start);
+        $diffInMinutes = $start->diffInMinutes($end);
         
         // Kembalikan dalam format float (jam)
-        return $diffInMinutes / 60;
+        return abs($diffInMinutes) / 60;
     }
 
     /**

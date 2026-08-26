@@ -19,7 +19,7 @@ class OvertimeExportService
         $this->calcService = $calcService;
     }
 
-    public function export(string $startDate, string $endDate)
+    public function export(string $startDate, string $endDate, ?int $projectId = null)
     {
         $templatePath = storage_path('app/templates/Format_Rekap_Lembur_HRD_Usulan.xlsx');
         if (!file_exists($templatePath)) {
@@ -29,16 +29,24 @@ class OvertimeExportService
         $spreadsheet = IOFactory::load($templatePath);
 
         // 1. Sheet Master Karyawan
-        $this->fillMasterKaryawan($spreadsheet->getSheetByName('Master Karyawan'));
+        $this->fillMasterKaryawan($spreadsheet->getSheetByName('Master Karyawan'), $projectId);
 
         // 2. Sheet Kalender Libur
         $this->fillKalenderLibur($spreadsheet->getSheetByName('Kalender Libur'), $startDate, $endDate);
 
         // Fetch Overtimes
-        $overtimes = Overtime::with(['employee.user', 'employee.projects', 'employee.salaries'])
+        $query = Overtime::with(['employee.user', 'employee.projects', 'employee.salaries'])
             ->whereBetween('date', [$startDate, $endDate])
-            ->orderBy('date', 'asc')
-            ->get();
+            ->where('status', 'approved')
+            ->orderBy('date', 'asc');
+
+        if ($projectId) {
+            $query->whereHas('employee.projects', function ($q) use ($projectId) {
+                $q->where('projects.id', $projectId);
+            });
+        }
+
+        $overtimes = $query->get();
 
         // 3. Sheet Data Lembur (Detail)
         $rekapData = $this->fillDataLembur($spreadsheet->getSheetByName('Data Lembur (Detail)'), $overtimes);
@@ -53,15 +61,23 @@ class OvertimeExportService
         return $tempFile;
     }
 
-    protected function fillMasterKaryawan($sheet)
+    protected function fillMasterKaryawan($sheet, ?int $projectId = null)
     {
         if (!$sheet) return;
 
         // Ambil data pegawai aktif (bukan magang)
-        $employees = Employee::with(['user', 'projects', 'salaries'])
+        $query = Employee::with(['user', 'projects', 'salaries'])
             ->whereHas('user', function ($q) {
                 $q->where('role', '!=', 'intern')->where('is_active', true);
-            })->get();
+            });
+
+        if ($projectId) {
+            $query->whereHas('projects', function ($q) use ($projectId) {
+                $q->where('projects.id', $projectId);
+            });
+        }
+
+        $employees = $query->get();
 
         $row = 5;
         foreach ($employees as $employee) {
@@ -139,13 +155,12 @@ class OvertimeExportService
             
             $sheet->setCellValue('G' . $row, $hari);
             
-            // Format waktu menjadi fraction hari untuk excel (misal 18:00 = 0.75)
-            $startFraction = Carbon::parse($overtime->start_time)->diffInMinutes(Carbon::parse('00:00')) / 1440;
-            $endFraction = Carbon::parse($overtime->end_time)->diffInMinutes(Carbon::parse('00:00')) / 1440;
+            // Format waktu ke string HH:MM
+            $sheet->setCellValue('H' . $row, substr($overtime->start_time, 0, 5));
+            $sheet->setCellValue('I' . $row, substr($overtime->end_time, 0, 5));
             
-            $sheet->setCellValue('H' . $row, $startFraction);
-            $sheet->setCellValue('I' . $row, $endFraction);
-            $sheet->getStyle('H' . $row . ':I' . $row)->getNumberFormat()->setFormatCode('hh:mm');
+            // Format number bisa dihapus atau diset text
+            $sheet->getStyle('H' . $row . ':I' . $row)->getNumberFormat()->setFormatCode('@');
             
             $sheet->setCellValue('J' . $row, $duration);
             

@@ -129,8 +129,15 @@ export default function EmployeesEdit({ employee, projects, activeSalary }: Empl
                                         NIK <span className="text-red-500">*</span>
                                     </label>
                                     <Input
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        maxLength={16}
                                         value={data.nik}
-                                        onChange={(e) => setData('nik', e.target.value)}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/\D/g, '');
+                                            setData('nik', val);
+                                        }}
                                         className="h-11 bg-[#F8FAFC] border-neutral-200 text-[#1E293B] font-semibold focus-visible:ring-[#035EA9]"
                                     />
                                     {errors.nik && <p className="text-xs text-red-500 font-semibold">{errors.nik}</p>}
@@ -152,8 +159,15 @@ export default function EmployeesEdit({ employee, projects, activeSalary }: Empl
                                 <div className="flex flex-col gap-2">
                                     <label className="text-[14px] font-bold text-[#1E293B]">Nomor Telepon</label>
                                     <Input
-                                        value={data.phone}
-                                        onChange={(e) => setData('phone', e.target.value)}
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        maxLength={15}
+                                        value={data.phone || ''}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/\D/g, '');
+                                            setData('phone', val);
+                                        }}
                                         className="h-11 bg-[#F8FAFC] border-neutral-200 text-[#1E293B] font-semibold focus-visible:ring-[#035EA9]"
                                     />
                                     {errors.phone && <p className="text-xs text-red-500 font-semibold">{errors.phone}</p>}

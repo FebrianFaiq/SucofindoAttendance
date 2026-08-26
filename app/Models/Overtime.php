@@ -95,10 +95,14 @@ class Overtime extends Model
      */
     public function getDurationAttribute(): float
     {
-        $start = Carbon::parse($this->start_time);
-        $end = Carbon::parse($this->end_time);
+        $start = \Carbon\Carbon::parse($this->start_time);
+        $end = \Carbon\Carbon::parse($this->end_time);
 
-        return round($end->floatDiffInHours($start), 2);
+        if ($end->lessThan($start)) {
+            $end->addDay();
+        }
+
+        return round($start->floatDiffInHours($end), 2);
     }
 
     // ───────────────────────────────────────────

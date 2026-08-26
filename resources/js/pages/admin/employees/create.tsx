@@ -77,8 +77,15 @@ export default function EmployeesCreate({ projects }: EmployeesCreateProps) {
                                         NIK <span className="text-red-500">*</span>
                                     </label>
                                     <Input 
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        maxLength={16}
                                         value={data.nik}
-                                        onChange={(e) => setData('nik', e.target.value)}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/\D/g, '');
+                                            setData('nik', val);
+                                        }}
                                         placeholder="Contoh: 3201123456780001" 
                                         className="h-11 bg-[#F8FAFC] border-neutral-200 text-[#1E293B] font-semibold focus-visible:ring-[#035EA9]"
                                     />
@@ -102,8 +109,15 @@ export default function EmployeesCreate({ projects }: EmployeesCreateProps) {
                                 <div className="flex flex-col gap-2">
                                     <label className="text-[14px] font-bold text-[#1E293B]">Nomor Telepon</label>
                                     <Input 
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        maxLength={15}
                                         value={data.phone}
-                                        onChange={(e) => setData('phone', e.target.value)}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/\D/g, '');
+                                            setData('phone', val);
+                                        }}
                                         placeholder="Contoh: 081234567890" 
                                         className="h-11 bg-[#F8FAFC] border-neutral-200 text-[#1E293B] font-semibold focus-visible:ring-[#035EA9]"
                                     />

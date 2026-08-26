@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { format, parseISO } from 'date-fns';
 import {
     UserSearch,
@@ -24,11 +24,20 @@ import {
     Info,
     CheckCircle2,
     XCircle,
+    FileSpreadsheet,
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -44,7 +53,7 @@ import AppLayout from '@/layouts/app-layout';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
-type OvertimeStatus = 'pending' | 'approved' | 'canceled';
+type OvertimeStatus = 'pending' | 'approved' | 'canceled' | 'rejected';
 
 function getStatusBadge(status: OvertimeStatus) {
     switch (status) {
@@ -61,6 +70,7 @@ function getStatusBadge(status: OvertimeStatus) {
                 </Badge>
             );
         case 'canceled':
+        case 'rejected':
             return (
                 <Badge className="rounded-md border-none bg-red-50 text-red-600 hover:bg-red-100 px-2.5 py-1 text-[13px] font-bold">
                     Canceled
@@ -117,7 +127,7 @@ function getDrawerStatusBadge(status: OvertimeStatus) {
 
 // ─── Component ─────────────────────────────────────────────────────────────
 
-export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours }: any) {
+export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours, kpi }: any) {
     // Filter states
     const [searchTerm, setSearchTerm] = useState('');
     const [projectFilter, setProjectFilter] = useState('');
@@ -128,10 +138,46 @@ export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [selectedOvertime, setSelectedOvertime] = useState<any | null>(null);
 
+    // Export modal state
+    const [isExportOpen, setIsExportOpen] = useState(false);
+    const now = new Date();
+    const prevMonth = now.getMonth() === 0 ? 12 : now.getMonth(); // 1-12
+    const prevYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+    const [exportMonth, setExportMonth] = useState(String(prevMonth));
+    const [exportYear, setExportYear] = useState(String(prevYear));
+    const [exportProject, setExportProject] = useState('all');
+
+    const monthNames = [
+        { value: '1', label: 'Januari' }, { value: '2', label: 'Februari' },
+        { value: '3', label: 'Maret' }, { value: '4', label: 'April' },
+        { value: '5', label: 'Mei' }, { value: '6', label: 'Juni' },
+        { value: '7', label: 'Juli' }, { value: '8', label: 'Agustus' },
+        { value: '9', label: 'September' }, { value: '10', label: 'Oktober' },
+        { value: '11', label: 'November' }, { value: '12', label: 'Desember' },
+    ];
+
+    const yearOptions = Array.from({ length: 5 }, (_, i) => now.getFullYear() - i);
+
+    const handleExport = () => {
+        const month = parseInt(exportMonth);
+        const year = parseInt(exportYear);
+        const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+        const lastDay = new Date(year, month, 0).getDate();
+        const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+        let url = `/admin/reports/overtime-export-excel?start_date=${startDate}&end_date=${endDate}`;
+        if (exportProject && exportProject !== 'all') {
+            url += `&project_id=${exportProject}`;
+        }
+
+        window.open(url, '_blank');
+        setIsExportOpen(false);
+    };
+
     // KPI counts
-    const pendingCount = overtimes.data.filter((d: any) => d.status === 'pending').length;
-    const approvedCount = overtimes.data.filter((d: any) => d.status === 'approved').length;
-    const canceledCount = overtimes.data.filter((d: any) => d.status === 'canceled').length;
+    const pendingCount = kpi?.pending || 0;
+    const approvedCount = kpi?.approved || 0;
+    const canceledCount = kpi?.canceled || 0;
 
     // Filter data
     const filteredData = overtimes.data.filter((item: any) => {
@@ -339,16 +385,15 @@ export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours
                     <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
                         <h2 className="text-xl font-bold text-neutral-900 tracking-tight">Data Karyawan Lembur</h2>
                         <div className="flex gap-2">
-                            <a 
-                                href={`/admin/reports/overtime-export-excel?start_date=${startDate || new Date().toISOString().split('T')[0]}&end_date=${endDate || new Date().toISOString().split('T')[0]}`} 
-                                target="_blank" 
-                                rel="noreferrer"
+                            <Button
+                                type="button"
+                                onClick={() => setIsExportOpen(true)}
+                                variant="outline"
+                                className="h-9 border-neutral-300 font-bold text-neutral-700 shadow-sm hover:bg-neutral-50 flex gap-2"
                             >
-                                <Button variant="outline" className="h-9 border-neutral-300 font-bold text-neutral-700 shadow-sm hover:bg-neutral-50 flex gap-2">
-                                    <Download className="h-4 w-4" />
-                                    Export Excel
-                                </Button>
-                            </a>
+                                <FileSpreadsheet className="h-4 w-4" />
+                                Export Rekap Lembur
+                            </Button>
                         </div>
                     </div>
                     <div className="overflow-x-auto">
@@ -585,8 +630,8 @@ export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours
                                                         <Calendar className="h-4 w-4 text-neutral-500" />
                                                     </div>
                                                     <div className="flex flex-col">
-                                                        <span className="text-[10px] font-semibold text-neutral-400">Day</span>
-                                                        <span className="text-sm font-bold text-neutral-900">{selectedOvertime.day_name}</span>
+                                                        <span className="text-[10px] font-semibold text-neutral-400">Day / Date</span>
+                                                        <span className="text-sm font-bold text-neutral-900">{formatDate(selectedOvertime.date)}</span>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2">
@@ -601,15 +646,15 @@ export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours
                                             </div>
                                         </div>
 
-                                        {/* ── Job Description ── */}
+                                        {/* ── Deskripsi Lembur ── */}
                                         <div className="rounded-xl border border-neutral-200 border-l-[3px] border-l-[#035EA9] overflow-hidden">
                                             <div className="px-5 pt-4 pb-2 flex items-center gap-2">
                                                 <ClipboardPenLine className="h-4 w-4 text-[#035EA9]" />
-                                                <span className="text-[11px] font-extrabold text-neutral-500 uppercase tracking-wider">Job Description</span>
+                                                <span className="text-[11px] font-extrabold text-neutral-500 uppercase tracking-wider">Deskripsi Lembur</span>
                                             </div>
                                             <div className="px-5 pb-4">
                                                 <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
-                                                    <p className="text-sm text-neutral-700 leading-relaxed italic">
+                                                    <p className="text-sm text-neutral-700 leading-relaxed italic whitespace-pre-wrap">
                                                         "{selectedOvertime.work_notes}"
                                                     </p>
                                                 </div>
@@ -660,6 +705,13 @@ export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours
                                             <div className="flex gap-3">
                                                 <Button
                                                     type="button"
+                                                    onClick={() => {
+                                                        if (confirm('Yakin ingin membatalkan lembur ini?')) {
+                                                            router.patch(`/admin/overtime/${selectedOvertime.id}/reject`, {}, {
+                                                                onSuccess: () => setIsSheetOpen(false)
+                                                            });
+                                                        }
+                                                    }}
                                                     className="flex-1 h-11 bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold text-sm rounded-lg flex items-center justify-center gap-2"
                                                 >
                                                     <XCircle className="h-4 w-4" />
@@ -667,6 +719,13 @@ export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours
                                                 </Button>
                                                 <Button
                                                     type="button"
+                                                    onClick={() => {
+                                                        if (confirm('Yakin ingin menyetujui lembur ini?')) {
+                                                            router.patch(`/admin/overtime/${selectedOvertime.id}/approve`, {}, {
+                                                                onSuccess: () => setIsSheetOpen(false)
+                                                            });
+                                                        }
+                                                    }}
                                                     className="flex-1 h-11 bg-[#166534] hover:bg-[#14532d] text-white font-bold text-sm rounded-lg flex items-center justify-center gap-2"
                                                 >
                                                     <CheckCircle2 className="h-4 w-4" />
@@ -689,6 +748,102 @@ export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours
                         })()}
                     </SheetContent>
                 </Sheet>
+
+                {/* ── Export Modal ───────────────────────────────── */}
+                <Dialog open={isExportOpen} onOpenChange={setIsExportOpen}>
+                    <DialogContent className="sm:max-w-[440px] font-mulish">
+                        <DialogHeader>
+                            <DialogTitle className="text-xl font-bold text-neutral-900 flex items-center gap-2">
+                                <FileSpreadsheet className="h-5 w-5 text-[#035EA9]" />
+                                Export Rekap Lembur
+                            </DialogTitle>
+                            <DialogDescription className="text-neutral-500 text-sm">
+                                Pilih periode dan proyek untuk mengekspor data lembur yang sudah di-review ke format Excel.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="space-y-4 py-2">
+                            {/* Bulan */}
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-sm font-semibold text-neutral-800">Bulan</label>
+                                <Select value={exportMonth} onValueChange={setExportMonth}>
+                                    <SelectTrigger className="h-10 w-full border-neutral-300 font-medium text-neutral-900 shadow-sm">
+                                        <SelectValue placeholder="Pilih Bulan" />
+                                    </SelectTrigger>
+                                    <SelectContent className="font-mulish">
+                                        {monthNames.map((m) => (
+                                            <SelectItem key={m.value} value={m.value} className="font-medium">
+                                                {m.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Tahun */}
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-sm font-semibold text-neutral-800">Tahun</label>
+                                <Select value={exportYear} onValueChange={setExportYear}>
+                                    <SelectTrigger className="h-10 w-full border-neutral-300 font-medium text-neutral-900 shadow-sm">
+                                        <SelectValue placeholder="Pilih Tahun" />
+                                    </SelectTrigger>
+                                    <SelectContent className="font-mulish">
+                                        {yearOptions.map((y) => (
+                                            <SelectItem key={y} value={String(y)} className="font-medium">
+                                                {y}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Proyek */}
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-sm font-semibold text-neutral-800">Proyek</label>
+                                <Select value={exportProject} onValueChange={setExportProject}>
+                                    <SelectTrigger className="h-10 w-full border-neutral-300 font-medium text-neutral-900 shadow-sm">
+                                        <SelectValue placeholder="Semua Proyek" />
+                                    </SelectTrigger>
+                                    <SelectContent className="font-mulish">
+                                        <SelectItem value="all" className="font-medium">Semua Proyek</SelectItem>
+                                        {projects.map((proj: any) => (
+                                            <SelectItem key={proj.id} value={String(proj.id)} className="font-medium">
+                                                {proj.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Info */}
+                            <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50/50 px-3 py-2.5">
+                                <Info className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+                                <p className="text-xs text-blue-700">
+                                    Hanya data lembur yang berstatus <strong>Sudah Di-review</strong> yang akan diekspor ke dalam file Excel.
+                                </p>
+                            </div>
+                        </div>
+
+                        <DialogFooter className="gap-3">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setIsExportOpen(false)}
+                                className="border-neutral-300 font-bold text-neutral-700"
+                            >
+                                Batal
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={handleExport}
+                                className="bg-[#035EA9] hover:bg-[#035EA9]/90 font-bold text-white flex gap-2"
+                            >
+                                <Download className="h-4 w-4" />
+                                Download Excel
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </>
     );

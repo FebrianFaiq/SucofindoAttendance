@@ -19,7 +19,9 @@ import {
     Plus,
     Trash2,
     ExternalLink,
-    Download
+    Download,
+    FileSpreadsheet,
+    Info
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -263,28 +265,35 @@ return false;
         return date.getHours() >= 8 && date.getMinutes() > 0;
     };
 
-    const exportUrl = `/admin/reports/export?${new URLSearchParams({
-        ...(startDate ? { start_date: startDate } : {}),
-        ...(endDate ? { end_date: endDate } : {}),
-        ...(searchTerm ? { search: searchTerm } : {}),
-        ...(projectFilter ? { project_id: projectFilter } : {}),
-    }).toString()}`;
+    // ── Export modal state ──
+    const [isExportOpen, setIsExportOpen] = useState(false);
+    const nowDate = new Date();
+    const prevMonthVal = nowDate.getMonth() === 0 ? 12 : nowDate.getMonth();
+    const prevYearVal = nowDate.getMonth() === 0 ? nowDate.getFullYear() - 1 : nowDate.getFullYear();
+    const [expMonth, setExpMonth] = useState(String(prevMonthVal));
+    const [expYear, setExpYear] = useState(String(prevYearVal));
+    const [expType, setExpType] = useState('employee');
 
-    // Ekstrak bulan dan tahun dari startDate jika ada, jika tidak gunakan bulan/tahun saat ini
-    const exportMonth = startDate ? String(parseISO(startDate).getMonth() + 1) : String(new Date().getMonth() + 1);
-    const exportYear = startDate ? String(parseISO(startDate).getFullYear()) : String(new Date().getFullYear());
+    const monthNames = [
+        { value: '1', label: 'Januari' }, { value: '2', label: 'Februari' },
+        { value: '3', label: 'Maret' }, { value: '4', label: 'April' },
+        { value: '5', label: 'Mei' }, { value: '6', label: 'Juni' },
+        { value: '7', label: 'Juli' }, { value: '8', label: 'Agustus' },
+        { value: '9', label: 'September' }, { value: '10', label: 'Oktober' },
+        { value: '11', label: 'November' }, { value: '12', label: 'Desember' },
+    ];
 
-    const excelExportKaryawanUrl = `/admin/reports/export-excel?${new URLSearchParams({
-        role: 'employee',
-        month: exportMonth,
-        year: exportYear,
-    }).toString()}`;
+    const yearOptions = Array.from({ length: 5 }, (_, i) => nowDate.getFullYear() - i);
 
-    const excelExportMagangUrl = `/admin/reports/export-excel?${new URLSearchParams({
-        role: 'intern',
-        month: exportMonth,
-        year: exportYear,
-    }).toString()}`;
+    const handleExport = () => {
+        const url = `/admin/reports/export-excel?${new URLSearchParams({
+            role: expType,
+            month: expMonth,
+            year: expYear,
+        }).toString()}`;
+        window.open(url, '_blank');
+        setIsExportOpen(false);
+    };
 
     return (
         <>
@@ -451,36 +460,15 @@ return false;
                     <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
                         <h2 className="text-xl font-bold text-neutral-900 tracking-tight">Data Kehadiran</h2>
                         <div className="flex gap-2">
-                            <a
-                                href={exportUrl}
-                                target="_blank"
-                                rel="noreferrer"
+                            <Button
+                                type="button"
+                                onClick={() => setIsExportOpen(true)}
+                                variant="outline"
+                                className="h-9 border-neutral-300 font-bold text-neutral-700 shadow-sm hover:bg-neutral-50 flex gap-2"
                             >
-                                <Button variant="outline" className="h-9 border-neutral-300 font-bold text-neutral-700 shadow-sm hover:bg-neutral-50 flex gap-2">
-                                    <Download className="h-4 w-4" />
-                                    Export CSV
-                                </Button>
-                            </a>
-                            <a
-                                href={excelExportKaryawanUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                            >
-                                <Button className="h-9 bg-emerald-600 font-bold text-white shadow-sm hover:bg-emerald-700 flex gap-2">
-                                    <Download className="h-4 w-4" />
-                                    Excel Karyawan
-                                </Button>
-                            </a>
-                            <a
-                                href={excelExportMagangUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                            >
-                                <Button className="h-9 bg-indigo-600 font-bold text-white shadow-sm hover:bg-indigo-700 flex gap-2">
-                                    <Download className="h-4 w-4" />
-                                    Excel Magang
-                                </Button>
-                            </a>
+                                <FileSpreadsheet className="h-4 w-4" />
+                                Export Rekap Kehadiran
+                            </Button>
                         </div>
                     </div>
                     <div className="overflow-x-auto">
@@ -488,6 +476,7 @@ return false;
                             <thead className="bg-[#F8FAFC] text-neutral-600 whitespace-nowrap border-b border-neutral-200">
                                 <tr>
                                     <th className="px-6 py-4 font-bold tracking-wide">Karyawan</th>
+                                    <th className="px-6 py-4 font-bold tracking-wide">Tanggal</th>
                                     <th className="px-6 py-4 font-bold tracking-wide">Proyek / Bidang</th>
                                     <th className="px-6 py-4 font-bold tracking-wide text-center">Clock In</th>
                                     <th className="px-6 py-4 font-bold tracking-wide text-center">Clock Out</th>
@@ -521,6 +510,9 @@ return false;
                                                             </span>
                                                         </div>
                                                     </div>
+                                                </td>
+                                                <td className="px-6 py-3 font-semibold text-neutral-600 whitespace-nowrap">
+                                                    {item.check_in_at ? format(new Date(item.check_in_at), 'dd MMM yyyy') : '—'}
                                                 </td>
                                                 <td className="px-6 py-3 font-semibold text-neutral-600">
                                                     {isIntern ? (
@@ -679,13 +671,13 @@ return false;
                                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#E5F0F9] text-sm font-bold text-[#035EA9] shrink-0">
                                             {getInitials(employeeName)}
                                         </div>
-                                        <div className="flex-1 min-w-0">
+                                        <div className="flex-1 min-w-0 pr-2">
                                             <h3 className="text-base font-bold text-neutral-900 leading-snug">{employeeName}</h3>
                                             <p className="text-xs font-medium text-neutral-500 mt-0.5">
                                                 NIK: {nik} · {assignmentName}
                                             </p>
                                         </div>
-                                        <Badge className={`shrink-0 rounded-full border-none px-3 py-1 text-[11px] font-bold ${isPresent
+                                        <Badge className={`shrink-0 rounded-full border-none px-3 py-1 text-[11px] font-bold mr-6 ${isPresent
                                                 ? 'bg-emerald-50 text-emerald-600'
                                                 : 'bg-red-50 text-red-600'
                                             }`}>
@@ -695,7 +687,7 @@ return false;
 
                                     {/* ── Section: Attendance Summary ── */}
                                     <div className="px-6 pb-5">
-                                        <h4 className="text-[11px] font-extrabold text-neutral-500 uppercase tracking-wider mb-3">Attendance Summary</h4>
+                                        <h4 className="text-[11px] font-extrabold text-neutral-500 uppercase tracking-wider mb-3">Attendance Summary ({selectedAttendance.check_in_at ? format(new Date(selectedAttendance.check_in_at), 'dd MMM yyyy') : '—'})</h4>
 
                                         {/* Clock In / Clock Out Cards */}
                                         <div className="grid grid-cols-2 gap-3">
@@ -880,8 +872,97 @@ return false;
                     </SheetContent>
                 </Sheet>
 
+                {/* ── Export Modal ───────────────────────────────── */}
+                <Dialog open={isExportOpen} onOpenChange={setIsExportOpen}>
+                    <DialogContent className="sm:max-w-[440px] font-mulish">
+                        <DialogHeader>
+                            <DialogTitle className="text-xl font-bold text-neutral-900 flex items-center gap-2">
+                                <FileSpreadsheet className="h-5 w-5 text-[#035EA9]" />
+                                Export Rekap Kehadiran
+                            </DialogTitle>
+                            <DialogDescription className="text-neutral-500 text-sm">
+                                Pilih periode dan tipe karyawan untuk mengekspor data kehadiran ke format Excel.
+                            </DialogDescription>
+                        </DialogHeader>
 
+                        <div className="space-y-4 py-2">
+                            {/* Bulan */}
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-sm font-semibold text-neutral-800">Bulan</label>
+                                <Select value={expMonth} onValueChange={setExpMonth}>
+                                    <SelectTrigger className="h-10 w-full border-neutral-300 font-medium text-neutral-900 shadow-sm">
+                                        <SelectValue placeholder="Pilih Bulan" />
+                                    </SelectTrigger>
+                                    <SelectContent className="font-mulish">
+                                        {monthNames.map((m) => (
+                                            <SelectItem key={m.value} value={m.value} className="font-medium">
+                                                {m.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
+                            {/* Tahun */}
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-sm font-semibold text-neutral-800">Tahun</label>
+                                <Select value={expYear} onValueChange={setExpYear}>
+                                    <SelectTrigger className="h-10 w-full border-neutral-300 font-medium text-neutral-900 shadow-sm">
+                                        <SelectValue placeholder="Pilih Tahun" />
+                                    </SelectTrigger>
+                                    <SelectContent className="font-mulish">
+                                        {yearOptions.map((y) => (
+                                            <SelectItem key={y} value={String(y)} className="font-medium">
+                                                {y}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Tipe Karyawan */}
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-sm font-semibold text-neutral-800">Tipe Karyawan</label>
+                                <Select value={expType} onValueChange={setExpType}>
+                                    <SelectTrigger className="h-10 w-full border-neutral-300 font-medium text-neutral-900 shadow-sm">
+                                        <SelectValue placeholder="Pilih Tipe" />
+                                    </SelectTrigger>
+                                    <SelectContent className="font-mulish">
+                                        <SelectItem value="employee" className="font-medium">Karyawan & PTT</SelectItem>
+                                        <SelectItem value="intern" className="font-medium">Magang</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Info */}
+                            <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50/50 px-3 py-2.5">
+                                <Info className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+                                <p className="text-xs text-blue-700">
+                                    File Excel yang dihasilkan akan menggunakan format grid bulanan.
+                                </p>
+                            </div>
+                        </div>
+
+                        <DialogFooter className="gap-3">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setIsExportOpen(false)}
+                                className="border-neutral-300 font-bold text-neutral-700"
+                            >
+                                Batal
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={handleExport}
+                                className="bg-[#035EA9] hover:bg-[#035EA9]/90 font-bold text-white flex gap-2"
+                            >
+                                <Download className="h-4 w-4" />
+                                Download Excel
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </>
     );
