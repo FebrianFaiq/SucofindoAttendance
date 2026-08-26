@@ -120,14 +120,18 @@ Route::prefix('admin')
         // Monitoring Lembur (Overtime Monitoring)
         Route::get('overtime', [Admin\OvertimeController::class, 'index'])
             ->name('admin.overtime.index');
+        Route::patch('overtime/{overtime}/approve', [Admin\OvertimeController::class, 'approve'])
+            ->name('admin.overtime.approve');
+        Route::patch('overtime/{overtime}/reject', [Admin\OvertimeController::class, 'reject'])
+            ->name('admin.overtime.reject');
 
         // Rekap & Export (Reports & Export)
         Route::get('reports', [Admin\ReportController::class, 'index'])
             ->name('admin.reports.index');
-        Route::get('reports/export', [Admin\ReportController::class, 'export'])
-            ->name('admin.reports.export');
         Route::get('reports/export-excel', [Admin\ReportController::class, 'exportExcel'])
             ->name('admin.reports.export-excel');
+        Route::get('reports/overtime-export-excel', [Admin\ReportController::class, 'exportOvertimeExcel'])
+            ->name('admin.reports.overtime-export-excel');
 
         // Master Hari Libur (Holiday Management)
         Route::get('holidays', [Admin\HolidayController::class, 'index'])

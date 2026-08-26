@@ -8,7 +8,6 @@ use App\Models\Employee;
 use App\Models\Holiday;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response as HttpResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
@@ -47,65 +46,6 @@ class ReportController extends Controller
         return Inertia::render('admin/reports/index', [
             'attendances' => $attendances,
             'filters' => $request->only(['date_from', 'date_to', 'employee_id']),
-        ]);
-    }
-
-    /**
-     * Export rekap kehadiran ke CSV.
-     * (FR-EXP-01)
-     */
-    public function export(Request $request): HttpResponse
-    {
-        $query = Attendance::with(['employee.user']);
-
-        $dateFrom = $request->input('start_date', $request->input('date_from'));
-        $dateTo = $request->input('end_date', $request->input('date_to'));
-
-        if ($dateFrom) {
-            $query->whereDate('check_in_at', '>=', $dateFrom);
-        }
-        if ($dateTo) {
-            $query->whereDate('check_in_at', '<=', $dateTo);
-        }
-        if ($request->filled('employee_id')) {
-            $query->where('employee_id', $request->input('employee_id'));
-        }
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->whereHas('employee', function ($q) use ($search) {
-                $q->where('nik', 'like', "%{$search}%")
-                    ->orWhereHas('user', function ($uq) use ($search) {
-                        $uq->where('name', 'like', "%{$search}%");
-                    });
-            });
-        }
-
-        $attendances = $query->orderByDesc('check_in_at')->get();
-
-        // Generate CSV
-        $csvHeader = ['Nama', 'NIK', 'Tanggal', 'Jam Masuk', 'Jam Keluar', 'Tipe', 'Catatan Kerja'];
-        $csvRows = $attendances->map(function ($attendance) {
-            return [
-                $attendance->employee->user->name ?? '-',
-                $attendance->employee->nik ?? '-',
-                $attendance->check_in_at?->format('Y-m-d') ?? '-',
-                $attendance->check_in_at?->format('H:i') ?? '-',
-                $attendance->check_out_at?->format('H:i') ?? '-',
-                $attendance->type,
-                str_replace(["\r", "\n"], ' ', $attendance->work_notes ?? '-'),
-            ];
-        });
-
-        $output = implode(',', $csvHeader)."\n";
-        foreach ($csvRows as $row) {
-            $output .= implode(',', array_map(fn ($val) => '"'.str_replace('"', '""', $val).'"', $row))."\n";
-        }
-
-        $filename = 'rekap-kehadiran-'.now()->format('Y-m-d').'.csv';
-
-        return response($output, 200, [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
 
@@ -253,5 +193,39 @@ class ReportController extends Controller
         return response()->download($tempFile, $filenameStr, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ])->deleteFileAfterSend(true);
+    }
+    /**
+     * Export rekap lembur ke Excel menggunakan format template HRD.
+     */
+    public function exportOvertimeExcel(Request $request, \App\Services\Overtime\OvertimeExportService $exportService)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'project_id' => 'nullable|integer|exists:projects,id',
+        ]);
+
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $projectId = $request->input('project_id') ? (int) $request->input('project_id') : null;
+
+        try {
+            $tempFile = $exportService->export($startDate, $endDate, $projectId);
+            
+            $monthName = \Carbon\Carbon::parse($startDate)->format('F_Y');
+            $projectSuffix = '';
+            if ($projectId) {
+                $project = \App\Models\Project::find($projectId);
+                $projectSuffix = '_' . str_replace(' ', '_', $project->name ?? '');
+            }
+            $filename = "Rekap_Lembur_HRD_{$monthName}{$projectSuffix}.xlsx";
+
+            return response()->download($tempFile, $filename, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])->deleteFileAfterSend(true);
+            
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal melakukan export: ' . $e->getMessage());
+        }
     }
 }

@@ -29,11 +29,49 @@ class OvertimeController extends Controller
         $employee = $user->employee;
 
         $overtimes = Overtime::forEmployee($employee->id)
+            ->with(['employee.projects'])
             ->orderByDesc('date')
             ->paginate(15);
 
+        $statusMap = [
+            'pending' => 'Belum Direview',
+            'approved' => 'Sudah Direview',
+            'rejected' => 'Canceled',
+        ];
+
+        $overtimes->getCollection()->transform(function ($overtime) use ($employee, $statusMap) {
+            $durationHours = intval($overtime->duration);
+            $durationMinutes = round(($overtime->duration - $durationHours) * 60);
+            $durationFormatted = "{$durationHours} Jam {$durationMinutes} Menit";
+
+            return [
+                'id' => $overtime->id,
+                'date' => \Carbon\Carbon::parse($overtime->date)->translatedFormat('d M Y'),
+                'location' => 'Kantor', 
+                'client' => $employee->activeProject()?->name ?? 'Internal',
+                'duration' => $durationFormatted,
+                'status' => $statusMap[$overtime->status] ?? 'Unknown',
+            ];
+        });
+
+        $totalDurationMTD = Overtime::forEmployee($employee->id)
+            ->whereMonth('date', now()->month)
+            ->whereYear('date', now()->year)
+            ->where('status', 'approved')
+            ->get()
+            ->sum('duration');
+        
+        $totalHours = intval($totalDurationMTD);
+        $totalMinutes = round(($totalDurationMTD - $totalHours) * 60);
+        $totalDurationFormatted = "{$totalHours}h {$totalMinutes}m";
+
+        $lastOvertime = Overtime::forEmployee($employee->id)->orderByDesc('created_at')->first();
+        $lastStatus = $lastOvertime ? ($statusMap[$lastOvertime->status] ?? '-') : '-';
+
         return Inertia::render('employee/overtime/index', [
             'overtimes' => $overtimes,
+            'totalDurationMtd' => $totalDurationFormatted,
+            'lastStatus' => $lastStatus,
         ]);
     }
 
@@ -64,8 +102,25 @@ class OvertimeController extends Controller
         $user = Auth::user();
         $employee = $user->employee;
 
+        $date = \Carbon\Carbon::parse($request->validated('date'));
+
+        $count = Overtime::whereYear('date', $date->year)
+            ->whereMonth('date', $date->month)
+            ->count();
+            
+        $sequence = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+        
+        $romanMonths = [
+            1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI',
+            7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'
+        ];
+        $romanMonth = $romanMonths[$date->month];
+        
+        $spklNumber = "{$sequence}/SBA-{$romanMonth}/LEMBUR/{$date->year}";
+
         Overtime::create([
             'employee_id' => $employee->id,
+            'spkl_number' => $spklNumber,
             'date' => $request->validated('date'),
             'start_time' => $request->validated('start_time'),
             'end_time' => $request->validated('end_time'),

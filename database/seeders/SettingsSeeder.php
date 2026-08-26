@@ -26,6 +26,18 @@ class SettingsSeeder extends Seeder
                 'updated_by' => null,
                 'updated_at' => now(),
             ],
+            [
+                'key' => 'overtime_rate_normal',
+                'value' => '0.015',
+                'updated_by' => null,
+                'updated_at' => now(),
+            ],
+            [
+                'key' => 'overtime_rate_holiday',
+                'value' => '0.02',
+                'updated_by' => null,
+                'updated_at' => now(),
+            ],
         ];
 
         foreach ($settings as $setting) {

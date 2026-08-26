@@ -3,40 +3,7 @@ import { Clock, Plus, Clock3, FileText, ChevronLeft, ChevronRight, Info } from '
 import React from 'react';
 import AppLayout from '@/layouts/app-layout';
 
-const dummyHistory = [
-    {
-        id: 1,
-        date: '15 Okt 2023',
-        location: 'Kantor Pusat',
-        client: 'Internal',
-        duration: '2 Jam 30 Menit',
-        status: 'Belum Direview',
-    },
-    {
-        id: 2,
-        date: '12 Okt 2023',
-        location: 'Graha Sucofindo',
-        client: 'PT Antam',
-        duration: '3 Jam 00 Menit',
-        status: 'Sudah Direview',
-    },
-    {
-        id: 3,
-        date: '10 Okt 2023',
-        location: 'Site Bekasi',
-        client: 'PT Pertamina',
-        duration: '4 Jam 15 Menit',
-        status: 'Canceled',
-    },
-    {
-        id: 4,
-        date: '08 Okt 2023',
-        location: 'Kantor Pusat',
-        client: 'Internal',
-        duration: '2 Jam 00 Menit',
-        status: 'Sudah Direview',
-    },
-];
+// Data disediakan dari backend
 
 function getStatusBadge(status: string) {
     if (status === 'Belum Direview') {
@@ -63,7 +30,7 @@ function getStatusBadge(status: string) {
     return null;
 }
 
-export default function OvertimeIndex() {
+export default function OvertimeIndex({ overtimes, totalDurationMtd, lastStatus }: any) {
     return (
         <>
             <Head title="Lembur" />
@@ -104,7 +71,7 @@ export default function OvertimeIndex() {
                             <Clock className="h-5 w-5" />
                             <span className="text-sm font-bold">Total Durasi Lembur</span>
                         </div>
-                        <h2 className="text-4xl font-black text-[#101828] mb-1">2h 45m</h2>
+                        <h2 className="text-4xl font-black text-[#101828] mb-1">{totalDurationMtd || '0h 0m'}</h2>
                         <span className="text-xs font-semibold text-neutral-400">Month to date</span>
                     </div>
 
@@ -117,7 +84,7 @@ export default function OvertimeIndex() {
                         <div className="mt-auto">
                             <div className="inline-flex items-center gap-2 rounded-md border border-[#BFDBFE] bg-[#EFF6FF] px-3 py-1.5 text-sm font-bold text-[#1D4ED8]">
                                 <Info className="h-4 w-4 text-[#3B82F6]" />
-                                Belum Direview
+                                {lastStatus || 'Belum Ada Data'}
                             </div>
                         </div>
                     </div>
@@ -140,7 +107,7 @@ export default function OvertimeIndex() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-neutral-200 text-neutral-700">
-                                {dummyHistory.map((item) => (
+                                {overtimes.data.map((item: any) => (
                                     <tr key={item.id} className="hover:bg-neutral-50/50">
                                         <td className="px-6 py-4 whitespace-nowrap font-bold text-neutral-600">
                                             {item.date}
@@ -165,7 +132,7 @@ export default function OvertimeIndex() {
                     {/* Pagination */}
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-neutral-100 px-6 py-4 mt-auto">
                         <p className="text-sm font-semibold text-neutral-500">
-                            Menampilkan 1-4 dari 24 entri
+                            Menampilkan {overtimes.from || 0}-{overtimes.to || 0} dari {overtimes.total || 0} entri
                         </p>
                         <div className="flex items-center gap-2">
                             <button className="flex h-8 w-8 items-center justify-center rounded border border-neutral-200 text-neutral-400 hover:bg-neutral-50">

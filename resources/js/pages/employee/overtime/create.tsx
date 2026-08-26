@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import React, { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -23,8 +23,40 @@ export default function OvertimeCreate() {
     const [client, setClient] = useState('');
     const [description, setDescription] = useState('');
 
-    // Static display for duration since there is no logic
-    const durationDisplay = '0 Jam 0 Menit';
+    const [processing, setProcessing] = useState(false);
+
+    const calculateDuration = () => {
+        if (!startHour || !startMinute || !endHour || !endMinute) return '0 Jam 0 Menit';
+        const start = parseInt(startHour) * 60 + parseInt(startMinute);
+        let end = parseInt(endHour) * 60 + parseInt(endMinute);
+        if (end < start) end += 24 * 60;
+        
+        const diff = end - start;
+        const h = Math.floor(diff / 60);
+        const m = diff % 60;
+        return `${h} Jam ${m} Menit`;
+    };
+
+    const durationDisplay = calculateDuration();
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        setProcessing(true);
+        let finalDescription = description;
+        if (location || client) {
+            finalDescription = `[Lokasi: ${location || '-'} | Klien: ${client || '-'}]\n${description}`;
+        }
+        
+        router.post('/employee/overtime', {
+            date,
+            start_time: `${startHour}:${startMinute}`,
+            end_time: `${endHour}:${endMinute}`,
+            description: finalDescription,
+        }, {
+            onFinish: () => setProcessing(false),
+        });
+    };
 
     const hours = Array.from({ length: 24 }).map((_, i) => i.toString().padStart(2, '0'));
     const minutes = Array.from({ length: 60 }).map((_, i) => i.toString().padStart(2, '0'));
@@ -45,7 +77,7 @@ export default function OvertimeCreate() {
 
                 {/* ── Form Container ── */}
                 <div className="w-full max-w-4xl rounded-xl border border-neutral-200 bg-white p-8 shadow-sm">
-                    <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
+                    <form onSubmit={handleSubmit} className="space-y-8">
                         <div className="space-y-8">
                             {/* Tanggal Lembur */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -172,9 +204,10 @@ export default function OvertimeCreate() {
                             </Link>
                             <button
                                 type="submit"
-                                className="inline-flex h-12 min-w-[180px] items-center justify-center rounded-lg bg-[#035EA9] px-6 text-[15px] font-extrabold text-white shadow-sm hover:bg-[#035EA9]/90 hover:shadow-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#035EA9] focus-visible:ring-offset-2"
+                                disabled={processing}
+                                className="inline-flex h-12 min-w-[180px] items-center justify-center rounded-lg bg-[#035EA9] px-6 text-[15px] font-extrabold text-white shadow-sm hover:bg-[#035EA9]/90 hover:shadow-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#035EA9] focus-visible:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
-                                Submit Overtime
+                                {processing ? 'Memproses...' : 'Submit Overtime'}
                             </button>
                         </div>
                     </form>
