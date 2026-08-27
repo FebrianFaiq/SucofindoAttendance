@@ -273,6 +273,7 @@ return false;
     const [expMonth, setExpMonth] = useState(String(prevMonthVal));
     const [expYear, setExpYear] = useState(String(prevYearVal));
     const [expType, setExpType] = useState('employee');
+    const [expProject, setExpProject] = useState('all');
 
     const monthNames = [
         { value: '1', label: 'Januari' }, { value: '2', label: 'Februari' },
@@ -290,6 +291,7 @@ return false;
             role: expType,
             month: expMonth,
             year: expYear,
+            project_id: expProject === 'all' ? '' : expProject,
         }).toString()}`;
         window.open(url, '_blank');
         setIsExportOpen(false);
@@ -476,8 +478,8 @@ return false;
                             <thead className="bg-[#F8FAFC] text-neutral-600 whitespace-nowrap border-b border-neutral-200">
                                 <tr>
                                     <th className="px-6 py-4 font-bold tracking-wide">Karyawan</th>
-                                    <th className="px-6 py-4 font-bold tracking-wide">Tanggal</th>
                                     <th className="px-6 py-4 font-bold tracking-wide">Proyek / Bidang</th>
+                                    <th className="px-6 py-4 font-bold tracking-wide">Tanggal</th>
                                     <th className="px-6 py-4 font-bold tracking-wide text-center">Clock In</th>
                                     <th className="px-6 py-4 font-bold tracking-wide text-center">Clock Out</th>
                                     <th className="px-6 py-4 font-bold tracking-wide">Mode</th>
@@ -511,9 +513,6 @@ return false;
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-3 font-semibold text-neutral-600 whitespace-nowrap">
-                                                    {item.check_in_at ? format(new Date(item.check_in_at), 'dd MMM yyyy') : '—'}
-                                                </td>
                                                 <td className="px-6 py-3 font-semibold text-neutral-600">
                                                     {isIntern ? (
                                                         <Badge variant="secondary" className="rounded-md border-none bg-[#00A099]/10 text-[#00A099] hover:bg-[#00A099]/20 px-2.5 py-1 text-[13px] font-bold">
@@ -524,6 +523,9 @@ return false;
                                                             {item.employee?.projects?.[0]?.name ?? '—'}
                                                         </Badge>
                                                     )}
+                                                </td>
+                                                <td className="px-6 py-3 font-semibold text-neutral-600 whitespace-nowrap">
+                                                    {item.check_in_at ? format(new Date(item.check_in_at), 'dd MMM yyyy') : '—'}
                                                 </td>
                                                 <td className="px-6 py-3 text-center whitespace-nowrap">
                                                     <span className={`font-bold ${late ? 'text-[#DC2626]' : 'text-neutral-700'}`}>
@@ -930,6 +932,33 @@ return false;
                                     <SelectContent className="font-mulish">
                                         <SelectItem value="employee" className="font-medium">Karyawan & PTT</SelectItem>
                                         <SelectItem value="intern" className="font-medium">Magang</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Proyek / Bidang */}
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-sm font-semibold text-neutral-800">Proyek / Bidang (Opsional)</label>
+                                <Select value={expProject} onValueChange={setExpProject}>
+                                    <SelectTrigger className="h-10 w-full border-neutral-300 font-medium text-neutral-900 shadow-sm">
+                                        <SelectValue placeholder="Semua Proyek / Bidang" />
+                                    </SelectTrigger>
+                                    <SelectContent className="font-mulish">
+                                        <SelectItem value="all" className="font-medium">Semua Proyek / Bidang</SelectItem>
+                                        {expType === 'intern' ? (
+                                            <>
+                                                <SelectItem value="LSI" className="font-medium">LSI</SelectItem>
+                                                <SelectItem value="DukBis" className="font-medium">DukBis</SelectItem>
+                                                <SelectItem value="BIT" className="font-medium">BIT</SelectItem>
+                                                <SelectItem value="KSP" className="font-medium">KSP</SelectItem>
+                                            </>
+                                        ) : (
+                                            projects.map((p) => (
+                                                <SelectItem key={p.id} value={String(p.id)} className="font-medium">
+                                                    {p.name}
+                                                </SelectItem>
+                                            ))
+                                        )}
                                     </SelectContent>
                                 </Select>
                             </div>

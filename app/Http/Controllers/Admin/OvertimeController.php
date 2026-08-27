@@ -71,6 +71,7 @@ class OvertimeController extends Controller
                     'status' => $overtime->status === 'rejected' ? 'canceled' : $overtime->status,
                     'work_notes' => $description,
                     'gaji_pokok' => $salary?->base_salary ?? 0,
+                    'is_holiday' => $overtime->date->isWeekend() || \App\Models\Holiday::isHoliday($overtime->date),
             ];
         });
 

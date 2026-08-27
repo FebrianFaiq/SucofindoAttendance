@@ -224,9 +224,15 @@ return 'EM';
                                                 <td className="px-6 py-4 font-semibold text-neutral-600">{emp.nik}</td>
                                                 <td className="px-6 py-4 font-semibold text-neutral-600">{emp.user?.email}</td>
                                                 <td className="px-6 py-4">
-                                                    {emp.user?.role === 'intern' ? (
+                                                    {!emp.user?.is_active ? (
+                                                        <span className="text-neutral-400 font-bold">—</span>
+                                                    ) : emp.user?.role === 'intern' ? (
                                                         <Badge variant="secondary" className="rounded-md border-none bg-[#00A099]/10 text-[#00A099] hover:bg-[#00A099]/20 px-2.5 py-1 text-[13px] font-bold">
                                                             {emp.division || '—'}
+                                                        </Badge>
+                                                    ) : activeProject === 'Belum Ditugaskan' ? (
+                                                        <Badge variant="secondary" className="rounded-md border-none bg-red-50 text-red-600 hover:bg-red-100 px-2.5 py-1 text-[13px] font-bold">
+                                                            Belum Ditugaskan
                                                         </Badge>
                                                     ) : (
                                                         <Badge variant="secondary" className="rounded-md border-none bg-[#035EA9]/10 text-[#035EA9] hover:bg-[#035EA9]/20 px-2.5 py-1 text-[13px] font-bold">
@@ -447,26 +453,28 @@ return 'EM';
                                 </div>
 
                                 {/* Active Projects Section */}
-                                <div className="flex flex-col gap-2">
-                                    <div className="flex items-center gap-1.5 text-[#035EA9]">
-                                        <ClipboardList className="h-4 w-4" />
-                                        <h3 className="font-bold text-neutral-900 text-sm">Projek yang sedang Berjalan</h3>
-                                    </div>
+                                {selectedEmployee.user?.role !== 'intern' && (
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex items-center gap-1.5 text-[#035EA9]">
+                                            <ClipboardList className="h-4 w-4" />
+                                            <h3 className="font-bold text-neutral-900 text-sm">Projek yang sedang Berjalan</h3>
+                                        </div>
 
-                                    <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white p-2.5">
-                                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#F1F5F9]">
-                                            <LayoutGrid className="h-4 w-4 text-[#64748B]" />
-                                        </div>
-                                        <div className="flex flex-col leading-tight gap-0.5">
-                                            <span className="text-xs font-bold text-neutral-900">
-                                                {selectedEmployee.projects?.[0]?.name ?? 'Belum ada proyek aktif'}
-                                            </span>
-                                            <span className="text-[11px] font-semibold text-neutral-500">
-                                                {selectedEmployee.projects?.[0]?.code ?? 'N/A'}
-                                            </span>
+                                        <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white p-2.5">
+                                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#F1F5F9]">
+                                                <LayoutGrid className="h-4 w-4 text-[#64748B]" />
+                                            </div>
+                                            <div className="flex flex-col leading-tight gap-0.5">
+                                                <span className="text-xs font-bold text-neutral-900">
+                                                    {selectedEmployee.projects?.[0]?.name ?? 'Belum ada proyek aktif'}
+                                                </span>
+                                                <span className="text-[11px] font-semibold text-neutral-500">
+                                                    {selectedEmployee.projects?.[0]?.code ?? 'N/A'}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                )}
 
                                 {/* Action Buttons */}
                                 <div className="mt-2 flex flex-col gap-3 pt-3 border-t border-neutral-200">

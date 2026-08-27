@@ -98,7 +98,20 @@ class ProjectController extends Controller
             'is_active' => ['sometimes', 'boolean'],
         ]);
 
+        $wasActive = $project->is_active;
         $project->update($validated);
+
+        // Jika proyek di non-aktifkan, unassign semua karyawan yang sedang bertugas
+        if ($wasActive && !$project->is_active) {
+            \Illuminate\Support\Facades\DB::table('employee_projects')
+                ->where('project_id', $project->id)
+                ->where('status', 'active')
+                ->update([
+                    'status' => 'completed',
+                    'ended_at' => now(),
+                    'updated_at' => now(),
+                ]);
+        }
 
         return redirect()->route('admin.projects.index')
             ->with('success', 'Proyek berhasil diperbarui.');

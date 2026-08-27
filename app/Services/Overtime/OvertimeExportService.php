@@ -29,10 +29,7 @@ class OvertimeExportService
         $spreadsheet = IOFactory::load($templatePath);
 
         // 1. Sheet Master Karyawan
-        $this->fillMasterKaryawan($spreadsheet->getSheetByName('Master Karyawan'), $projectId);
-
-        // 2. Sheet Kalender Libur
-        $this->fillKalenderLibur($spreadsheet->getSheetByName('Kalender Libur'), $startDate, $endDate);
+        $this->fillMasterKaryawan($spreadsheet->getSheetByName('Master Karyawan'), $projectId, $startDate, $endDate);
 
         // Fetch Overtimes
         $query = Overtime::with(['employee.user', 'employee.projects', 'employee.salaries'])
@@ -61,14 +58,20 @@ class OvertimeExportService
         return $tempFile;
     }
 
-    protected function fillMasterKaryawan($sheet, ?int $projectId = null)
+    protected function fillMasterKaryawan($sheet, ?int $projectId = null, ?string $startDate = null, ?string $endDate = null)
     {
         if (!$sheet) return;
 
-        // Ambil data pegawai aktif (bukan magang)
+        // Ambil data pegawai aktif (bukan magang) yang memiliki overtime approved pada periode ini
         $query = Employee::with(['user', 'projects', 'salaries'])
             ->whereHas('user', function ($q) {
                 $q->where('role', '!=', 'intern')->where('is_active', true);
+            })
+            ->whereHas('overtimes', function ($q) use ($startDate, $endDate) {
+                $q->where('status', 'approved');
+                if ($startDate && $endDate) {
+                    $q->whereBetween('date', [$startDate, $endDate]);
+                }
             });
 
         if ($projectId) {
@@ -88,21 +91,6 @@ class OvertimeExportService
             
             $salary = $employee->activeSalary()?->base_salary ?? 0;
             $sheet->setCellValue('E' . $row, $salary);
-            $row++;
-        }
-    }
-
-    protected function fillKalenderLibur($sheet, $start, $end)
-    {
-        if (!$sheet) return;
-
-        $holidays = Holiday::whereBetween('date', [$start, $end])->orderBy('date', 'asc')->get();
-
-        $row = 5;
-        foreach ($holidays as $holiday) {
-            $sheet->setCellValue('A' . $row, Date::PHPToExcel(Carbon::parse($holiday->date)));
-            $sheet->getStyle('A' . $row)->getNumberFormat()->setFormatCode('dd/mm/yyyy');
-            $sheet->setCellValue('B' . $row, $holiday->name ?? $holiday->description);
             $row++;
         }
     }

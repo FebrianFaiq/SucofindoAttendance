@@ -540,8 +540,9 @@ export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours
                                 : (selectedOvertime.project ?? 'Belum Ditugaskan');
                             
                             // Salary calculation
-                            const dasarPerhitungan = '1/173';
-                            const upahPerSesi = Math.round(selectedOvertime.gaji_pokok / 173);
+                            const multiplier = selectedOvertime.is_holiday ? 0.02 : 0.015;
+                            const dasarPerhitungan = selectedOvertime.is_holiday ? 'Libur (2.0%)' : 'Normal (1.5%)';
+                            const upahPerSesi = Math.round(selectedOvertime.gaji_pokok * multiplier);
                             const totalUpah = Math.round(upahPerSesi * selectedOvertime.duration_hours);
 
                             const durationH = Math.floor(selectedOvertime.duration_hours);
@@ -661,42 +662,44 @@ export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours
                                             </div>
                                         </div>
 
-                                        {/* ── Perhitungan Upah Lembur ── */}
-                                        <div className="rounded-xl border border-neutral-200 border-l-[3px] border-l-[#035EA9] overflow-hidden">
-                                            <div className="px-5 pt-4 pb-2 flex items-center gap-2">
-                                                <ClipboardPenLine className="h-4 w-4 text-[#035EA9]" />
-                                                <span className="text-[11px] font-extrabold text-neutral-500 uppercase tracking-wider">Perhitungan Upah Lembur</span>
+                                            {/* ── Perhitungan Upah Lembur ── */}
+                                        {selectedOvertime.status !== 'canceled' && (
+                                            <div className="rounded-xl border border-neutral-200 border-l-[3px] border-l-[#035EA9] overflow-hidden">
+                                                <div className="px-5 pt-4 pb-2 flex items-center gap-2">
+                                                    <ClipboardPenLine className="h-4 w-4 text-[#035EA9]" />
+                                                    <span className="text-[11px] font-extrabold text-neutral-500 uppercase tracking-wider">Perhitungan Upah Lembur</span>
+                                                </div>
+                                                <div className="px-5 pb-4">
+                                                    <div className="divide-y divide-neutral-100">
+                                                        <div className="flex items-center justify-between py-2.5">
+                                                            <span className="text-sm text-neutral-600">Durasi Lembur</span>
+                                                            <span className="text-sm font-semibold text-neutral-900">{selectedOvertime.duration_hours} Jam</span>
+                                                        </div>
+                                                        <div className="flex items-center justify-between py-2.5">
+                                                            <span className="text-sm text-neutral-600">Gaji Pokok</span>
+                                                            <span className="text-sm font-semibold text-neutral-900">{formatCurrency(selectedOvertime.gaji_pokok)}</span>
+                                                        </div>
+                                                        <div className="flex items-center justify-between py-2.5">
+                                                            <span className="text-sm text-neutral-600">Dasar Perhitungan</span>
+                                                            <span className="text-sm font-semibold text-neutral-900">{dasarPerhitungan}</span>
+                                                        </div>
+                                                        <div className="flex items-center justify-between py-2.5">
+                                                            <span className="text-sm text-neutral-600">Upah per Sesi</span>
+                                                            <span className="text-sm font-semibold text-neutral-900">{formatCurrency(upahPerSesi)}</span>
+                                                        </div>
+                                                    </div>
+                                                    {/* Total Highlight */}
+                                                    <div className="mt-2 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 flex items-center justify-between">
+                                                        <span className="text-sm font-bold text-neutral-900">Total Upah Lembur</span>
+                                                        <span className="text-lg font-black text-[#DC2626]">{formatCurrency(totalUpah)}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 mt-2">
+                                                        <Info className="h-3.5 w-3.5 text-neutral-400 shrink-0" />
+                                                        <span className="text-[11px] text-neutral-400">Nilai dihitung otomatis berdasarkan data master karyawan</span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="px-5 pb-4">
-                                                <div className="divide-y divide-neutral-100">
-                                                    <div className="flex items-center justify-between py-2.5">
-                                                        <span className="text-sm text-neutral-600">Durasi Lembur</span>
-                                                        <span className="text-sm font-semibold text-neutral-900">{selectedOvertime.duration_hours} Jam</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between py-2.5">
-                                                        <span className="text-sm text-neutral-600">Gaji Pokok</span>
-                                                        <span className="text-sm font-semibold text-neutral-900">{formatCurrency(selectedOvertime.gaji_pokok)}</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between py-2.5">
-                                                        <span className="text-sm text-neutral-600">Dasar Perhitungan</span>
-                                                        <span className="text-sm font-semibold text-neutral-900">{dasarPerhitungan}</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between py-2.5">
-                                                        <span className="text-sm text-neutral-600">Upah per Sesi</span>
-                                                        <span className="text-sm font-semibold text-neutral-900">{formatCurrency(upahPerSesi)}</span>
-                                                    </div>
-                                                </div>
-                                                {/* Total Highlight */}
-                                                <div className="mt-2 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 flex items-center justify-between">
-                                                    <span className="text-sm font-bold text-neutral-900">Total Upah Lembur</span>
-                                                    <span className="text-lg font-black text-[#DC2626]">{formatCurrency(totalUpah)}</span>
-                                                </div>
-                                                <div className="flex items-center gap-1.5 mt-2">
-                                                    <Info className="h-3.5 w-3.5 text-neutral-400 shrink-0" />
-                                                    <span className="text-[11px] text-neutral-400">Nilai dihitung otomatis berdasarkan data master karyawan</span>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        )}
                                     </div>
 
                                     {/* ── Footer Buttons ── */}

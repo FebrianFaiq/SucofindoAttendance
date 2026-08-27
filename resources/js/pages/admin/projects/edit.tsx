@@ -3,9 +3,10 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Save, FileText, Calculator } from 'lucide-react';
+import { Save, FileText, Calculator, AlertTriangle } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { format } from 'date-fns';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 
 type Project = {
     id: number;
@@ -26,10 +27,23 @@ export default function ProjectsEdit({ project }: { project: Project }) {
         end_date: project.end_date || '',
         is_active: project.is_active,
     });
+    
+    const [isConfirmOpen, setIsConfirmOpen] = React.useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Jika proyek yang asalnya aktif akan dinonaktifkan, tampilkan konfirmasi
+        if (project.is_active && !data.is_active) {
+            setIsConfirmOpen(true);
+        } else {
+            submitForm();
+        }
+    };
+
+    const submitForm = () => {
         put(`/admin/projects/${project.id}`);
+        setIsConfirmOpen(false);
     };
 
     // Calculate duration in days if both dates are selected
@@ -208,6 +222,35 @@ export default function ProjectsEdit({ project }: { project: Project }) {
                         </div>
                     </div>
                 </form>
+                
+                {/* ── Deactivation Confirmation Dialog ───────────────── */}
+                <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+                    <DialogContent className="sm:max-w-[420px] p-8 font-mulish text-center border-none">
+                        <DialogHeader className="flex flex-col items-center justify-center sm:text-center">
+                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-50 mb-4">
+                                <AlertTriangle className="h-8 w-8 text-amber-600" />
+                            </div>
+                            <DialogTitle className="text-2xl font-bold text-[#1E293B]">Nonaktifkan Proyek?</DialogTitle>
+                            <DialogDescription className="text-[15px] font-medium text-[#64748B] mt-3 leading-relaxed text-center">
+                                Anda akan menonaktifkan proyek ini. Semua karyawan yang saat ini ditugaskan pada proyek ini akan otomatis di-unassign. Lanjutkan?
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter className="flex flex-col sm:flex-col w-full gap-3 mt-6">
+                            <Button
+                                disabled={processing}
+                                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold h-11 sm:w-full"
+                                onClick={submitForm}
+                            >
+                                {processing ? 'Memproses...' : 'Ya, Nonaktifkan'}
+                            </Button>
+                            <DialogClose asChild>
+                                <Button variant="outline" className="w-full border-neutral-300 font-bold text-neutral-700 h-11 hover:bg-neutral-50 sm:w-full sm:mt-0">
+                                    Batal
+                                </Button>
+                            </DialogClose>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </>
     );
