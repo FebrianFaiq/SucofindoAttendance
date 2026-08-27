@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
 import '../theme/app_colors.dart';
+import 'dashboard_page.dart';
 import 'login_page.dart'; // For logout navigation
+import 'overtime_page.dart';
+import '../widgets/custom_app_bar.dart';
+import '../widgets/custom_bottom_nav_bar.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -25,108 +29,24 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9FF),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(70),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(16),
-              bottomRight: Radius.circular(16),
-            ),
-          ),
-          child: SafeArea(
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: AppColors.primaryDark),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                Expanded(
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 48),
-                      child: Image.asset(
-                        'assets/images/logo-sucofindo.png',
-                        height: 44,
-                        errorBuilder: (ctx, err, stack) => const Icon(Icons.business, color: AppColors.primary),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: const CustomAppBar(),
       floatingActionButton: SizedBox(
         width: 64,
         height: 64,
         child: FloatingActionButton(
           onPressed: () {
-            // Go back to dashboard when center FAB is clicked
-            Navigator.of(context).popUntil((route) => route.isFirst);
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const DashboardPage()),
+            );
           },
-          backgroundColor: AppColors.textSecondary, // Greyed out in design
+          backgroundColor: AppColors.textSecondary,
           elevation: 4,
           shape: const CircleBorder(),
           child: const Icon(Icons.fingerprint, color: Colors.white, size: 34),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.white,
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8,
-        padding: EdgeInsets.zero,
-        child: SizedBox(
-          height: 70,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              _buildBottomNavItem(
-                icon: Icons.access_time,
-                label: 'Lembur',
-                isActive: _selectedNavIndex == 0,
-                onTap: () => setState(() => _selectedNavIndex = 0),
-              ),
-              SizedBox(
-                width: 80,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    const SizedBox(height: 9), // 5 (dot) + 4 (spacing) = 9 to maintain alignment with active state
-                    Text(
-                      'Absensi',
-                      style: GoogleFonts.mulish(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary, // Inactive in design
-                      ),
-                    ),
-                    const SizedBox(height: 13),
-                  ],
-                ),
-              ),
-              _buildBottomNavItem(
-                icon: Icons.person_outline,
-                label: 'Profil',
-                isActive: _selectedNavIndex == 2,
-                onTap: () {},
-              ),
-            ],
-          ),
-        ),
-      ),
+      bottomNavigationBar: const CustomBottomNavBar(selectedIndex: 2),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -233,54 +153,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildBottomNavItem({
-    required IconData icon,
-    required String label,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 80,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Icon(
-              icon,
-              size: 26,
-              color: isActive ? AppColors.primaryDark : AppColors.textSecondary,
-            ),
-            if (isActive) ...[
-              const SizedBox(height: 4),
-              Container(
-                width: 5,
-                height: 5,
-                decoration: const BoxDecoration(
-                  color: AppColors.primaryDark,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(height: 4),
-            ] else ...[
-              const SizedBox(height: 13),
-            ],
-            Text(
-              label,
-              style: GoogleFonts.mulish(
-                fontSize: 13,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
-                color: isActive ? AppColors.primaryDark : AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 13),
-          ],
-        ),
-      ),
-    );
-  }
+
 }
 
 class _ProfileDashedCirclePainter extends CustomPainter {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/id_date_helper.dart';
 import '../theme/app_colors.dart';
+import '../widgets/custom_app_bar.dart';
 
 class CheckOutPage extends StatefulWidget {
   final String clockInTime;
@@ -154,47 +155,7 @@ class _CheckOutPageState extends State<CheckOutPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9FF),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(70),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(16),
-              bottomRight: Radius.circular(16),
-            ),
-          ),
-          child: SafeArea(
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: AppColors.primaryDark),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                Expanded(
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 48),
-                      child: Image.asset(
-                        'assets/images/logo-sucofindo.png',
-                        height: 44,
-                        errorBuilder: (ctx, err, stack) => const Icon(Icons.business, color: AppColors.primary),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: const CustomAppBar(),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(24),
         color: const Color(0xFFF9F9FF),

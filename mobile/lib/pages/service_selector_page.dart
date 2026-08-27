@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
 import 'dashboard_page.dart';
+import 'overtime_page.dart';
 
 class ServiceSelectorPage extends StatelessWidget {
   const ServiceSelectorPage({super.key});
@@ -112,7 +113,11 @@ class ServiceSelectorPage extends StatelessWidget {
                       description: 'Catat dan kelola pengajuan lembur Anda.',
                       buttonText: 'Buka Lembur',
                       isPrimary: true,
-                      onTap: () => _showComingSoon(context),
+                      onTap: () {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(builder: (_) => const OvertimePage()),
+                        );
+                      },
                     ),
                   ],
                 ),

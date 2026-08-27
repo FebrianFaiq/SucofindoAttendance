@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/id_date_helper.dart';
 import '../theme/app_colors.dart';
+import '../widgets/custom_app_bar.dart';
 
 class CheckInPage extends StatefulWidget {
   const CheckInPage({super.key});
@@ -19,7 +20,8 @@ class _CheckInPageState extends State<CheckInPage> {
   bool _photoTaken = false;
   bool _isSubmitting = false;
 
-  final String _locationAddress = 'Jl. Raya Pasar Minggu No. 34, Pancoran, Kota Jakarta Selatan, Daerah Khusus Ibukota Jakarta 12780';
+  final String _locationAddress =
+      'Jl. Raya Pasar Minggu No. 34, Pancoran, Kota Jakarta Selatan, Daerah Khusus Ibukota Jakarta 12780';
   final bool _inRadius = true;
 
   @override
@@ -79,7 +81,9 @@ class _CheckInPageState extends State<CheckInPage> {
           ),
           backgroundColor: AppColors.danger,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
       return;
@@ -164,47 +168,7 @@ class _CheckInPageState extends State<CheckInPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9FF),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(70),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(16),
-              bottomRight: Radius.circular(16),
-            ),
-          ),
-          child: SafeArea(
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: AppColors.primaryDark),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                Expanded(
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 48),
-                      child: Image.asset(
-                        'assets/images/logo-sucofindo.png',
-                        height: 44,
-                        errorBuilder: (ctx, err, stack) => const Icon(Icons.business, color: AppColors.primary),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: const CustomAppBar(),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(24),
         color: const Color(0xFFF9F9FF),
@@ -222,10 +186,17 @@ class _CheckInPageState extends State<CheckInPage> {
                         valueColor: AlwaysStoppedAnimation(Colors.white),
                       ),
                     )
-                  : const Icon(Icons.fingerprint, size: 20, color: Colors.white),
+                  : const Icon(
+                      Icons.fingerprint,
+                      size: 20,
+                      color: Colors.white,
+                    ),
               label: Text(
                 _isSubmitting ? 'Memproses...' : 'Konfirmasi Clock In',
-                style: GoogleFonts.mulish(fontWeight: FontWeight.w700, fontSize: 14),
+                style: GoogleFonts.mulish(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryDark,
@@ -373,9 +344,16 @@ class _CheckInPageState extends State<CheckInPage> {
                       height: 80,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1.5),
+                        border: Border.all(
+                          color: AppColors.primary.withOpacity(0.3),
+                          width: 1.5,
+                        ),
                       ),
-                      child: Icon(Icons.face, size: 40, color: AppColors.textSecondary.withOpacity(0.8)),
+                      child: Icon(
+                        Icons.face,
+                        size: 40,
+                        color: AppColors.textSecondary.withOpacity(0.8),
+                      ),
                     ),
                   ),
                 ),
@@ -432,14 +410,21 @@ class _CheckInPageState extends State<CheckInPage> {
             ),
             if (_inRadius)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle_outline, size: 12, color: AppColors.primaryDark),
+                    const Icon(
+                      Icons.check_circle_outline,
+                      size: 12,
+                      color: AppColors.primaryDark,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'Dalam Radius',
@@ -465,7 +450,9 @@ class _CheckInPageState extends State<CheckInPage> {
           child: Column(
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
                 child: Container(
                   height: 120,
                   width: double.infinity,
@@ -475,12 +462,23 @@ class _CheckInPageState extends State<CheckInPage> {
                       Positioned.fill(
                         child: GridView.builder(
                           physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 6),
-                          itemBuilder: (ctx, i) => Icon(Icons.map, size: 40, color: Colors.blue.withOpacity(0.05)),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 6,
+                              ),
+                          itemBuilder: (ctx, i) => Icon(
+                            Icons.map,
+                            size: 40,
+                            color: Colors.blue.withOpacity(0.05),
+                          ),
                         ),
                       ),
                       const Center(
-                        child: Icon(Icons.location_on, size: 40, color: AppColors.primaryDark),
+                        child: Icon(
+                          Icons.location_on,
+                          size: 40,
+                          color: AppColors.primaryDark,
+                        ),
                       ),
                     ],
                   ),
@@ -491,7 +489,11 @@ class _CheckInPageState extends State<CheckInPage> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.location_on_outlined, size: 20, color: AppColors.primaryDark),
+                    const Icon(
+                      Icons.location_on_outlined,
+                      size: 20,
+                      color: AppColors.primaryDark,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -545,10 +547,30 @@ class DashedRectPainter extends CustomPainter {
       ..strokeWidth = strokeWidth
       ..style = PaintingStyle.stroke;
 
-    _drawDashedLine(canvas, const Offset(0, 0), Offset(size.width, 0), paint); // top
-    _drawDashedLine(canvas, Offset(size.width, 0), Offset(size.width, size.height), paint); // right
-    _drawDashedLine(canvas, Offset(size.width, size.height), Offset(0, size.height), paint); // bottom
-    _drawDashedLine(canvas, Offset(0, size.height), const Offset(0, 0), paint); // left
+    _drawDashedLine(
+      canvas,
+      const Offset(0, 0),
+      Offset(size.width, 0),
+      paint,
+    ); // top
+    _drawDashedLine(
+      canvas,
+      Offset(size.width, 0),
+      Offset(size.width, size.height),
+      paint,
+    ); // right
+    _drawDashedLine(
+      canvas,
+      Offset(size.width, size.height),
+      Offset(0, size.height),
+      paint,
+    ); // bottom
+    _drawDashedLine(
+      canvas,
+      Offset(0, size.height),
+      const Offset(0, 0),
+      paint,
+    ); // left
   }
 
   void _drawDashedLine(Canvas canvas, Offset p1, Offset p2, Paint paint) {

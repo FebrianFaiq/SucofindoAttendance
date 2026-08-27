@@ -60,7 +60,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                   fit: BoxFit.contain,
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Title
                 Text(
                   'BUAT PASSWORD BARU',
@@ -111,6 +111,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
+                          keyboardType: TextInputType.visiblePassword,
+                          enableSuggestions: false,
+                          autocorrect: false,
                           style: GoogleFonts.mulish(
                             fontSize: 14,
                             color: AppColors.textPrimary,
@@ -121,28 +124,47 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                               color: AppColors.textMuted,
                               fontSize: 14,
                             ),
-                            prefixIcon: const Icon(Icons.vpn_key_outlined, color: AppColors.textSecondary),
+                            prefixIcon: const Icon(
+                              Icons.vpn_key_outlined,
+                              color: AppColors.textSecondary,
+                            ),
                             suffixIcon: IconButton(
                               icon: Icon(
-                                _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                _obscurePassword
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
                                 color: AppColors.textSecondary,
                               ),
-                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                              onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              ),
                             ),
                             filled: true,
                             fillColor: Colors.white,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 16,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AppColors.border, width: 1.2),
+                              borderSide: const BorderSide(
+                                color: AppColors.border,
+                                width: 1.2,
+                              ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AppColors.border, width: 1.2),
+                              borderSide: const BorderSide(
+                                color: AppColors.border,
+                                width: 1.2,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                              borderSide: const BorderSide(
+                                color: AppColors.primary,
+                                width: 1.5,
+                              ),
                             ),
                           ),
                           validator: (value) {
@@ -179,6 +201,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                         TextFormField(
                           controller: _confirmController,
                           obscureText: _obscureConfirm,
+                          keyboardType: TextInputType.visiblePassword,
+                          enableSuggestions: false,
+                          autocorrect: false,
                           style: GoogleFonts.mulish(
                             fontSize: 14,
                             color: AppColors.textPrimary,
@@ -189,28 +214,47 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                               color: AppColors.textMuted,
                               fontSize: 14,
                             ),
-                            prefixIcon: const Icon(Icons.lock_reset_outlined, color: AppColors.textSecondary),
+                            prefixIcon: const Icon(
+                              Icons.lock_reset_outlined,
+                              color: AppColors.textSecondary,
+                            ),
                             suffixIcon: IconButton(
                               icon: Icon(
-                                _obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                _obscureConfirm
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
                                 color: AppColors.textSecondary,
                               ),
-                              onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                              onPressed: () => setState(
+                                () => _obscureConfirm = !_obscureConfirm,
+                              ),
                             ),
                             filled: true,
                             fillColor: Colors.white,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 16,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AppColors.border, width: 1.2),
+                              borderSide: const BorderSide(
+                                color: AppColors.border,
+                                width: 1.2,
+                              ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AppColors.border, width: 1.2),
+                              borderSide: const BorderSide(
+                                color: AppColors.border,
+                                width: 1.2,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                              borderSide: const BorderSide(
+                                color: AppColors.primary,
+                                width: 1.5,
+                              ),
                             ),
                           ),
                           validator: (value) {
@@ -224,7 +268,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                           },
                         ),
                         const SizedBox(height: 24),
-                        
+
                         const Divider(height: 1, color: AppColors.border),
                         const SizedBox(height: 24),
 
@@ -232,14 +276,22 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.04), // Or F9F9FF if it is extremely light
+                            color: AppColors.primary.withOpacity(
+                              0.04,
+                            ), // Or F9F9FF if it is extremely light
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                            border: Border.all(
+                              color: AppColors.primary.withOpacity(0.1),
+                            ),
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.info_outline, color: AppColors.primaryDark, size: 20),
+                              const Icon(
+                                Icons.info_outline,
+                                color: AppColors.primaryDark,
+                                size: 20,
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
@@ -265,21 +317,27 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primaryDark,
                               foregroundColor: Colors.white,
-                              disabledBackgroundColor: AppColors.primaryDark.withOpacity(0.5),
+                              disabledBackgroundColor: AppColors.primaryDark
+                                  .withOpacity(0.5),
                               elevation: 0,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            icon: _isLoading 
-                              ? const SizedBox(
-                                  width: 20, 
-                                  height: 20, 
-                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                                )
-                              : const Icon(Icons.save_outlined, size: 20),
+                            icon: _isLoading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.save_outlined, size: 20),
                             label: Text(
-                              _isLoading ? 'Menyimpan...' : 'Simpan Password & Lanjutkan',
+                              _isLoading
+                                  ? 'Menyimpan...'
+                                  : 'Simpan Password & Lanjutkan',
                               style: GoogleFonts.mulish(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,

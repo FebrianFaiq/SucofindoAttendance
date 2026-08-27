@@ -7,7 +7,10 @@ import '../theme/app_colors.dart';
 import 'check_in_page.dart';
 import 'check_out_page.dart';
 import 'history_page.dart';
+import 'overtime_page.dart';
 import 'profile_page.dart';
+import '../widgets/custom_app_bar.dart';
+import '../widgets/custom_bottom_nav_bar.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -65,9 +68,9 @@ class _DashboardPageState extends State<DashboardPage> {
 
   void _handleAction() async {
     if (!_hasCheckedIn) {
-      final result = await Navigator.of(context).push<bool>(
-        MaterialPageRoute(builder: (_) => const CheckInPage()),
-      );
+      final result = await Navigator.of(
+        context,
+      ).push<bool>(MaterialPageRoute(builder: (_) => const CheckInPage()));
       if (result == true && mounted) {
         setState(() {
           _hasCheckedIn = true;
@@ -107,47 +110,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9FF),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(70),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(16),
-              bottomRight: Radius.circular(16),
-            ),
-          ),
-          child: SafeArea(
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: AppColors.primaryDark),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                Expanded(
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 48), // balance the back button
-                      child: Image.asset(
-                        'assets/images/logo-sucofindo.png',
-                        height: 44, // increased from 32
-                        errorBuilder: (ctx, err, stack) => const Icon(Icons.business, color: AppColors.primary),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: const CustomAppBar(),
       floatingActionButton: SizedBox(
         width: 64,
         height: 64,
@@ -160,68 +123,7 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.white,
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8,
-        padding: EdgeInsets.zero,
-        child: SizedBox(
-          height: 70,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              // Lembur
-              _buildBottomNavItem(
-                icon: Icons.access_time,
-                label: 'Lembur',
-                isActive: false,
-                onTap: () {},
-              ),
-              // Absensi (Center)
-              SizedBox(
-                width: 80,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Container(
-                      width: 5,
-                      height: 5,
-                      decoration: const BoxDecoration(
-                        color: AppColors.primaryDark,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Absensi',
-                      style: GoogleFonts.mulish(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primaryDark,
-                      ),
-                    ),
-                    const SizedBox(height: 13), // total 2+5+6 = 13 for alignment
-                  ],
-                ),
-              ),
-              // Profil
-              _buildBottomNavItem(
-                icon: Icons.person_outline,
-                label: 'Profil',
-                isActive: false,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ProfilePage()),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
+      bottomNavigationBar: const CustomBottomNavBar(selectedIndex: 1),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -267,7 +169,9 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const HistoryPage())),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const HistoryPage()),
+                  ),
                   child: Text(
                     'Lihat Semua',
                     style: GoogleFonts.mulish(
@@ -288,54 +192,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildBottomNavItem({
-    required IconData icon,
-    required String label,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 80,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Icon(
-              icon,
-              size: 26,
-              color: isActive ? AppColors.primaryDark : AppColors.textSecondary,
-            ),
-            if (isActive) ...[
-              const SizedBox(height: 4),
-              Container(
-                width: 5,
-                height: 5,
-                decoration: const BoxDecoration(
-                  color: AppColors.primaryDark,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(height: 4),
-            ] else ...[
-              const SizedBox(height: 13),
-            ],
-            Text(
-              label,
-              style: GoogleFonts.mulish(
-                fontSize: 13,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
-                color: isActive ? AppColors.primaryDark : AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 13), // padding at bottom to align with center item
-          ],
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildMainStatusCard() {
     String statusText = 'Belum Absen';
@@ -374,7 +231,11 @@ class _DashboardPageState extends State<DashboardPage> {
                 gap: 6,
               ),
               child: const Center(
-                child: Icon(Icons.access_time_filled, color: AppColors.primaryDark, size: 40),
+                child: Icon(
+                  Icons.access_time_filled,
+                  color: AppColors.primaryDark,
+                  size: 40,
+                ),
               ),
             ),
           ),
@@ -405,7 +266,11 @@ class _DashboardPageState extends State<DashboardPage> {
             height: 48,
             child: ElevatedButton.icon(
               onPressed: _hasCheckedOut ? null : _handleAction,
-              icon: const Icon(Icons.fingerprint, size: 20, color: Colors.white),
+              icon: const Icon(
+                Icons.fingerprint,
+                size: 20,
+                color: Colors.white,
+              ),
               label: Text(btnText),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryDark,
@@ -509,7 +374,11 @@ class _StatCard extends StatelessWidget {
   final IconData icon;
   final String value;
 
-  const _StatCard({required this.title, required this.icon, required this.value});
+  const _StatCard({
+    required this.title,
+    required this.icon,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -561,7 +430,11 @@ class _StatCardDuration extends StatelessWidget {
   final IconData icon;
   final String valueStr;
 
-  const _StatCardDuration({required this.title, required this.icon, required this.valueStr});
+  const _StatCardDuration({
+    required this.title,
+    required this.icon,
+    required this.valueStr,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -640,7 +513,7 @@ class _StatCardDuration extends StatelessWidget {
                 ),
               ),
             ],
-          )
+          ),
         ],
       ),
     );
