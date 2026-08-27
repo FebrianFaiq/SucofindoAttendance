@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
 import 'change_password_page.dart';
-import 'dashboard_page.dart';
+import 'main_page.dart';
 import '../services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
@@ -54,7 +54,7 @@ class _LoginPageState extends State<LoginPage>
         );
       } else {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const DashboardPage()),
+          MaterialPageRoute(builder: (_) => const MainPage()),
         );
       }
     } else {

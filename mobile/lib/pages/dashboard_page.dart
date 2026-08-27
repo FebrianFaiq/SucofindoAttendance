@@ -17,10 +17,10 @@ class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
   @override
-  State<DashboardPage> createState() => _DashboardPageState();
+  State<DashboardPage> createState() => DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
+class DashboardPageState extends State<DashboardPage> {
   bool _hasCheckedIn = false;
   bool _hasCheckedOut = false;
   String? _clockInTime;
@@ -32,10 +32,10 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
-    _loadDashboardData();
+    loadDashboardData();
   }
 
-  Future<void> _loadDashboardData() async {
+  Future<void> loadDashboardData() async {
     setState(() => _isLoading = true);
     final result = await AttendanceService.getDashboard();
     if (result['success'] == true) {
@@ -63,13 +63,13 @@ class _DashboardPageState extends State<DashboardPage> {
     return IdDateHelper.formatFull(DateTime.now());
   }
 
-  void _handleAction() async {
+  void handleAction() async {
     if (!_hasCheckedIn) {
       final result = await Navigator.of(
         context,
       ).push<bool>(MaterialPageRoute(builder: (_) => const CheckInPage()));
       if (result == true) {
-        _loadDashboardData();
+        loadDashboardData();
       }
     } else if (!_hasCheckedOut) {
       final result = await Navigator.of(context).push<bool>(
@@ -78,93 +78,76 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
       );
       if (result == true) {
-        _loadDashboardData();
+        loadDashboardData();
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF9F9FF),
-      appBar: const CustomAppBar(),
-      floatingActionButton: SizedBox(
-        width: 64,
-        height: 64,
-        child: FloatingActionButton(
-          onPressed: _handleAction,
-          backgroundColor: AppColors.primaryDark,
-          elevation: 4,
-          shape: const CircleBorder(),
-          child: const Icon(Icons.fingerprint, color: Colors.white, size: 34),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: const CustomBottomNavBar(selectedIndex: 1),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Text
-            Text(
-              'Absensi',
-              style: GoogleFonts.mulish(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                color: AppColors.primaryDark,
-              ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Text
+          Text(
+            'Absensi',
+            style: GoogleFonts.mulish(
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              color: AppColors.primaryDark,
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Catatan kehadiran Anda hari ini',
-              style: GoogleFonts.mulish(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Catatan kehadiran Anda hari ini',
+            style: GoogleFonts.mulish(
+              fontSize: 14,
+              color: AppColors.textSecondary,
             ),
-            const SizedBox(height: 24),
+          ),
+          const SizedBox(height: 24),
 
-            // Main Status Card
-            _buildMainStatusCard(),
-            const SizedBox(height: 16),
+          // Main Status Card
+          _buildMainStatusCard(),
+          const SizedBox(height: 16),
 
-            // 3 Stats Cards
-            _buildStatsCards(),
-            const SizedBox(height: 24),
+          // 3 Stats Cards
+          _buildStatsCards(),
+          const SizedBox(height: 24),
 
-            // Riwayat Absensi
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Riwayat Absensi',
+          // Riwayat Absensi
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Riwayat Absensi',
+                style: GoogleFonts.mulish(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              GestureDetector(
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const HistoryPage()),
+                ),
+                child: Text(
+                  'Lihat Semua',
                   style: GoogleFonts.mulish(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
                   ),
                 ),
-                GestureDetector(
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const HistoryPage()),
-                  ),
-                  child: Text(
-                    'Lihat Semua',
-                    style: GoogleFonts.mulish(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            ..._recentAttendances.map((record) => _buildHistoryCard(record)),
-            const SizedBox(height: 40),
-          ],
-        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ..._recentAttendances.map((record) => _buildHistoryCard(record)),
+          const SizedBox(height: 40),
+        ],
       ),
     );
   }
@@ -242,7 +225,7 @@ class _DashboardPageState extends State<DashboardPage> {
             width: double.infinity,
             height: 48,
             child: ElevatedButton.icon(
-              onPressed: _hasCheckedOut ? null : _handleAction,
+              onPressed: _hasCheckedOut ? null : handleAction,
               icon: const Icon(
                 Icons.fingerprint,
                 size: 20,

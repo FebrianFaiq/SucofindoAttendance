@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
-import 'dashboard_page.dart';
+import 'main_page.dart';
 import '../services/auth_service.dart';
 
 class ChangePasswordPage extends StatefulWidget {
@@ -42,7 +42,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
     if (result['success'] == true) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const DashboardPage()),
+        MaterialPageRoute(builder: (_) => const MainPage()),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

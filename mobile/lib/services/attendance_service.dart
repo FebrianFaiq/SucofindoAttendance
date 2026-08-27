@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:image_picker/image_picker.dart';
+import 'package:camera/camera.dart';
 import 'auth_service.dart';
 import 'api_config.dart';
 
@@ -62,20 +62,38 @@ class AttendanceService {
     }
   }
 
-  static Future<Map<String, dynamic>> checkOut(String workNotes) async {
+  static Future<Map<String, dynamic>> checkOut(
+    String workNotes,
+    double lat,
+    double lng,
+    XFile photo,
+  ) async {
     try {
       final token = await AuthService.getToken();
       if (token == null) return {'success': false, 'message': 'Unauthorized'};
 
-      final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}/attendance/check-out'),
-        headers: ApiConfig.authHeaders(token),
-        body: jsonEncode({
-          'work_notes': workNotes,
-        }),
-      );
+      final uri = Uri.parse('${ApiConfig.baseUrl}/attendance/check-out');
+      final request = http.MultipartRequest('POST', uri)
+        ..headers.addAll({
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        })
+        ..fields['work_notes'] = workNotes
+        ..fields['gps_lat'] = lat.toString()
+        ..fields['gps_lng'] = lng.toString();
 
+      final fileBytes = await photo.readAsBytes();
+      final multipartFile = http.MultipartFile.fromBytes(
+        'photo',
+        fileBytes,
+        filename: photo.name.isNotEmpty ? photo.name : 'checkout_photo.jpg',
+      );
+      request.files.add(multipartFile);
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
       final data = jsonDecode(response.body);
+
       if (response.statusCode == 200 && data['status'] == 'success') {
         return {'success': true, 'data': data['data']};
       }

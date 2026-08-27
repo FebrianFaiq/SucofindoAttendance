@@ -1,46 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
-import 'dashboard_page.dart';
-import 'overtime_page.dart';
+import 'main_page.dart';
 
 class ServiceSelectorPage extends StatelessWidget {
   const ServiceSelectorPage({super.key});
-
-  void _showComingSoon(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            const Icon(Icons.hourglass_empty, color: AppColors.warning, size: 24),
-            const SizedBox(width: 10),
-            Text(
-              'Coming Soon',
-              style: GoogleFonts.mulish(fontWeight: FontWeight.w700),
-            ),
-          ],
-        ),
-        content: Text(
-          'Fitur Lembur sedang dalam tahap pengembangan.',
-          style: GoogleFonts.mulish(color: AppColors.textSecondary, fontSize: 14),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(
-              'Kembali',
-              style: GoogleFonts.mulish(
-                fontWeight: FontWeight.w700,
-                color: AppColors.primary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,7 +64,7 @@ class ServiceSelectorPage extends StatelessWidget {
                       isPrimary: true,
                       onTap: () {
                         Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(builder: (_) => const DashboardPage()),
+                          MaterialPageRoute(builder: (_) => const MainPage(initialIndex: 1)),
                         );
                       },
                     ),
@@ -115,7 +79,7 @@ class ServiceSelectorPage extends StatelessWidget {
                       isPrimary: true,
                       onTap: () {
                         Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(builder: (_) => const OvertimePage()),
+                          MaterialPageRoute(builder: (_) => const MainPage(initialIndex: 0)),
                         );
                       },
                     ),

@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
-import '../pages/dashboard_page.dart';
-import '../pages/overtime_page.dart';
-import '../pages/profile_page.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int selectedIndex;
+  final Function(int) onItemTapped;
 
   const CustomBottomNavBar({
     super.key,
     required this.selectedIndex,
+    required this.onItemTapped,
   });
 
   @override
@@ -32,21 +31,13 @@ class CustomBottomNavBar extends StatelessWidget {
               icon: Icons.access_time,
               label: 'Lembur',
               isActive: selectedIndex == 0,
-              targetPage: const OvertimePage(),
               currentIndex: 0,
             ),
             // Absensi (Center) - We just render the label since FAB is in Scaffold
             SizedBox(
               width: 80,
               child: GestureDetector(
-                onTap: () {
-                  if (selectedIndex != 1) {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const DashboardPage()),
-                    );
-                  }
-                },
+                onTap: () => onItemTapped(1),
                 behavior: HitTestBehavior.opaque,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -86,7 +77,6 @@ class CustomBottomNavBar extends StatelessWidget {
               icon: Icons.person_outline,
               label: 'Profil',
               isActive: selectedIndex == 2,
-              targetPage: const ProfilePage(),
               currentIndex: 2,
             ),
           ],
@@ -100,18 +90,10 @@ class CustomBottomNavBar extends StatelessWidget {
     required IconData icon,
     required String label,
     required bool isActive,
-    required Widget targetPage,
     required int currentIndex,
   }) {
     return GestureDetector(
-      onTap: () {
-        if (selectedIndex != currentIndex) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => targetPage),
-          );
-        }
-      },
+      onTap: () => onItemTapped(currentIndex),
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: 80,
@@ -119,13 +101,7 @@ class CustomBottomNavBar extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Icon(
-              icon,
-              size: 26,
-              color: isActive ? AppColors.primaryDark : AppColors.textSecondary,
-            ),
             if (isActive) ...[
-              const SizedBox(height: 4),
               Container(
                 width: 5,
                 height: 5,
@@ -136,8 +112,14 @@ class CustomBottomNavBar extends StatelessWidget {
               ),
               const SizedBox(height: 4),
             ] else ...[
-              const SizedBox(height: 13),
+              const SizedBox(height: 9),
             ],
+            Icon(
+              icon,
+              size: 26,
+              color: isActive ? AppColors.primaryDark : AppColors.textSecondary,
+            ),
+            const SizedBox(height: 4),
             Text(
               label,
               style: GoogleFonts.mulish(

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
+import 'main_page.dart';
 import '../services/attendance_service.dart';
 
 class HistoryPage extends StatefulWidget {
@@ -68,7 +69,17 @@ class _HistoryPageState extends State<HistoryPage> {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: const CustomBottomNavBar(selectedIndex: 1),
+      bottomNavigationBar: CustomBottomNavBar(
+        selectedIndex: 1,
+        onItemTapped: (index) {
+          if (index != 1) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => MainPage(initialIndex: index)),
+              (route) => false,
+            );
+          }
+        },
+      ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         children: [
