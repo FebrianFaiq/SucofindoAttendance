@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../utils/id_date_helper.dart';
 import '../theme/app_colors.dart';
 import '../widgets/custom_app_bar.dart';
+import '../services/attendance_service.dart';
 
 class CheckOutPage extends StatefulWidget {
   final String clockInTime;
@@ -78,11 +79,14 @@ class _CheckOutPageState extends State<CheckOutPage> {
     }
 
     setState(() => _isSubmitting = true);
-    await Future.delayed(const Duration(milliseconds: 1500));
+
+    final result = await AttendanceService.checkOut(_notesController.text.trim());
 
     if (!mounted) return;
+    setState(() => _isSubmitting = false);
 
-    await showDialog(
+    if (result['success'] == true) {
+      await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
@@ -149,6 +153,14 @@ class _CheckOutPageState extends State<CheckOutPage> {
         ),
       ),
     );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Gagal melakukan Clock Out'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+    }
   }
 
   @override

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
 import 'change_password_page.dart';
-import 'service_selector_page.dart';
+import 'dashboard_page.dart';
+import '../services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -42,16 +43,24 @@ class _LoginPageState extends State<LoginPage>
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
-    if (email == 'karyawan@sucofindo.co.id' && password == 'password') {
-      if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const ChangePasswordPage()),
-      );
+    final result = await AuthService.login(email, password);
+
+    if (!mounted) return;
+
+    if (result['success'] == true) {
+      if (result['must_change_password'] == true) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const ChangePasswordPage()),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const DashboardPage()),
+        );
+      }
     } else {
       setState(() {
         _isLoading = false;
-        _errorMessage =
-            'Email atau password salah. Gunakan karyawan@sucofindo.co.id / password';
+        _errorMessage = result['message'] ?? 'Gagal login';
       });
     }
   }

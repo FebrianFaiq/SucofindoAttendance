@@ -11,6 +11,7 @@ import 'overtime_page.dart';
 import 'profile_page.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
+import '../services/attendance_service.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -24,22 +25,37 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _hasCheckedOut = false;
   String? _clockInTime;
   String? _clockOutTime;
-  late Timer _timer;
+  String _totalDuration = '0j 0m';
+  List<dynamic> _recentAttendances = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _updateTime();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateTime());
+    _loadDashboardData();
   }
 
-  void _updateTime() {
-    if (mounted) setState(() {});
+  Future<void> _loadDashboardData() async {
+    setState(() => _isLoading = true);
+    final result = await AttendanceService.getDashboard();
+    if (result['success'] == true) {
+      final data = result['data'];
+      setState(() {
+        _hasCheckedIn = data['has_checked_in'];
+        _hasCheckedOut = data['has_checked_out'];
+        _clockInTime = data['clock_in_time'];
+        _clockOutTime = data['clock_out_time'];
+        _totalDuration = data['total_duration'];
+        _recentAttendances = data['recent_attendances'] ?? [];
+      });
+    }
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
   void dispose() {
-    _timer.cancel();
     super.dispose();
   }
 
@@ -47,35 +63,13 @@ class _DashboardPageState extends State<DashboardPage> {
     return IdDateHelper.formatFull(DateTime.now());
   }
 
-  String _getTotalDuration() {
-    if (_clockInTime == null) return '0j 0m';
-    if (_clockOutTime != null) {
-      final inParts = _clockInTime!.split(':');
-      final outParts = _clockOutTime!.split(':');
-      final inMinutes = int.parse(inParts[0]) * 60 + int.parse(inParts[1]);
-      final outMinutes = int.parse(outParts[0]) * 60 + int.parse(outParts[1]);
-      final diff = outMinutes - inMinutes;
-      return '${diff ~/ 60}j ${diff % 60}m';
-    }
-    final inParts = _clockInTime!.split(':');
-    final now = DateTime.now();
-    final inMinutes = int.parse(inParts[0]) * 60 + int.parse(inParts[1]);
-    final nowMinutes = now.hour * 60 + now.minute;
-    final diff = nowMinutes - inMinutes;
-    if (diff < 0) return '0j 0m';
-    return '${diff ~/ 60}j ${diff % 60}m';
-  }
-
   void _handleAction() async {
     if (!_hasCheckedIn) {
       final result = await Navigator.of(
         context,
       ).push<bool>(MaterialPageRoute(builder: (_) => const CheckInPage()));
-      if (result == true && mounted) {
-        setState(() {
-          _hasCheckedIn = true;
-          _clockInTime = IdDateHelper.formatTime(DateTime.now());
-        });
+      if (result == true) {
+        _loadDashboardData();
       }
     } else if (!_hasCheckedOut) {
       final result = await Navigator.of(context).push<bool>(
@@ -83,28 +77,11 @@ class _DashboardPageState extends State<DashboardPage> {
           builder: (_) => CheckOutPage(clockInTime: _clockInTime ?? '--:--'),
         ),
       );
-      if (result == true && mounted) {
-        setState(() {
-          _hasCheckedOut = true;
-          _clockOutTime = IdDateHelper.formatTime(DateTime.now());
-        });
+      if (result == true) {
+        _loadDashboardData();
       }
     }
   }
-
-  // Static recent attendance data (Riwayat Absensi)
-  static final List<Map<String, String>> _recentAttendances = [
-    {
-      'dateTitle': 'Jumat, 20 Okt',
-      'time': '08:00 - 17:00',
-      'duration': '9j 0m',
-    },
-    {
-      'dateTitle': 'Kamis, 19 Okt',
-      'time': '08:15 - 17:00',
-      'duration': '8j 45m',
-    },
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -316,14 +293,14 @@ class _DashboardPageState extends State<DashboardPage> {
           child: _StatCardDuration(
             title: 'DURASI',
             icon: Icons.access_time,
-            valueStr: _getTotalDuration(),
+            valueStr: _totalDuration,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildHistoryCard(Map<String, String> record) {
+  Widget _buildHistoryCard(dynamic record) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -339,7 +316,7 @@ class _DashboardPageState extends State<DashboardPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                record['dateTitle']!,
+                record['date'] ?? '-',
                 style: GoogleFonts.mulish(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -348,7 +325,7 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
               const SizedBox(height: 4),
               Text(
-                record['time']!,
+                '${record['clock_in'] ?? '--:--'} - ${record['clock_out'] ?? '--:--'}',
                 style: GoogleFonts.mulish(
                   fontSize: 13,
                   color: AppColors.textSecondary,
@@ -357,7 +334,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ],
           ),
           Text(
-            record['duration']!,
+            record['duration'] ?? '0j 0m',
             style: GoogleFonts.mulish(
               fontSize: 14,
               color: AppColors.textSecondary,

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
+import '../services/attendance_service.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -10,78 +11,47 @@ class HistoryPage extends StatefulWidget {
   @override
   State<HistoryPage> createState() => _HistoryPageState();
 }
-
 class _HistoryPageState extends State<HistoryPage> {
-  int _visibleCount = 4;
+  int _currentPage = 1;
+  int _lastPage = 1;
+  bool _isLoading = false;
+  List<dynamic> _historyData = [];
 
-  static final List<Map<String, String>> _historyData = [
-    {
-      'date': 'Senin, 20 Nov 2023',
-      'clockIn': '07:45',
-      'clockOut': '17:10',
-      'mode': 'WFA',
-      'duration': '9h 25m',
-    },
-    {
-      'date': 'Jumat, 17 Nov 2023',
-      'clockIn': '08:15',
-      'clockOut': '17:05',
-      'mode': 'WFO',
-      'duration': '8h 50m',
-    },
-    {
-      'date': 'Kamis, 16 Nov 2023',
-      'clockIn': '07:50',
-      'clockOut': '17:00',
-      'mode': 'WFA',
-      'duration': '9h 10m',
-    },
-    {
-      'date': 'Rabu, 15 Nov 2023',
-      'clockIn': '07:55',
-      'clockOut': '18:30',
-      'mode': 'WFA',
-      'duration': '10h 35m',
-    },
-    {
-      'date': 'Selasa, 14 Nov 2023',
-      'clockIn': '07:40',
-      'clockOut': '17:00',
-      'mode': 'WFO',
-      'duration': '9h 20m',
-    },
-    {
-      'date': 'Senin, 13 Nov 2023',
-      'clockIn': '08:00',
-      'clockOut': '17:15',
-      'mode': 'WFO',
-      'duration': '9h 15m',
-    },
-    {
-      'date': 'Jumat, 10 Nov 2023',
-      'clockIn': '07:50',
-      'clockOut': '17:20',
-      'mode': 'WFA',
-      'duration': '9h 30m',
-    },
-    {
-      'date': 'Kamis, 9 Nov 2023',
-      'clockIn': '07:58',
-      'clockOut': '17:02',
-      'mode': 'WFO',
-      'duration': '9h 4m',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _fetchHistory();
+  }
 
-  void _loadMore() {
-    setState(() {
-      _visibleCount = (_visibleCount + 4).clamp(0, _historyData.length);
-    });
+  Future<void> _fetchHistory({bool loadMore = false}) async {
+    if (_isLoading) return;
+    if (loadMore && _currentPage >= _lastPage) return;
+
+    setState(() => _isLoading = true);
+
+    final nextPage = loadMore ? _currentPage + 1 : 1;
+    final result = await AttendanceService.getHistory(page: nextPage);
+
+    if (result['success'] == true) {
+      setState(() {
+        if (loadMore) {
+          _historyData.addAll(result['data']);
+        } else {
+          _historyData = result['data'];
+        }
+        _currentPage = result['meta']['current_page'];
+        _lastPage = result['meta']['last_page'];
+      });
+    }
+
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final visibleItems = _historyData.take(_visibleCount).toList();
+    final visibleItems = _historyData;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9FF),
@@ -118,21 +88,23 @@ class _HistoryPageState extends State<HistoryPage> {
           ...visibleItems.map((record) => _buildHistoryCard(record)),
 
           // Load More
-          if (_visibleCount < _historyData.length) ...[
+          if (_currentPage < _lastPage) ...[
             const SizedBox(height: 8),
             Center(
               child: GestureDetector(
-                onTap: _loadMore,
+                onTap: () => _fetchHistory(loadMore: true),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Text(
-                    'Muat Lebih Banyak',
-                    style: GoogleFonts.mulish(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
-                    ),
-                  ),
+                  child: _isLoading 
+                    ? const CircularProgressIndicator()
+                    : Text(
+                        'Muat Lebih Banyak',
+                        style: GoogleFonts.mulish(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
                 ),
               ),
             ),
@@ -143,9 +115,26 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
-  Widget _buildHistoryCard(Map<String, String> record) {
-    final isLate = int.parse(record['clockIn']!.split(':')[0]) >= 8 &&
-        int.parse(record['clockIn']!.split(':')[1]) > 0;
+  Widget _buildHistoryCard(dynamic record) {
+    bool isLate = false;
+    if (record['clock_in'] != null) {
+      final parts = record['clock_in'].toString().split(':');
+      if (parts.length >= 2) {
+        isLate = int.parse(parts[0]) >= 8 && int.parse(parts[1]) > 0;
+      }
+    }
+
+    String duration = '--';
+    if (record['clock_in'] != null && record['clock_out'] != null) {
+      final inParts = record['clock_in'].toString().split(':');
+      final outParts = record['clock_out'].toString().split(':');
+      if (inParts.length >= 2 && outParts.length >= 2) {
+        final inMinutes = int.parse(inParts[0]) * 60 + int.parse(inParts[1]);
+        final outMinutes = int.parse(outParts[0]) * 60 + int.parse(outParts[1]);
+        final diff = outMinutes - inMinutes;
+        duration = '${diff ~/ 60}j ${diff % 60}m';
+      }
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -164,7 +153,7 @@ class _HistoryPageState extends State<HistoryPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                record['date']!,
+                record['date'] ?? '-',
                 style: GoogleFonts.mulish(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
@@ -174,18 +163,18 @@ class _HistoryPageState extends State<HistoryPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: record['mode'] == 'WFO'
+                  color: record['type'] == 'WFO'
                       ? AppColors.primary.withOpacity(0.1)
                       : AppColors.primaryDark.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: record['mode'] == 'WFO'
+                    color: record['type'] == 'WFO'
                         ? AppColors.primary.withOpacity(0.3)
                         : AppColors.primaryDark.withOpacity(0.3),
                   ),
                 ),
                 child: Text(
-                  record['mode']!,
+                  record['type'] ?? '-',
                   style: GoogleFonts.mulish(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -205,21 +194,21 @@ class _HistoryPageState extends State<HistoryPage> {
               Expanded(
                 child: _buildTimeColumn(
                   'Clock In',
-                  record['clockIn']!,
+                  record['clock_in'] ?? '--:--',
                   isLate ? AppColors.danger : AppColors.textPrimary,
                 ),
               ),
               Expanded(
                 child: _buildTimeColumn(
                   'Clock Out',
-                  record['clockOut']!,
+                  record['clock_out'] ?? '--:--',
                   AppColors.textPrimary,
                 ),
               ),
               Expanded(
                 child: _buildTimeColumn(
                   'Durasi',
-                  record['duration']!,
+                  duration,
                   AppColors.primaryDark,
                 ),
               ),

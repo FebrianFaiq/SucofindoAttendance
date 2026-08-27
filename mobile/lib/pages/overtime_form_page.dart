@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
 import '../widgets/custom_app_bar.dart';
+import '../services/overtime_service.dart';
 
 class OvertimeFormPage extends StatefulWidget {
   const OvertimeFormPage({super.key});
@@ -107,20 +108,59 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
     }
   }
 
-  void _handleSubmit() {
-    // Static: show success snackbar and pop
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Pengajuan lembur berhasil dikirim!',
-          style: GoogleFonts.mulish(fontWeight: FontWeight.w600),
+  bool _isSubmitting = false;
+
+  Future<void> _handleSubmit() async {
+    if (_selectedDate == null ||
+        _startTime == null ||
+        _endTime == null ||
+        _deskripsiController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lengkapi semua data!'),
+          backgroundColor: AppColors.danger,
         ),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    String start = '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}';
+    String end = '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}';
+    String dateStr = '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}';
+
+    final result = await OvertimeService.submitOvertime(
+      dateStr,
+      start,
+      end,
+      _deskripsiController.text,
     );
-    Navigator.of(context).pop(true);
+
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
+
+    if (result['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Pengajuan lembur berhasil dikirim!',
+            style: GoogleFonts.mulish(fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+      Navigator.of(context).pop(true);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Gagal mengirim pengajuan lembur'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+    }
   }
 
   @override
@@ -441,10 +481,19 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
               child: SizedBox(
                 height: 52,
                 child: ElevatedButton.icon(
-                  onPressed: _handleSubmit,
-                  icon: const Icon(Icons.send, size: 20, color: Colors.white),
+                  onPressed: _isSubmitting ? null : _handleSubmit,
+                  icon: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(Colors.white),
+                          ),
+                        )
+                      : const Icon(Icons.send, size: 20, color: Colors.white),
                   label: Text(
-                    'Submit Overtime',
+                    _isSubmitting ? 'Memproses...' : 'Submit Overtime',
                     style: GoogleFonts.mulish(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,

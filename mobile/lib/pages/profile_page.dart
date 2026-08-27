@@ -4,9 +4,9 @@ import 'dart:math' as math;
 import '../theme/app_colors.dart';
 import 'dashboard_page.dart';
 import 'login_page.dart'; // For logout navigation
-import 'overtime_page.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
+import '../services/auth_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -18,7 +18,9 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   int _selectedNavIndex = 2; // Profil active
 
-  void _handleLogout() {
+  void _handleLogout() async {
+    await AuthService.logout();
+    if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginPage()),
       (route) => false,
@@ -52,75 +54,89 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           children: [
             // Profile Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border, width: 1.2),
-              ),
-              child: Column(
-                children: [
-                  // Avatar with dashed border
-                  CustomPaint(
-                    painter: _ProfileDashedCirclePainter(
-                      color: AppColors.primaryDark,
-                      strokeWidth: 2,
-                      dashes: 30,
-                      gapSize: 4,
-                    ),
-                    child: Container(
-                      width: 120,
-                      height: 120,
-                      margin: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color(0xFFC4C4C4), // Grey placeholder
+            FutureBuilder<Map<String, dynamic>?>(
+              future: AuthService.getUser(),
+              builder: (context, snapshot) {
+                final user = snapshot.data;
+                final name = user?['name'] ?? 'Loading...';
+                final email = user?['email'] ?? '';
+                String role = user?['role'] ?? '';
+                if (role == 'employee') role = 'Karyawan PTT';
+                if (role == 'intern') role = 'Magang';
+
+                return Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.border, width: 1.2),
+                  ),
+                  child: Column(
+                    children: [
+                      // Avatar with dashed border
+                      CustomPaint(
+                        painter: _ProfileDashedCirclePainter(
+                          color: AppColors.primaryDark,
+                          strokeWidth: 2,
+                          dashes: 30,
+                          gapSize: 4,
+                        ),
+                        child: Container(
+                          width: 120,
+                          height: 120,
+                          margin: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(0xFFC4C4C4), // Grey placeholder
+                          ),
+                          child: const Icon(Icons.person, size: 64, color: Colors.white),
+                        ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  
-                  // Name
-                  Text(
-                    'Lorem Ipsum',
-                    style: GoogleFonts.mulish(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  
-                  // Email
-                  Text(
-                    'LoremIpsum@gmail.com',
-                    style: GoogleFonts.mulish(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Role Badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'Karyawan PTT',
-                      style: GoogleFonts.mulish(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textSecondary,
+                      const SizedBox(height: 24),
+                      
+                      // Name
+                      Text(
+                        name,
+                        style: GoogleFonts.mulish(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 8),
+                      
+                      // Email
+                      Text(
+                        email,
+                        style: GoogleFonts.mulish(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      
+                      // Role Badge
+                      if (role.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            role,
+                            style: GoogleFonts.mulish(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              }
             ),
             const SizedBox(height: 32),
             

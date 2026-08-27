@@ -5,7 +5,7 @@ import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
 import 'overtime_form_page.dart';
 import 'dashboard_page.dart';
-import 'profile_page.dart';
+import '../services/overtime_service.dart';
 
 class OvertimePage extends StatefulWidget {
   const OvertimePage({super.key});
@@ -15,34 +15,42 @@ class OvertimePage extends StatefulWidget {
 }
 
 class _OvertimePageState extends State<OvertimePage> {
-  // ── Static data ────────────────────────────────────────────────────
-  final int _totalHariIni = 3; // jam
-  final String _totalDurasi = '12h 45m';
-  final String _statusTerakhir = 'Sudah Direview';
+  int _currentPage = 1;
+  int _lastPage = 1;
+  bool _isLoading = false;
+  List<dynamic> _riwayatLembur = [];
 
-  final List<Map<String, String>> _riwayatLembur = [
-    {
-      'tanggal': '15 Okt 2023',
-      'status': 'Sudah Direview',
-      'lokasi': 'Kantor Pusat',
-      'klien': 'Internal',
-      'durasi': '2 Jam 30 Menit',
-    },
-    {
-      'tanggal': '12 Okt 2023',
-      'status': 'Belum Direview',
-      'lokasi': 'Cabang Jakarta',
-      'klien': 'PT Pertamina',
-      'durasi': '4 Jam 0 Menit',
-    },
-    {
-      'tanggal': '8 Okt 2023',
-      'status': 'Sudah Direview',
-      'lokasi': 'Kantor Pusat',
-      'klien': 'PT Telkom',
-      'durasi': '3 Jam 15 Menit',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _fetchOvertimes();
+  }
+
+  Future<void> _fetchOvertimes({bool loadMore = false}) async {
+    if (_isLoading) return;
+    if (loadMore && _currentPage >= _lastPage) return;
+
+    setState(() => _isLoading = true);
+
+    final nextPage = loadMore ? _currentPage + 1 : 1;
+    final result = await OvertimeService.getOvertimes(page: nextPage);
+
+    if (result['success'] == true) {
+      setState(() {
+        if (loadMore) {
+          _riwayatLembur.addAll(result['data']);
+        } else {
+          _riwayatLembur = result['data'];
+        }
+        _currentPage = result['meta']['current_page'];
+        _lastPage = result['meta']['last_page'];
+      });
+    }
+
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
 
   void _navigateToForm() async {
     await Navigator.of(context).push(
@@ -52,6 +60,34 @@ class _OvertimePageState extends State<OvertimePage> {
 
   @override
   Widget build(BuildContext context) {
+    int _totalHariIni = 0;
+    int _totalMinutes = 0;
+    String _statusTerakhir = 'Belum Ada Data';
+
+    if (_riwayatLembur.isNotEmpty) {
+      _statusTerakhir = _riwayatLembur.first['status'] ?? 'Pending';
+      final now = DateTime.now();
+      for (var item in _riwayatLembur) {
+        if (item['date'] != null) {
+          final dt = DateTime.tryParse(item['date']);
+          if (dt != null && dt.year == now.year && dt.month == now.month && dt.day == now.day) {
+            _totalHariIni++;
+          }
+        }
+        if (item['start_time'] != null && item['end_time'] != null) {
+           final inParts = item['start_time'].toString().split(':');
+           final outParts = item['end_time'].toString().split(':');
+           if (inParts.length >= 2 && outParts.length >= 2) {
+             final inMinutes = int.parse(inParts[0]) * 60 + int.parse(inParts[1]);
+             final outMinutes = int.parse(outParts[0]) * 60 + int.parse(outParts[1]);
+             _totalMinutes += (outMinutes - inMinutes);
+           }
+        }
+      }
+    }
+    
+    String _totalDurasi = '${_totalMinutes ~/ 60}j ${_totalMinutes % 60}m';
+
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9FF),
       appBar: const CustomAppBar(),
@@ -124,7 +160,7 @@ class _OvertimePageState extends State<OvertimePage> {
             const SizedBox(height: 12),
 
             // ── Status Terakhir ────────────────────────────────────
-            _buildStatusTerakhirCard(),
+            _buildStatusTerakhirCard(_statusTerakhir),
             const SizedBox(height: 20),
 
             // ── Button Ajukan Lembur ───────────────────────────────
@@ -242,7 +278,7 @@ class _OvertimePageState extends State<OvertimePage> {
   }
 
   // ── Status Terakhir Card ─────────────────────────────────────────
-  Widget _buildStatusTerakhirCard() {
+  Widget _buildStatusTerakhirCard(String status) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
@@ -274,7 +310,7 @@ class _OvertimePageState extends State<OvertimePage> {
               ),
             ],
           ),
-          _buildStatusBadge(_statusTerakhir),
+          _buildStatusBadge(status),
         ],
       ),
     );
@@ -306,7 +342,19 @@ class _OvertimePageState extends State<OvertimePage> {
   }
 
   // ── Riwayat Card ─────────────────────────────────────────────────
-  Widget _buildRiwayatCard(Map<String, String> item) {
+  Widget _buildRiwayatCard(dynamic item) {
+    String duration = '--';
+    if (item['start_time'] != null && item['end_time'] != null) {
+      final inParts = item['start_time'].toString().split(':');
+      final outParts = item['end_time'].toString().split(':');
+      if (inParts.length >= 2 && outParts.length >= 2) {
+        final inMinutes = int.parse(inParts[0]) * 60 + int.parse(inParts[1]);
+        final outMinutes = int.parse(outParts[0]) * 60 + int.parse(outParts[1]);
+        final diff = outMinutes - inMinutes;
+        duration = '${diff ~/ 60}j ${diff % 60}m';
+      }
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -334,7 +382,7 @@ class _OvertimePageState extends State<OvertimePage> {
                   Icon(Icons.calendar_today_outlined, size: 15, color: AppColors.textSecondary),
                   const SizedBox(width: 6),
                   Text(
-                    item['tanggal']!,
+                    item['date'] ?? '-',
                     style: GoogleFonts.mulish(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -343,58 +391,29 @@ class _OvertimePageState extends State<OvertimePage> {
                   ),
                 ],
               ),
-              _buildStatusBadge(item['status']!),
+              _buildStatusBadge(item['status'] ?? 'Pending'),
             ],
           ),
           const SizedBox(height: 16),
 
-          // Lokasi & Klien row
-          Row(
+          // Description row
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Lokasi',
-                      style: GoogleFonts.mulish(
-                        fontSize: 12,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      item['lokasi']!,
-                      style: GoogleFonts.mulish(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
+              Text(
+                'Keterangan',
+                style: GoogleFonts.mulish(
+                  fontSize: 12,
+                  color: AppColors.textMuted,
                 ),
               ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Klien',
-                      style: GoogleFonts.mulish(
-                        fontSize: 12,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      item['klien']!,
-                      style: GoogleFonts.mulish(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
+              const SizedBox(height: 2),
+              Text(
+                item['description'] ?? '-',
+                style: GoogleFonts.mulish(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
@@ -418,7 +437,7 @@ class _OvertimePageState extends State<OvertimePage> {
                   Icon(Icons.access_time, size: 16, color: AppColors.primary),
                   const SizedBox(width: 4),
                   Text(
-                    item['durasi']!,
+                    duration,
                     style: GoogleFonts.mulish(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,

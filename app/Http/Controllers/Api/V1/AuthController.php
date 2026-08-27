@@ -126,4 +126,39 @@ class AuthController extends Controller
             'message' => 'Logout berhasil',
         ]);
     }
+
+    /**
+     * Ganti password wajib untuk mobile.
+     *
+     * POST /api/v1/auth/change-password
+     */
+    public function changePassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        ]);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        $user->update([
+            'password' => Hash::make($request->password),
+            'must_change_password' => false,
+        ]);
+
+        \App\Models\PasswordChangeLog::create([
+            'user_id' => $user->id,
+            'changed_by' => $user->id,
+            'method' => 'self_change',
+            'created_at' => now(),
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Password berhasil diubah',
+            'data' => [
+                'must_change_password' => false,
+            ]
+        ]);
+    }
 }

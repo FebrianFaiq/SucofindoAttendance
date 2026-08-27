@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import '../utils/id_date_helper.dart';
 import '../theme/app_colors.dart';
 import '../widgets/custom_app_bar.dart';
+import '../services/attendance_service.dart';
+import '../services/location_service.dart';
 
 class CheckInPage extends StatefulWidget {
   const CheckInPage({super.key});
@@ -20,15 +23,45 @@ class _CheckInPageState extends State<CheckInPage> {
   bool _photoTaken = false;
   bool _isSubmitting = false;
 
-  final String _locationAddress =
-      'Jl. Raya Pasar Minggu No. 34, Pancoran, Kota Jakarta Selatan, Daerah Khusus Ibukota Jakarta 12780';
-  final bool _inRadius = true;
+  // Location state — fetched from GPS
+  String _locationAddress = 'Mengambil lokasi...';
+  bool _locationFetched = false;
+  bool _locationError = false;
+  double? _latitude;
+  double? _longitude;
 
   @override
   void initState() {
     super.initState();
     _updateTime();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateTime());
+    _fetchLocation();
+  }
+
+  Future<void> _fetchLocation() async {
+    final position = await LocationService.getCurrentPosition();
+    if (position != null) {
+      final address = await LocationService.getAddressFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+      if (mounted) {
+        setState(() {
+          _latitude = position.latitude;
+          _longitude = position.longitude;
+          _locationAddress = address;
+          _locationFetched = true;
+          _locationError = false;
+        });
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          _locationAddress = 'Gagal mengambil lokasi. Tap untuk coba lagi.';
+          _locationError = true;
+        });
+      }
+    }
   }
 
   void _updateTime() {
@@ -49,30 +82,52 @@ class _CheckInPageState extends State<CheckInPage> {
     return IdDateHelper.formatFull(DateTime.now());
   }
 
-  void _simulateCapturePhoto() {
-    setState(() => _photoTaken = true);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle, color: Colors.white, size: 18),
-            const SizedBox(width: 8),
-            Text(
-              'Foto berhasil diambil',
-              style: GoogleFonts.mulish(fontWeight: FontWeight.w600),
+  final ImagePicker _picker = ImagePicker();
+  XFile? _photoFile;
+
+  void _capturePhoto() async {
+    try {
+      final pickedFile = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 50, // compress to 50%
+        maxWidth: 800,
+      );
+
+      if (pickedFile != null) {
+        setState(() {
+          _photoFile = pickedFile;
+          _photoTaken = true;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Foto berhasil diambil',
+                    style: GoogleFonts.mulish(fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              duration: const Duration(seconds: 2),
             ),
-          ],
-        ),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+          );
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal mengambil foto: $e')),
+      );
+    }
   }
 
   Future<void> _handleSubmit() async {
-    if (!_photoTaken) {
+    if (!_photoTaken || _photoFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -89,15 +144,41 @@ class _CheckInPageState extends State<CheckInPage> {
       return;
     }
 
+    if (!_locationFetched || _latitude == null || _longitude == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Lokasi belum tersedia. Pastikan GPS aktif.',
+            style: GoogleFonts.mulish(fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: AppColors.danger,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+      return;
+    }
+
     setState(() => _isSubmitting = true);
-    await Future.delayed(const Duration(milliseconds: 1500));
+    
+    double lat = _latitude!;
+    double lng = _longitude!;
+
+    final result = await AttendanceService.checkIn(
+      _workMode,
+      lat,
+      lng,
+      _photoFile!,
+    );
 
     if (!mounted) return;
+    setState(() => _isSubmitting = false);
 
-    // Show success dialog
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
+    if (result['success'] == true) {
+      // Show success dialog
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         content: Column(
@@ -162,6 +243,14 @@ class _CheckInPageState extends State<CheckInPage> {
         ),
       ),
     );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Gagal melakukan Clock In'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+    }
   }
 
   @override
@@ -372,7 +461,7 @@ class _CheckInPageState extends State<CheckInPage> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: _simulateCapturePhoto,
+                  onPressed: _capturePhoto,
                   icon: const Icon(Icons.camera_alt_outlined, size: 18),
                   label: const Text('Ambil Foto'),
                   style: ElevatedButton.styleFrom(
@@ -408,7 +497,7 @@ class _CheckInPageState extends State<CheckInPage> {
                 color: AppColors.textPrimary,
               ),
             ),
-            if (_inRadius)
+            if (_locationFetched)
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
@@ -427,7 +516,7 @@ class _CheckInPageState extends State<CheckInPage> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      'Dalam Radius',
+                      'GPS Aktif',
                       style: GoogleFonts.mulish(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
@@ -435,6 +524,34 @@ class _CheckInPageState extends State<CheckInPage> {
                       ),
                     ),
                   ],
+                ),
+              ),
+            if (_locationError)
+              GestureDetector(
+                onTap: _fetchLocation,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.danger.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.refresh, size: 12, color: AppColors.danger),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Coba Lagi',
+                        style: GoogleFonts.mulish(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.danger,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
           ],
@@ -473,12 +590,24 @@ class _CheckInPageState extends State<CheckInPage> {
                           ),
                         ),
                       ),
-                      const Center(
-                        child: Icon(
-                          Icons.location_on,
-                          size: 40,
-                          color: AppColors.primaryDark,
-                        ),
+                      Center(
+                        child: _locationFetched
+                            ? const Icon(
+                                Icons.location_on,
+                                size: 40,
+                                color: AppColors.primaryDark,
+                              )
+                            : _locationError
+                                ? const Icon(
+                                    Icons.location_off,
+                                    size: 40,
+                                    color: AppColors.danger,
+                                  )
+                                : const SizedBox(
+                                    width: 30,
+                                    height: 30,
+                                    child: CircularProgressIndicator(strokeWidth: 3),
+                                  ),
                       ),
                     ],
                   ),
@@ -489,10 +618,10 @@ class _CheckInPageState extends State<CheckInPage> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.location_on_outlined,
                       size: 20,
-                      color: AppColors.primaryDark,
+                      color: _locationError ? AppColors.danger : AppColors.primaryDark,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -503,18 +632,20 @@ class _CheckInPageState extends State<CheckInPage> {
                             _locationAddress,
                             style: GoogleFonts.mulish(
                               fontSize: 12,
-                              color: AppColors.textPrimary,
+                              color: _locationError ? AppColors.danger : AppColors.textPrimary,
                               height: 1.4,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Akurasi: ± 5 Meter',
-                            style: GoogleFonts.mulish(
-                              fontSize: 11,
-                              color: AppColors.textSecondary,
+                          if (_locationFetched && _latitude != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              'Koordinat: ${_latitude!.toStringAsFixed(6)}, ${_longitude!.toStringAsFixed(6)}',
+                              style: GoogleFonts.mulish(
+                                fontSize: 11,
+                                color: AppColors.textSecondary,
+                              ),
                             ),
-                          ),
+                          ],
                         ],
                       ),
                     ),

@@ -32,6 +32,8 @@ Route::prefix('v1')
         // Auth
         Route::post('auth/logout', [V1\AuthController::class, 'logout'])
             ->name('api.auth.logout');
+        Route::post('auth/change-password', [V1\AuthController::class, 'changePassword'])
+            ->name('api.auth.change_password');
 
         // Dashboard
         Route::get('dashboard', V1\DashboardController::class)
