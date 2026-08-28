@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
 import '../theme/app_colors.dart';
-import 'dashboard_page.dart';
-import 'login_page.dart'; // For logout navigation
-import '../widgets/custom_app_bar.dart';
-import '../widgets/custom_bottom_nav_bar.dart';
+import 'login_page.dart';
 import '../services/auth_service.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -16,7 +13,6 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  int _selectedNavIndex = 2; // Profil active
 
   void _handleLogout() async {
     await AuthService.logout();
@@ -29,28 +25,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF9F9FF),
-      appBar: const CustomAppBar(),
-      floatingActionButton: SizedBox(
-        width: 64,
-        height: 64,
-        child: FloatingActionButton(
-          onPressed: () {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const DashboardPage()),
-            );
-          },
-          backgroundColor: AppColors.textSecondary,
-          elevation: 4,
-          shape: const CircleBorder(),
-          child: const Icon(Icons.fingerprint, color: Colors.white, size: 34),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: const CustomBottomNavBar(selectedIndex: 2),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
         child: Column(
           children: [
             // Profile Card
@@ -165,8 +141,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 
 

@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:camera/camera.dart' show XFile;
 import '../utils/id_date_helper.dart';
 import '../theme/app_colors.dart';
 import '../widgets/custom_app_bar.dart';
+import '../widgets/inline_camera_widget.dart';
 import '../services/attendance_service.dart';
 import '../services/location_service.dart';
 
@@ -82,49 +83,7 @@ class _CheckInPageState extends State<CheckInPage> {
     return IdDateHelper.formatFull(DateTime.now());
   }
 
-  final ImagePicker _picker = ImagePicker();
   XFile? _photoFile;
-
-  void _capturePhoto() async {
-    try {
-      final pickedFile = await _picker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 50, // compress to 50%
-        maxWidth: 800,
-      );
-
-      if (pickedFile != null) {
-        setState(() {
-          _photoFile = pickedFile;
-          _photoTaken = true;
-        });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.white, size: 18),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Foto berhasil diambil',
-                    style: GoogleFonts.mulish(fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal mengambil foto: $e')),
-      );
-    }
-  }
 
   Future<void> _handleSubmit() async {
     if (!_photoTaken || _photoFile == null) {
@@ -327,8 +286,21 @@ class _CheckInPageState extends State<CheckInPage> {
             _buildWorkModeCard(),
             const SizedBox(height: 24),
 
-            // Verifikasi Wajah
-            _buildPhotoCard(),
+            // Verifikasi Wajah — Inline Camera
+            InlineCameraWidget(
+              onPhotoCaptured: (photo) {
+                setState(() {
+                  _photoFile = photo;
+                  _photoTaken = true;
+                });
+              },
+              onPhotoCleared: () {
+                setState(() {
+                  _photoFile = null;
+                  _photoTaken = false;
+                });
+              },
+            ),
             const SizedBox(height: 24),
 
             // Lokasi Saat Ini
@@ -391,94 +363,6 @@ class _CheckInPageState extends State<CheckInPage> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildPhotoCard() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Verifikasi Wajah',
-          style: GoogleFonts.mulish(
-            fontSize: 13,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border.withOpacity(0.5)),
-          ),
-          child: Column(
-            children: [
-              CustomPaint(
-                painter: DashedRectPainter(
-                  color: AppColors.textSecondary.withOpacity(0.5),
-                  strokeWidth: 2,
-                  gap: 6,
-                ),
-                child: Container(
-                  height: 220,
-                  width: double.infinity,
-                  color: AppColors.primary.withOpacity(0.1),
-                  child: Center(
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppColors.primary.withOpacity(0.3),
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.face,
-                        size: 40,
-                        color: AppColors.textSecondary.withOpacity(0.8),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Posisikan wajah Anda di dalam bingkai untuk verifikasi biometrik otomatis.',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.mulish(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _capturePhoto,
-                  icon: const Icon(Icons.camera_alt_outlined, size: 18),
-                  label: const Text('Ambil Foto'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE2E8F0),
-                    foregroundColor: AppColors.textSecondary,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 
@@ -657,71 +541,5 @@ class _CheckInPageState extends State<CheckInPage> {
         ),
       ],
     );
-  }
-}
-
-class DashedRectPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
-  final double gap;
-
-  DashedRectPainter({
-    required this.color,
-    required this.strokeWidth,
-    required this.gap,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
-
-    _drawDashedLine(
-      canvas,
-      const Offset(0, 0),
-      Offset(size.width, 0),
-      paint,
-    ); // top
-    _drawDashedLine(
-      canvas,
-      Offset(size.width, 0),
-      Offset(size.width, size.height),
-      paint,
-    ); // right
-    _drawDashedLine(
-      canvas,
-      Offset(size.width, size.height),
-      Offset(0, size.height),
-      paint,
-    ); // bottom
-    _drawDashedLine(
-      canvas,
-      Offset(0, size.height),
-      const Offset(0, 0),
-      paint,
-    ); // left
-  }
-
-  void _drawDashedLine(Canvas canvas, Offset p1, Offset p2, Paint paint) {
-    final distance = (p2 - p1).distance;
-    final direction = (p2 - p1) / distance;
-    double currentDistance = 0.0;
-    while (currentDistance < distance) {
-      final start = p1 + direction * currentDistance;
-      currentDistance += gap;
-      if (currentDistance > distance) currentDistance = distance;
-      final end = p1 + direction * currentDistance;
-      canvas.drawLine(start, end, paint);
-      currentDistance += gap;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant DashedRectPainter oldDelegate) {
-    return oldDelegate.color != color ||
-        oldDelegate.strokeWidth != strokeWidth ||
-        oldDelegate.gap != gap;
   }
 }

@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:camera/camera.dart' show XFile;
 import '../utils/id_date_helper.dart';
 import '../theme/app_colors.dart';
 import '../widgets/custom_app_bar.dart';
+import '../widgets/inline_camera_widget.dart';
 import '../services/attendance_service.dart';
+import '../services/location_service.dart';
 
 class CheckOutPage extends StatefulWidget {
   final String clockInTime;
@@ -23,11 +26,23 @@ class _CheckOutPageState extends State<CheckOutPage> {
   final _notesController = TextEditingController();
   bool _isSubmitting = false;
 
+  // Photo state
+  bool _photoTaken = false;
+  XFile? _photoFile;
+
+  // Location state — fetched from GPS
+  String _locationAddress = 'Mengambil lokasi...';
+  bool _locationFetched = false;
+  bool _locationError = false;
+  double? _latitude;
+  double? _longitude;
+
   @override
   void initState() {
     super.initState();
     _updateTime();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateTime());
+    _fetchLocation();
   }
 
   void _updateTime() {
@@ -51,6 +66,32 @@ class _CheckOutPageState extends State<CheckOutPage> {
     return '${diff ~/ 60}j ${diff % 60}m';
   }
 
+  Future<void> _fetchLocation() async {
+    final position = await LocationService.getCurrentPosition();
+    if (position != null) {
+      final address = await LocationService.getAddressFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+      if (mounted) {
+        setState(() {
+          _latitude = position.latitude;
+          _longitude = position.longitude;
+          _locationAddress = address;
+          _locationFetched = true;
+          _locationError = false;
+        });
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          _locationAddress = 'Gagal mengambil lokasi. Tap untuk coba lagi.';
+          _locationError = true;
+        });
+      }
+    }
+  }
+
   @override
   void dispose() {
     _timer.cancel();
@@ -63,6 +104,39 @@ class _CheckOutPageState extends State<CheckOutPage> {
   }
 
   Future<void> _handleSubmit() async {
+    // Validate photo
+    if (!_photoTaken || _photoFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Silakan ambil foto terlebih dahulu',
+            style: GoogleFonts.mulish(fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: AppColors.danger,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+      return;
+    }
+
+    // Validate location
+    if (!_locationFetched || _latitude == null || _longitude == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Lokasi belum tersedia. Pastikan GPS aktif.',
+            style: GoogleFonts.mulish(fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: AppColors.danger,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+      return;
+    }
+
+    // Validate work notes
     if (_notesController.text.trim().length < 10) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -80,7 +154,12 @@ class _CheckOutPageState extends State<CheckOutPage> {
 
     setState(() => _isSubmitting = true);
 
-    final result = await AttendanceService.checkOut(_notesController.text.trim());
+    final result = await AttendanceService.checkOut(
+      _notesController.text.trim(),
+      _latitude!,
+      _longitude!,
+      _photoFile!,
+    );
 
     if (!mounted) return;
     setState(() => _isSubmitting = false);
@@ -221,6 +300,27 @@ class _CheckOutPageState extends State<CheckOutPage> {
             ),
             const SizedBox(height: 24),
 
+            // Verifikasi Wajah — Inline Camera
+            InlineCameraWidget(
+              onPhotoCaptured: (photo) {
+                setState(() {
+                  _photoFile = photo;
+                  _photoTaken = true;
+                });
+              },
+              onPhotoCleared: () {
+                setState(() {
+                  _photoFile = null;
+                  _photoTaken = false;
+                });
+              },
+            ),
+            const SizedBox(height: 24),
+
+            // Lokasi Saat Ini
+            _buildLocationCard(),
+            const SizedBox(height: 24),
+
             // Catatan Pekerjaan
             _buildNotesField(),
           ],
@@ -355,6 +455,183 @@ class _CheckOutPageState extends State<CheckOutPage> {
     );
   }
 
+  Widget _buildLocationCard() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Lokasi Saat Ini',
+              style: GoogleFonts.mulish(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            if (_locationFetched)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.check_circle_outline,
+                      size: 12,
+                      color: AppColors.primaryDark,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'GPS Aktif',
+                      style: GoogleFonts.mulish(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primaryDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            if (_locationError)
+              GestureDetector(
+                onTap: _fetchLocation,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.danger.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.refresh, size: 12, color: AppColors.danger),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Coba Lagi',
+                        style: GoogleFonts.mulish(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.danger,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border.withOpacity(0.5)),
+          ),
+          child: Column(
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
+                child: Container(
+                  height: 120,
+                  width: double.infinity,
+                  color: const Color(0xFFE8F0FE),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: GridView.builder(
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 6,
+                              ),
+                          itemBuilder: (ctx, i) => Icon(
+                            Icons.map,
+                            size: 40,
+                            color: Colors.blue.withOpacity(0.05),
+                          ),
+                        ),
+                      ),
+                      Center(
+                        child: _locationFetched
+                            ? const Icon(
+                                Icons.location_on,
+                                size: 40,
+                                color: AppColors.primaryDark,
+                              )
+                            : _locationError
+                                ? const Icon(
+                                    Icons.location_off,
+                                    size: 40,
+                                    color: AppColors.danger,
+                                  )
+                                : const SizedBox(
+                                    width: 30,
+                                    height: 30,
+                                    child: CircularProgressIndicator(strokeWidth: 3),
+                                  ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.location_on_outlined,
+                      size: 20,
+                      color: _locationError ? AppColors.danger : AppColors.primaryDark,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _locationAddress,
+                            style: GoogleFonts.mulish(
+                              fontSize: 12,
+                              color: _locationError ? AppColors.danger : AppColors.textPrimary,
+                              height: 1.4,
+                            ),
+                          ),
+                          if (_locationFetched && _latitude != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              'Koordinat: ${_latitude!.toStringAsFixed(6)}, ${_longitude!.toStringAsFixed(6)}',
+                              style: GoogleFonts.mulish(
+                                fontSize: 11,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildNotesField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -403,10 +680,10 @@ class _CheckOutPageState extends State<CheckOutPage> {
               color: AppColors.textPrimary,
             ),
             decoration: InputDecoration(
-              hintText: 'Lorem Ipsum',
+              hintText: 'Ceritakan pekerjaan atau aktivitas yang Anda lakukan hari ini...',
               hintStyle: GoogleFonts.mulish(
                 fontSize: 14,
-                color: AppColors.textPrimary,
+                color: AppColors.textMuted,
               ),
               filled: true,
               fillColor: Colors.white,

@@ -75,7 +75,7 @@ class AttendanceController extends Controller
     /**
      * Check-out — POST /api/v1/attendance/check-out
      *
-     * Menerima JSON body { work_notes }.
+     * Menerima multipart/form-data { work_notes, photo, gps_lat, gps_lng }.
      * Validasi di-handle oleh CheckOutRequest (sama dengan web).
      */
     public function checkOut(CheckOutRequest $request): JsonResponse
@@ -86,9 +86,27 @@ class AttendanceController extends Controller
 
         $todayAttendance = $employee->todayAttendance();
 
+        // Simpan foto bukti check-out
+        $photoPath = null;
+        $photo = $request->file('photo');
+        if ($photo && $photo->isValid()) {
+            $targetDir = storage_path('app/public/attendance/check-out');
+            if (! is_dir($targetDir)) {
+                mkdir($targetDir, 0755, true);
+            }
+
+            $extension = $photo->getClientOriginalExtension() ?: 'jpg';
+            $fileName = Str::uuid().'.'.$extension;
+            $photo->move($targetDir, $fileName);
+            $photoPath = 'attendance/check-out/'.$fileName;
+        }
+
         $todayAttendance->update([
             'check_out_at' => now(),
             'work_notes' => $request->validated('work_notes'),
+            'check_out_evidence' => $photoPath,
+            'check_out_latitude' => $request->validated('gps_lat'),
+            'check_out_longitude' => $request->validated('gps_lng'),
         ]);
 
         // Hitung durasi

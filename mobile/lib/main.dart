@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'theme/app_theme.dart';
 import 'pages/login_page.dart';
-import 'pages/dashboard_page.dart';
+import 'pages/main_page.dart';
 import 'pages/change_password_page.dart';
 import 'services/auth_service.dart';
 
@@ -23,7 +23,7 @@ void main() async {
     if (user != null && user['must_change_password'] == true) {
       initialPage = const ChangePasswordPage();
     } else {
-      initialPage = const DashboardPage();
+      initialPage = const MainPage();
     }
   }
 

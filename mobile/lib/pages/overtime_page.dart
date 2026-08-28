@@ -4,7 +4,6 @@ import '../theme/app_colors.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
 import 'overtime_form_page.dart';
-import 'dashboard_page.dart';
 import '../services/overtime_service.dart';
 
 class OvertimePage extends StatefulWidget {
@@ -88,29 +87,8 @@ class _OvertimePageState extends State<OvertimePage> {
     
     String _totalDurasi = '${_totalMinutes ~/ 60}j ${_totalMinutes % 60}m';
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF9F9FF),
-      appBar: const CustomAppBar(),
-      floatingActionButton: SizedBox(
-        width: 64,
-        height: 64,
-        child: FloatingActionButton(
-          onPressed: () {
-            // Navigate to dashboard (Absensi)
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const DashboardPage()),
-            );
-          },
-          backgroundColor: AppColors.textSecondary,
-          elevation: 4,
-          shape: const CircleBorder(),
-          child: const Icon(Icons.fingerprint, color: Colors.white, size: 34),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: const CustomBottomNavBar(selectedIndex: 0),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -203,8 +181,7 @@ class _OvertimePageState extends State<OvertimePage> {
             const SizedBox(height: 40),
           ],
         ),
-      ),
-    );
+      );
   }
 
 
