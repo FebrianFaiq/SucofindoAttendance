@@ -46,7 +46,12 @@ class OvertimeController extends Controller
 
             return [
                 'id' => $overtime->id,
+                'spkl_number' => $overtime->spkl_number,
+                'raw_date' => $overtime->date,
                 'date' => \Carbon\Carbon::parse($overtime->date)->translatedFormat('d M Y'),
+                'start_time' => $overtime->start_time,
+                'end_time' => $overtime->end_time,
+                'description' => $overtime->description,
                 'location' => 'Kantor', 
                 'client' => $employee->activeProject()?->name ?? 'Internal',
                 'duration' => $durationFormatted,
