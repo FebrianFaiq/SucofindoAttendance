@@ -56,7 +56,10 @@ class _InlineCameraWidgetState extends State<InlineCameraWidget>
     if (_controller == null || !_controller!.value.isInitialized) return;
 
     if (state == AppLifecycleState.inactive) {
-      _controller?.dispose();
+      final controllerToDispose = _controller;
+      _controller = null;
+      _isCameraActive = false;
+      controllerToDispose?.dispose();
     } else if (state == AppLifecycleState.resumed) {
       if (_isCameraActive && _capturedPhoto == null) {
         _initCamera();
@@ -118,16 +121,21 @@ class _InlineCameraWidgetState extends State<InlineCameraWidget>
     try {
       final photo = await _controller!.takePicture();
 
-      // Dispose camera after capture
-      await _controller?.dispose();
-
+      // Set state FIRST to prevent timer-triggered rebuilds from accessing
+      // a disposed controller (race condition with parent's 1-second timer)
       if (mounted) {
         setState(() {
           _capturedPhoto = photo;
           _isCameraActive = false;
         });
-        widget.onPhotoCaptured(photo);
       }
+
+      // Dispose camera after state is updated
+      final controllerToDispose = _controller;
+      _controller = null;
+      await controllerToDispose?.dispose();
+
+      widget.onPhotoCaptured(photo);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

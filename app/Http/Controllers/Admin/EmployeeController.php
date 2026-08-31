@@ -23,7 +23,7 @@ class EmployeeController extends Controller
     /**
      * Default password untuk pegawai baru.
      */
-    private const DEFAULT_PASSWORD = '123';
+    private const DEFAULT_PASSWORD = 'Sucofindo123';
 
     /**
      * Tampilkan daftar karyawan.

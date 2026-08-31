@@ -552,6 +552,7 @@ class _CheckOutPageState extends State<CheckOutPage> {
                       Positioned.fill(
                         child: GridView.builder(
                           physics: const NeverScrollableScrollPhysics(),
+                          itemCount: 18, // 6 columns × 3 rows
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 6,

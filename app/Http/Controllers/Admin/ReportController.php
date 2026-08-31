@@ -107,6 +107,11 @@ class ReportController extends Controller
         $sheet->setCellValue('D1', 'Tanggal');
         $sheet->mergeCells('D1:'.Coordinate::stringFromColumnIndex($daysInMonth + 3).'1');
 
+        $colTotalKerja = $daysInMonth + 4;
+        $colTotalLibur = $daysInMonth + 5;
+        $sheet->setCellValue(Coordinate::stringFromColumnIndex($colTotalKerja).'1', 'Summary');
+        $sheet->mergeCells(Coordinate::stringFromColumnIndex($colTotalKerja).'1:'.Coordinate::stringFromColumnIndex($colTotalLibur).'1');
+
         // Set style header utama
         $headerStyle = [
             'font' => ['bold' => true],
@@ -119,8 +124,9 @@ class ReportController extends Controller
 
         $sheet->getStyle('A1:C2')->applyFromArray($headerStyle);
         $sheet->getStyle('D1:'.Coordinate::stringFromColumnIndex($daysInMonth + 3).'1')->applyFromArray($headerStyle);
+        $sheet->getStyle(Coordinate::stringFromColumnIndex($colTotalKerja).'1:'.Coordinate::stringFromColumnIndex($colTotalLibur).'1')->applyFromArray($headerStyle);
 
-        // Header Row 2 (Angka Tanggal 1-31)
+        // Header Row 2 (Angka Tanggal 1-31 & Summary)
         for ($day = 1; $day <= $daysInMonth; $day++) {
             $colIndex = $day + 3; // Mulai dari kolom D (4)
             $colLetter = Coordinate::stringFromColumnIndex($colIndex);
@@ -144,6 +150,12 @@ class ReportController extends Controller
             $sheet->getStyle($colLetter.'2')->applyFromArray($cellStyle);
         }
 
+        $sheet->setCellValue(Coordinate::stringFromColumnIndex($colTotalKerja).'2', 'Total Kehadiran (Hari Kerja)');
+        $sheet->setCellValue(Coordinate::stringFromColumnIndex($colTotalLibur).'2', 'Total Kehadiran (Hari Libur)');
+        $sheet->getStyle(Coordinate::stringFromColumnIndex($colTotalKerja).'2:'.Coordinate::stringFromColumnIndex($colTotalLibur).'2')->applyFromArray($headerStyle);
+        $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($colTotalKerja))->setAutoSize(true);
+        $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($colTotalLibur))->setAutoSize(true);
+
         // Isi Data
         $row = 3;
         foreach ($employees as $employee) {
@@ -158,12 +170,24 @@ class ReportController extends Controller
             }
             $sheet->setCellValue('C'.$row, $unitKerja);
 
+            $totalKerja = 0;
+            $totalLibur = 0;
+
             for ($day = 1; $day <= $daysInMonth; $day++) {
                 $colLetter = Coordinate::stringFromColumnIndex($day + 3);
                 $key = $employee->id.'_'.$day;
+                
+                $currentDate = Carbon::createFromDate($year, $month, $day);
+                $isWeekend = $currentDate->isWeekend();
+                $isHoliday = in_array($currentDate->format('Y-m-d'), $holidays);
 
                 if ($attendances->has($key)) {
                     $sheet->setCellValue($colLetter.$row, 'v');
+                    if ($isWeekend || $isHoliday) {
+                        $totalLibur++;
+                    } else {
+                        $totalKerja++;
+                    }
                 }
 
                 $sheet->getStyle($colLetter.$row)->applyFromArray([
@@ -171,6 +195,15 @@ class ReportController extends Controller
                     'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
                 ]);
             }
+
+            // Set Summary Values
+            $sheet->setCellValue(Coordinate::stringFromColumnIndex($colTotalKerja).$row, $totalKerja);
+            $sheet->setCellValue(Coordinate::stringFromColumnIndex($colTotalLibur).$row, $totalLibur);
+
+            $sheet->getStyle(Coordinate::stringFromColumnIndex($colTotalKerja).$row.':'.Coordinate::stringFromColumnIndex($colTotalLibur).$row)->applyFromArray([
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            ]);
 
             $sheet->getStyle('A'.$row.':C'.$row)->applyFromArray([
                 'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],

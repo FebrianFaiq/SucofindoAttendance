@@ -22,7 +22,7 @@ class StoreEmployeeRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'nik' => ['required', 'numeric', 'digits:16', 'unique:employees,nik'],
+            'nik' => ['nullable', 'numeric', 'digits:16', 'unique:employees,nik'],
             'role' => ['required', 'in:employee,intern'],
             'division' => ['nullable', 'required_if:role,intern', 'in:LSI,DukBis,BIT,KSP'],
             'phone' => ['nullable', 'numeric'],

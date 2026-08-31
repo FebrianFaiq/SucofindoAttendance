@@ -126,7 +126,7 @@ export default function EmployeesEdit({ employee, projects, activeSalary }: Empl
 
                                 <div className="flex flex-col gap-2">
                                     <label className="text-[14px] font-bold text-[#1E293B]">
-                                        NIK <span className="text-red-500">*</span>
+                                        NIK
                                     </label>
                                     <Input
                                         type="text"
@@ -201,7 +201,7 @@ export default function EmployeesEdit({ employee, projects, activeSalary }: Empl
                                         >
                                             <Briefcase className="h-4 w-4 shrink-0" />
                                             <div className="flex flex-col">
-                                                <span className="text-xs">Karyawan PTT</span>
+                                                <span className="text-xs">PTT proyek</span>
                                                 <span className="text-[10px] font-normal text-neutral-500">Absen & Lembur</span>
                                             </div>
                                         </button>
@@ -217,7 +217,7 @@ export default function EmployeesEdit({ employee, projects, activeSalary }: Empl
                                         >
                                             <GraduationCap className="h-4 w-4 shrink-0" />
                                             <div className="flex flex-col">
-                                                <span className="text-xs">Mahasiswa Magang</span>
+                                                <span className="text-xs">Magang</span>
                                                 <span className="text-[10px] font-normal text-neutral-500">Hanya Kehadiran</span>
                                             </div>
                                         </button>
@@ -274,10 +274,14 @@ export default function EmployeesEdit({ employee, projects, activeSalary }: Empl
                                         <div className="relative">
                                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 font-semibold text-sm">Rp</span>
                                             <Input
-                                                type="number"
-                                                value={data.base_salary}
-                                                onChange={(e) => setData('base_salary', e.target.value)}
-                                                placeholder="Contoh: 4500000"
+                                                type="text"
+                                                inputMode="numeric"
+                                                value={data.base_salary ? parseInt(data.base_salary).toLocaleString('id-ID') : ''}
+                                                onChange={(e) => {
+                                                    const val = e.target.value.replace(/\D/g, '');
+                                                    setData('base_salary', val);
+                                                }}
+                                                placeholder="Contoh: 4.500.000"
                                                 className="h-11 pl-10 bg-[#F8FAFC] border-neutral-200 text-[#1E293B] font-semibold focus-visible:ring-[#035EA9]"
                                             />
                                         </div>
@@ -326,7 +330,7 @@ export default function EmployeesEdit({ employee, projects, activeSalary }: Empl
                                 </Button>
 
                                 <p className="text-[13px] font-medium text-[#64748B] mt-1">
-                                    Reset password akan mengembalikan kata sandi karyawan ke default (<b>123</b>).
+                                    Reset password akan mengembalikan kata sandi karyawan ke default (<b>Sucofindo123</b>).
                                 </p>
                             </div>
                         </section>
@@ -361,7 +365,7 @@ export default function EmployeesEdit({ employee, projects, activeSalary }: Empl
                             </div>
                             <DialogTitle className="text-2xl font-bold text-[#1E293B]">Reset Password?</DialogTitle>
                             <DialogDescription className="text-[15px] font-medium text-[#64748B] mt-3 leading-relaxed text-center">
-                                Apakah Anda yakin ingin mereset kata sandi karyawan ini? Tindakan ini akan mereset password ke bawaan (<b>123</b>).
+                                Apakah Anda yakin ingin mereset kata sandi karyawan ini? Tindakan ini akan mereset password ke bawaan (<b>Sucofindo123</b>).
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter className="flex flex-col sm:flex-col w-full gap-3 mt-6">
@@ -390,7 +394,7 @@ export default function EmployeesEdit({ employee, projects, activeSalary }: Empl
                             </div>
                             <DialogTitle className="text-2xl font-bold text-[#1E293B]">Reset Berhasil!</DialogTitle>
                             <DialogDescription className="text-[15px] font-medium text-[#64748B] mt-3 leading-relaxed text-center">
-                                Kata sandi telah berhasil diatur ulang menjadi <b>123</b>. Karyawan dapat login kembali menggunakan password ini!
+                                Kata sandi telah berhasil diatur ulang menjadi <b>Sucofindo123</b>. Karyawan dapat login kembali menggunakan password ini!
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter className="w-full mt-6 sm:justify-center">

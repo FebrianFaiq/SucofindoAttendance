@@ -43,21 +43,7 @@ class CheckInRequest extends FormRequest
             function (Validator $validator): void {
                 $today = today();
 
-                // 1. Cek apakah hari libur nasional / perusahaan terdaftar di master holidays
-                $holiday = Holiday::getHolidayDetails($today);
-                if ($holiday) {
-                    $validator->errors()->add('holiday', "Hari ini adalah hari libur ({$holiday->name}). Absensi tidak diizinkan.");
-
-                    return;
-                }
-
-                // 2. Cek apakah akhir pekan (Sabtu / Minggu)
-                if ($today->isWeekend()) {
-                    $dayName = $today->isoFormat('dddd') ?: ($today->isSaturday() ? 'Sabtu' : 'Minggu');
-                    $validator->errors()->add('holiday', "Hari ini adalah akhir pekan ({$dayName}). Absensi tidak diizinkan.");
-
-                    return;
-                }
+                // Hari libur dan akhir pekan sekarang diizinkan untuk absen
 
                 /** @var User $user */
                 $user = Auth::user();

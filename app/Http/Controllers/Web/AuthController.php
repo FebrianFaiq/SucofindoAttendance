@@ -25,11 +25,11 @@ class AuthController extends Controller
      *
      * GET /login
      */
-    public function create(): Response
+    public function create(): \Symfony\Component\HttpFoundation\Response
     {
         return Inertia::render('auth/login', [
             'canResetPassword' => true,
-        ]);
+        ])->toResponse(request())->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     }
 
     /**

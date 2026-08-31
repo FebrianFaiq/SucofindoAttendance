@@ -463,6 +463,7 @@ class _CheckInPageState extends State<CheckInPage> {
                       Positioned.fill(
                         child: GridView.builder(
                           physics: const NeverScrollableScrollPhysics(),
+                          itemCount: 18, // 6 columns × 3 rows
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 6,

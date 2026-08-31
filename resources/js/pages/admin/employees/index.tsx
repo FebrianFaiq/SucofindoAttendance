@@ -516,7 +516,7 @@ return 'EM';
                             </div>
                             <DialogTitle className="text-2xl font-bold text-[#1E293B]">Reset Password?</DialogTitle>
                             <DialogDescription className="text-[15px] font-medium text-[#64748B] mt-3 leading-relaxed text-center">
-                                Apakah Anda yakin ingin mereset kata sandi karyawan ini? Tindakan ini akan mereset password ke bawaan (123).
+                                Apakah Anda yakin ingin mereset kata sandi karyawan ini? Tindakan ini akan mereset password ke bawaan (Sucofindo123).
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter className="flex flex-col sm:flex-col w-full gap-3 mt-6">
@@ -545,7 +545,7 @@ return 'EM';
                             </div>
                             <DialogTitle className="text-2xl font-bold text-[#1E293B]">Reset Berhasil!</DialogTitle>
                             <DialogDescription className="text-[15px] font-medium text-[#64748B] mt-3 leading-relaxed text-center">
-                                Kata sandi telah berhasil diatur ulang menjadi <b>123</b>. Karyawan dapat login menggunakan password baru ini!
+                                Kata sandi telah berhasil diatur ulang menjadi <b>Sucofindo123</b>. Karyawan dapat login menggunakan password baru ini!
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter className="w-full mt-6 sm:justify-center">

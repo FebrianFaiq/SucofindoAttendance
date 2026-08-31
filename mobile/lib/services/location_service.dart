@@ -1,5 +1,6 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:flutter/foundation.dart';
 
 class LocationService {
   /// Request location permission and return current position.
@@ -36,8 +37,9 @@ class LocationService {
   /// Convert lat/lng to human-readable address
   static Future<String> getAddressFromCoordinates(double lat, double lng) async {
     try {
-      final placemarks =
-          await Geocoding().placemarkFromCoordinates(lat, lng);
+      final placemarks = await Geocoding()
+          .placemarkFromCoordinates(lat, lng)
+          .timeout(const Duration(seconds: 10));
       if (placemarks.isNotEmpty) {
         final place = placemarks.first;
         return [
@@ -51,7 +53,9 @@ class LocationService {
       }
     } catch (e) {
       // Geocoding failed — return coordinates as fallback
+      debugPrint('Geocoding error: $e');
     }
     return 'Lat: $lat, Lng: $lng';
   }
 }
+

@@ -74,7 +74,7 @@ export default function EmployeesCreate({ projects }: EmployeesCreateProps) {
                                 
                                 <div className="flex flex-col gap-2">
                                     <label className="text-[14px] font-bold text-[#1E293B]">
-                                        NIK <span className="text-red-500">*</span>
+                                        NIK
                                     </label>
                                     <Input 
                                         type="text"
@@ -150,7 +150,7 @@ export default function EmployeesCreate({ projects }: EmployeesCreateProps) {
                                         >
                                             <Briefcase className="h-4 w-4 shrink-0" />
                                             <div className="flex flex-col">
-                                                <span className="text-xs">Karyawan PTT</span>
+                                                <span className="text-xs">PTT proyek</span>
                                                 <span className="text-[10px] font-normal text-neutral-500">Absen & Lembur</span>
                                             </div>
                                         </button>
@@ -166,7 +166,7 @@ export default function EmployeesCreate({ projects }: EmployeesCreateProps) {
                                         >
                                             <GraduationCap className="h-4 w-4 shrink-0" />
                                             <div className="flex flex-col">
-                                                <span className="text-xs">Mahasiswa Magang</span>
+                                                <span className="text-xs">Magang</span>
                                                 <span className="text-[10px] font-normal text-neutral-500">Hanya Kehadiran</span>
                                             </div>
                                         </button>
@@ -223,10 +223,14 @@ export default function EmployeesCreate({ projects }: EmployeesCreateProps) {
                                         <div className="relative">
                                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 font-semibold text-sm">Rp</span>
                                             <Input
-                                                type="number"
-                                                value={data.base_salary}
-                                                onChange={(e) => setData('base_salary', e.target.value)}
-                                                placeholder="Contoh: 4500000"
+                                                type="text"
+                                                inputMode="numeric"
+                                                value={data.base_salary ? parseInt(data.base_salary).toLocaleString('id-ID') : ''}
+                                                onChange={(e) => {
+                                                    const val = e.target.value.replace(/\D/g, '');
+                                                    setData('base_salary', val);
+                                                }}
+                                                placeholder="Contoh: 4.500.000"
                                                 className="h-11 pl-10 bg-[#F8FAFC] border-neutral-200 text-[#1E293B] font-semibold focus-visible:ring-[#035EA9]"
                                             />
                                         </div>
@@ -263,13 +267,13 @@ export default function EmployeesCreate({ projects }: EmployeesCreateProps) {
                                 <div className="relative">
                                     <Input 
                                         type="text"
-                                        defaultValue="123" 
+                                        defaultValue="Sucofindo123" 
                                         disabled
                                         className="h-11 bg-[#F1F5F9] border-neutral-200 text-[#64748B] font-semibold focus-visible:ring-0 opacity-100 cursor-not-allowed"
                                     />
                                 </div>
                                 <p className="text-[13px] font-medium text-[#64748B]">
-                                    Password awal diset ke bawaan (<b>123</b>). Karyawan dapat mengganti password setelah login.
+                                    Password awal diset ke bawaan (<b>Sucofindo123</b>). Karyawan dapat mengganti password setelah login.
                                 </p>
                             </div>
                         </section>

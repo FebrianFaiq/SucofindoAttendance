@@ -26,7 +26,7 @@ class UpdateEmployeeRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
-            'nik' => ['required', 'numeric', 'digits:16', Rule::unique('employees', 'nik')->ignore($employee?->id)],
+            'nik' => ['nullable', 'numeric', 'digits:16', Rule::unique('employees', 'nik')->ignore($employee?->id)],
             'role' => ['sometimes', 'in:employee,intern'],
             'division' => ['nullable', 'required_if:role,intern', 'in:LSI,DukBis,BIT,KSP'],
             'phone' => ['nullable', 'numeric'],

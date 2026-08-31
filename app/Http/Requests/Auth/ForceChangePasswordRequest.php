@@ -21,7 +21,7 @@ class ForceChangePasswordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'password' => ['required', 'confirmed', Password::defaults()],
+            'password' => ['required', 'confirmed', 'not_in:Sucofindo123', Password::defaults()],
         ];
     }
 
@@ -32,6 +32,7 @@ class ForceChangePasswordRequest extends FormRequest
     {
         return [
             'password.required' => 'Password baru wajib diisi.',
+            'password.not_in' => 'Password baru tidak boleh sama dengan password default.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
         ];
     }
