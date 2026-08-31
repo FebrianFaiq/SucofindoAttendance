@@ -1,7 +1,8 @@
-import { Head, Link } from '@inertiajs/react';
-import { Clock, Plus, Clock3, FileText, ChevronLeft, ChevronRight, Info } from 'lucide-react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { Clock, Plus, Clock3, FileText, ChevronLeft, ChevronRight, Info, Printer } from 'lucide-react';
 import React from 'react';
 import AppLayout from '@/layouts/app-layout';
+import { handlePrintExport } from './print-template';
 
 // Data disediakan dari backend
 
@@ -30,7 +31,74 @@ function getStatusBadge(status: string) {
     return null;
 }
 
+function parseDescription(desc: string) {
+    let location = '';
+    let client = '';
+    let orderNumber = '';
+    let tasks: { startTime: string; endTime: string; description: string }[] = [];
+
+    if (!desc) return { location, client, orderNumber, tasks };
+
+    // Parse header if exists
+    const headerMatch = desc.match(/\[Lokasi: (.*?) \| Klien: (.*?) \| No Order: (.*?)\]/);
+    if (headerMatch) {
+        location = headerMatch[1] === '-' ? '' : headerMatch[1];
+        client = headerMatch[2] === '-' ? '' : headerMatch[2];
+        orderNumber = headerMatch[3] === '-' ? '' : headerMatch[3];
+    }
+
+    // Parse tasks
+    const lines = desc.split('\n');
+    let isTaskSection = false;
+    for (const line of lines) {
+        if (line.startsWith('Pekerjaan:')) {
+            isTaskSection = true;
+            continue;
+        }
+        if (isTaskSection && line.trim() !== '') {
+            const taskMatch = line.match(/^\d+\.\s*\[(.*?)\s*-\s*(.*?)\]\s*(.*)$/);
+            if (taskMatch) {
+                tasks.push({
+                    startTime: taskMatch[1] === '?' ? '' : taskMatch[1],
+                    endTime: taskMatch[2] === '?' ? '' : taskMatch[2],
+                    description: taskMatch[3],
+                });
+            } else {
+                if (tasks.length > 0) {
+                    tasks[tasks.length - 1].description += '\n' + line;
+                } else {
+                    tasks.push({ startTime: '', endTime: '', description: line });
+                }
+            }
+        }
+    }
+
+    if (tasks.length === 0 && desc.trim() !== '') {
+        const cleanDesc = desc.replace(/\[Lokasi.*?\]\s*Pekerjaan:\s*/, '');
+        tasks.push({ startTime: '', endTime: '', description: cleanDesc });
+    }
+
+    return { location, client, orderNumber, tasks };
+}
+
 export default function OvertimeIndex({ overtimes, totalDurationMtd, lastStatus }: any) {
+    const { auth } = usePage().props as any;
+    const user = auth?.user || {};
+
+    const handlePrint = (item: any) => {
+        const parsed = parseDescription(item.description);
+        handlePrintExport({
+            date: item.raw_date,
+            startTime: item.start_time,
+            endTime: item.end_time,
+            location: parsed.location || item.location,
+            client: parsed.client || item.client,
+            orderNumber: parsed.orderNumber,
+            tasks: parsed.tasks,
+            user: user,
+            spklNumber: item.spkl_number
+        });
+    };
     return (
         <>
             <Head title="Lembur" />
@@ -103,7 +171,8 @@ export default function OvertimeIndex({ overtimes, totalDurationMtd, lastStatus 
                                     <th className="px-6 py-4">TEMPAT KERJA</th>
                                     <th className="px-6 py-4">NAMA PELANGGAN</th>
                                     <th className="px-6 py-4">DURASI</th>
-                                    <th className="px-6 py-4 text-right">STATUS</th>
+                                    <th className="px-6 py-4 text-center">STATUS</th>
+                                    <th className="px-6 py-4 text-right">AKSI</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-neutral-200 text-neutral-700">
@@ -121,8 +190,17 @@ export default function OvertimeIndex({ overtimes, totalDurationMtd, lastStatus 
                                         <td className="px-6 py-4 whitespace-nowrap font-bold text-neutral-900">
                                             {item.duration}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                                        <td className="px-6 py-4 whitespace-nowrap text-center">
                                             {getStatusBadge(item.status)}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                                            <button 
+                                                onClick={() => handlePrint(item)}
+                                                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50 hover:text-[#035EA9] focus:outline-none focus:ring-2 focus:ring-[#035EA9] focus:ring-offset-1 transition-colors"
+                                                title="Cetak SPKL"
+                                            >
+                                                <Printer className="h-4 w-4" />
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
