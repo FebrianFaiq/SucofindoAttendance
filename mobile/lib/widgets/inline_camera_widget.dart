@@ -90,7 +90,6 @@ class _InlineCameraWidgetState extends State<InlineCameraWidget>
         frontCamera,
         ResolutionPreset.medium,
         enableAudio: false,
-        imageFormatGroup: ImageFormatGroup.jpeg,
       );
 
       await _controller!.initialize();
@@ -118,9 +117,6 @@ class _InlineCameraWidgetState extends State<InlineCameraWidget>
     try {
       final photo = await _controller!.takePicture();
 
-      // Dispose camera after capture
-      await _controller?.dispose();
-
       if (mounted) {
         setState(() {
           _capturedPhoto = photo;
@@ -140,9 +136,9 @@ class _InlineCameraWidgetState extends State<InlineCameraWidget>
   void _retakePhoto() {
     setState(() {
       _capturedPhoto = null;
+      _isCameraActive = true;
     });
     widget.onPhotoCleared?.call();
-    _initCamera();
   }
 
   @override
