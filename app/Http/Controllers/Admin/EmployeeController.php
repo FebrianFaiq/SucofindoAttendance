@@ -77,7 +77,7 @@ class EmployeeController extends Controller
 
     /**
      * Simpan karyawan baru.
-     * Membuat akun dengan password default (123), flag must_change_password = true.
+     * Membuat akun dengan password default (Sucofindo123), flag must_change_password = true.
      */
     public function store(StoreEmployeeRequest $request): RedirectResponse
     {
