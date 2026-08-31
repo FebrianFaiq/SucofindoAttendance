@@ -196,10 +196,10 @@ export default function OvertimeIndex({ overtimes, totalDurationMtd, lastStatus 
                                         <td className="px-6 py-4 whitespace-nowrap text-right">
                                             <button 
                                                 onClick={() => handlePrint(item)}
-                                                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50 hover:text-[#035EA9] focus:outline-none focus:ring-2 focus:ring-[#035EA9] focus:ring-offset-1 transition-colors"
+                                                className="inline-flex h-8 px-3 items-center justify-center rounded-md border border-neutral-200 bg-white text-xs font-semibold text-neutral-600 hover:bg-neutral-50 hover:text-[#035EA9] focus:outline-none focus:ring-2 focus:ring-[#035EA9] focus:ring-offset-1 transition-colors"
                                                 title="Cetak SPKL"
                                             >
-                                                <Printer className="h-4 w-4" />
+                                                Cetak
                                             </button>
                                         </td>
                                     </tr>
