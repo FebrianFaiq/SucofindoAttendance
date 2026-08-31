@@ -213,15 +213,17 @@ return 'EM';
                                                             <span className="font-bold text-neutral-900">{emp.user?.name}</span>
                                                             <span className="text-[11px] font-bold">
                                                                 {emp.user?.role === 'intern' ? (
-                                                                    <span className="text-[#00A099]">Mahasiswa Magang</span>
+                                                                    <span className="text-[#00A099]">Magang</span>
                                                                 ) : (
-                                                                    <span className="text-[#035EA9]">Karyawan PTT</span>
+                                                                    <span className="text-[#035EA9]">PTT Proyek</span>
                                                                 )}
                                                             </span>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 font-semibold text-neutral-600">{emp.nik}</td>
+                                                <td className="px-6 py-4 font-semibold text-neutral-600">
+                                                    {emp.nik ? emp.nik : <span className="text-neutral-400 font-bold">—</span>}
+                                                </td>
                                                 <td className="px-6 py-4 font-semibold text-neutral-600">{emp.user?.email}</td>
                                                 <td className="px-6 py-4">
                                                     {!emp.user?.is_active ? (
@@ -375,7 +377,7 @@ return 'EM';
                                             ? 'bg-[#00A099]/10 text-[#00A099] hover:bg-[#00A099]/20'
                                             : 'bg-[#035EA9]/10 text-[#035EA9] hover:bg-[#035EA9]/20'
                                             }`}>
-                                            {selectedEmployee.user?.role === 'intern' ? 'Mahasiswa Magang' : 'Karyawan PTT'}
+                                            {selectedEmployee.user?.role === 'intern' ? 'Magang' : 'PTT Proyek'}
                                         </Badge>
                                     </div>
                                 </div>
@@ -400,7 +402,7 @@ return 'EM';
                                             <div className="flex flex-col h-full w-full min-w-0">
                                                 <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">NIK</span>
                                                 <div className="w-full border-b-2 border-[#035EA9] pb-1 mt-1 flex-1 flex flex-col justify-end">
-                                                    <span className="text-xs font-semibold text-neutral-900 break-words block">{selectedEmployee.nik}</span>
+                                                    <span className="text-xs font-semibold text-neutral-900 break-words block">{selectedEmployee.nik || '—'}</span>
                                                 </div>
                                             </div>
                                         </div>

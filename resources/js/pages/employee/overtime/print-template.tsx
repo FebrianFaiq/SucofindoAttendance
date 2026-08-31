@@ -61,7 +61,7 @@ export function handlePrintExport(data: PrintData) {
     const userName = user?.name?.toUpperCase() || '.........................';
     let userStatus = '.........................';
     if (user?.role) {
-        userStatus = user.role === 'intern' ? 'MAHASISWA MAGANG' : 'KARYAWAN PTT';
+        userStatus = user.role === 'intern' ? 'MAGANG' : 'PTT PROYEK';
     }
 
     const tasksHTML = generateTasksHTML(tasks);
@@ -90,6 +90,9 @@ export function handlePrintExport(data: PrintData) {
         }
         .page {
             width: 100%;
+            height: 97vh;
+            display: flex;
+            flex-direction: column;
             page-break-after: always;
         }
         .page:last-child {
@@ -105,10 +108,16 @@ export function handlePrintExport(data: PrintData) {
         .outer-border {
             border: 2px solid #000;
             padding: 3px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
         .inner-border {
             border: 1px solid #000;
             padding: 16px;
+            flex: 1;
+            position: relative;
+            padding-bottom: 180px; /* Space for absolute sig-container */
         }
         .inner-border-compact {
             border: 1px solid #000;
@@ -163,16 +172,10 @@ export function handlePrintExport(data: PrintData) {
             justify-content: space-between;
         }
         .sig-name {
-            margin-top: 90px;
-            display: flex;
-            flex-direction: column;
             align-items: center;
         }
-        .sig-name-compact {
-            margin-top: 50px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        .sig-space {
+            height: 90px;
         }
         .sig-line {
             display: flex;
@@ -217,7 +220,13 @@ export function handlePrintExport(data: PrintData) {
         }
         .mengetahui {
             text-align: center;
-            margin-top: 4px;
+            margin-top: auto;
+        }
+        .sig-container {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            right: 16px;
         }
     </style>
 </head>
@@ -292,30 +301,33 @@ export function handlePrintExport(data: PrintData) {
                     <div class="field-value"><span>:</span> <span class="val">${orderNumber}</span></div>
                 </div>
 
-                <!-- Signatures -->
-                <div class="sig-grid">
-                    <div class="sig-col">
-                        <div>
-                            <div style="height:20px;"></div>
-                            <div>Menyetujui,</div>
-                            <div>Yang diperintah,</div>
-                        </div>
-                        <div class="sig-name">
-                            <div class="sig-line">( <span class="sig-underline">${userName}</span> )</div>
-                            <div class="sig-label">&nbsp;</div>
-                        </div>
-                    </div>
-                    <div class="sig-col">
-                        <div>
-                            <div class="date-line">
-                                <span class="date-dots"></span>
-                                <span>, ${shortDate}</span>
+                <div class="sig-container">
+                    <div class="sig-grid">
+                        <div class="sig-col">
+                            <div>
+                                <div style="height:20px;"></div>
+                                <div>Menyetujui,</div>
+                                <div>Yang diperintah,</div>
                             </div>
-                            <div>Yang memerintahkan</div>
+                            <div class="sig-space"></div>
+                            <div class="sig-name">
+                                <div class="sig-line">( <span class="sig-underline">${userName}</span> )</div>
+                                <div class="sig-label">&nbsp;</div>
+                            </div>
                         </div>
-                        <div class="sig-name">
-                            <div class="sig-line">( <span class="sig-underline-empty"></span> )</div>
-                            <div class="sig-label">Atasan Langsung</div>
+                        <div class="sig-col">
+                            <div>
+                                <div class="date-line">
+                                    <span class="date-dots"></span>
+                                    <span>, ${shortDate}</span>
+                                </div>
+                                <div>Yang memerintahkan</div>
+                            </div>
+                            <div class="sig-space"></div>
+                            <div class="sig-name">
+                                <div class="sig-line">( <span class="sig-underline-empty"></span> )</div>
+                                <div class="sig-label">Atasan Langsung</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -374,37 +386,42 @@ export function handlePrintExport(data: PrintData) {
                 </div>
 
                 <!-- Signatures -->
-                <div class="sig-grid">
-                    <div class="sig-col">
-                        <div>
-                            <div style="height:20px;"></div>
-                            <div>Disetujui,</div>
-                        </div>
-                        <div class="sig-name">
-                            <div class="sig-line">( <span class="sig-underline-empty"></span> )</div>
-                            <div class="sig-label">Atasan Langsung</div>
-                        </div>
-                    </div>
-                    <div class="sig-col">
-                        <div>
-                            <div class="date-line">
-                                <span class="date-dots"></span>
-                                <span>, ${shortDate}</span>
+                <div class="sig-container">
+                    <div class="sig-grid">
+                        <div class="sig-col">
+                            <div>
+                                <div style="height:20px;"></div>
+                                <div>Disetujui,</div>
                             </div>
-                            <div>Yang melaksanakan</div>
+                            <div class="sig-space"></div>
+                            <div class="sig-name">
+                                <div class="sig-line">( <span class="sig-underline-empty"></span> )</div>
+                                <div class="sig-label">Atasan Langsung</div>
+                            </div>
                         </div>
-                        <div class="sig-name">
-                            <div class="sig-line">( <span class="sig-underline">${userName}</span> )</div>
-                            <div class="sig-label">NPP .................../Jabatan</div>
+                        <div class="sig-col">
+                            <div>
+                                <div class="date-line">
+                                    <span class="date-dots"></span>
+                                    <span>, ${shortDate}</span>
+                                </div>
+                                <div>Yang melaksanakan</div>
+                            </div>
+                            <div class="sig-space"></div>
+                            <div class="sig-name">
+                                <div class="sig-line">( <span class="sig-underline">${userName}</span> )</div>
+                                <div class="sig-label">NPP .................../Jabatan</div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="mengetahui" style="margin-top:12px;">
-                    <div>Mengetahui</div>
-                    <div class="sig-name">
-                        <div class="sig-line">( <span class="sig-underline-empty" style="width:240px;"></span> )</div>
-                        <div class="sig-label">Kepala Cabang</div>
+                    <div class="mengetahui" style="margin-top:12px;">
+                        <div>Mengetahui</div>
+                        <div class="sig-space"></div>
+                        <div class="sig-name">
+                            <div class="sig-line">( <span class="sig-underline-empty" style="width:240px;"></span> )</div>
+                            <div class="sig-label">Kepala Cabang</div>
+                        </div>
                     </div>
                 </div>
             </div>

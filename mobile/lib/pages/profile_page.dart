@@ -37,7 +37,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 final name = user?['name'] ?? 'Loading...';
                 final email = user?['email'] ?? '';
                 String role = user?['role'] ?? '';
-                if (role == 'employee') role = 'Karyawan PTT';
+                if (role == 'employee') role = 'PTT Proyek';
                 if (role == 'intern') role = 'Magang';
 
                 return Container(

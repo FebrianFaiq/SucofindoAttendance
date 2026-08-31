@@ -47,9 +47,12 @@ class OvertimeController extends Controller
 
                 $description = $overtime->description ?? '';
                 $locationClient = '-';
-                if (preg_match('/^\[Lokasi: (.*?) \| Klien: (.*?)\]\n?(.*)$/s', $description, $matches)) {
+                if (preg_match('/^\[Lokasi: (.*?) \| Klien: (.*?) \| No Order: (.*?)\]\n?(.*)$/s', $description, $matches)) {
                     $locationClient = $matches[1] . ' / ' . $matches[2];
-                    $description = $matches[3];
+                    $description = trim($matches[4]);
+                } elseif (preg_match('/^\[Lokasi: (.*?) \| Klien: (.*?)\]\n?(.*)$/s', $description, $matches)) {
+                    $locationClient = $matches[1] . ' / ' . $matches[2];
+                    $description = trim($matches[3]);
                 }
 
                 return [
