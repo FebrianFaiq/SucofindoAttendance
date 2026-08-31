@@ -140,7 +140,7 @@ export default function AdminDashboard(props: AdminDashboardProps) {
 
     const kpiCards = [
         {
-            label: 'Total Karyawan PTT',
+            label: 'Total PTT Proyek',
             value: kpi.totalPtt.toLocaleString(),
             icon: Users,
             iconBg: 'bg-[#E5F0F9]',
@@ -424,8 +424,8 @@ export default function AdminDashboard(props: AdminDashboardProps) {
                                                             }`}
                                                     >
                                                         {record.role === 'intern'
-                                                            ? 'Mahasiswa Magang'
-                                                            : 'Karyawan PTT'}
+                                                            ? 'Magang'
+                                                            : 'PTT Proyek'}
                                                     </p>
                                                 </div>
                                             </div>

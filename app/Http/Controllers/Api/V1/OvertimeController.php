@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 /**
  * Overtime API — Daftar & input lembur.
  *
- * Khusus role 'employee' (karyawan PTT).
+ * Khusus role 'employee' (PTT Proyek).
  * Magang (intern) akan mendapat response 403.
  */
 class OvertimeController extends Controller
@@ -29,7 +29,7 @@ class OvertimeController extends Controller
         if ($user->isIntern()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Mahasiswa magang tidak memiliki akses ke fitur lembur.',
+                'message' => 'Magang tidak memiliki akses ke fitur lembur.',
             ], 403);
         }
 

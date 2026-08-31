@@ -430,9 +430,9 @@ export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours
                                                             <span className="font-bold text-neutral-900">{item.employee.name}</span>
                                                             <span className="text-[11px] font-bold">
                                                                 {isIntern ? (
-                                                                    <span className="text-[#00A099]">Mahasiswa Magang</span>
+                                                                    <span className="text-[#00A099]">Magang</span>
                                                                 ) : (
-                                                                    <span className="text-[#035EA9]">Karyawan PTT</span>
+                                                                    <span className="text-[#035EA9]">PTT Proyek</span>
                                                                 )}
                                                             </span>
                                                         </div>

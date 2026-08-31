@@ -46,7 +46,7 @@ export default function EmployeesCreate({ projects }: EmployeesCreateProps) {
                         Tambah Karyawan Baru
                     </h1>
                     <p className="text-[#64748B] font-medium text-[15px] mt-1">
-                        Masukkan detailnya untuk membuat catatan pegawai atau mahasiswa magang baru di sistem.
+                        Masukkan detailnya untuk membuat catatan pegawai atau peserta magang baru di sistem.
                     </p>
                 </div>
 
@@ -192,7 +192,7 @@ export default function EmployeesCreate({ projects }: EmployeesCreateProps) {
                                         </select>
                                         {errors.division && <p className="text-xs text-red-500 font-semibold">{errors.division}</p>}
                                         <p className="text-xs text-neutral-500">
-                                            Mahasiswa magang ditempatkan berdasarkan Bidang kerja, bukan proyek.
+                                            Peserta magang ditempatkan berdasarkan Bidang kerja, bukan proyek.
                                         </p>
                                     </div>
                                 ) : (
@@ -214,7 +214,7 @@ export default function EmployeesCreate({ projects }: EmployeesCreateProps) {
                                     </div>
                                 )}
 
-                                {/* Gaji Pokok (hanya untuk karyawan PTT) */}
+                                {/* Gaji Pokok (hanya untuk PTT Proyek) */}
                                 {data.role === 'employee' && (
                                     <div className="flex flex-col gap-2">
                                         <label className="text-[14px] font-bold text-[#1E293B]">

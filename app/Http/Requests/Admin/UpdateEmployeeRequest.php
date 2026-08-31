@@ -50,7 +50,7 @@ class UpdateEmployeeRequest extends FormRequest
             'nik.numeric' => 'NIK harus berupa angka.',
             'nik.digits' => 'NIK harus tepat 16 digit.',
             'phone.numeric' => 'Nomor telepon harus berupa angka.',
-            'base_salary.required_if' => 'Gaji pokok wajib diisi untuk karyawan PTT.',
+            'base_salary.required_if' => 'Gaji pokok wajib diisi untuk PTT Proyek.',
             'base_salary.numeric' => 'Gaji pokok harus berupa angka.',
             'base_salary.min' => 'Gaji pokok tidak boleh negatif.',
         ];

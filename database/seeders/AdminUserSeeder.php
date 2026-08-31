@@ -38,7 +38,7 @@ class AdminUserSeeder extends Seeder
         $employeeUser1 = User::withTrashed()->updateOrCreate(
             ['email' => 'karyawan@sucofindo.com'],
             [
-                'name' => 'Budi Santoso (Karyawan PTT)',
+                'name' => 'Budi Santoso (PTT Proyek)',
                 'password' => Hash::make('123'),
                 'role' => 'employee',
                 'must_change_password' => false,
@@ -99,7 +99,7 @@ class AdminUserSeeder extends Seeder
                 'is_active' => false,
             ],
             [
-                'name' => 'Kevin Sanjaya (Mahasiswa Magang)',
+                'name' => 'Kevin Sanjaya (Magang)',
                 'email' => 'magang@sucofindo.com',
                 'nik' => '3201123456780006',
                 'phone' => '081233445566',

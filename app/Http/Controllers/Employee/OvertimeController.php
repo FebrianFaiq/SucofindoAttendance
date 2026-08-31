@@ -23,7 +23,7 @@ class OvertimeController extends Controller
         $user = Auth::user();
 
         if ($user->isIntern()) {
-            abort(403, 'Mahasiswa magang tidak memiliki akses ke fitur lembur.');
+            abort(403, 'Magang tidak memiliki akses ke fitur lembur.');
         }
 
         $employee = $user->employee;
@@ -38,11 +38,24 @@ class OvertimeController extends Controller
             'approved' => 'Sudah Direview',
             'rejected' => 'Canceled',
         ];
-
         $overtimes->getCollection()->transform(function ($overtime) use ($employee, $statusMap) {
             $durationHours = intval($overtime->duration);
             $durationMinutes = round(($overtime->duration - $durationHours) * 60);
             $durationFormatted = "{$durationHours} Jam {$durationMinutes} Menit";
+            
+            $location = 'Kantor';
+            if (preg_match('/\[Lokasi:\s*(.*?)\s*\|/', $overtime->description, $locMatches)) {
+                if ($locMatches[1] !== '-' && $locMatches[1] !== '') {
+                    $location = $locMatches[1];
+                }
+            }
+            
+            $client = $employee->activeProject()?->name ?? 'Internal';
+            if (preg_match('/Klien:\s*(.*?)\s*\|/', $overtime->description, $clientMatches)) {
+                if ($clientMatches[1] !== '-' && $clientMatches[1] !== '') {
+                    $client = $clientMatches[1];
+                }
+            }
 
             return [
                 'id' => $overtime->id,
@@ -52,8 +65,8 @@ class OvertimeController extends Controller
                 'start_time' => $overtime->start_time,
                 'end_time' => $overtime->end_time,
                 'description' => $overtime->description,
-                'location' => 'Kantor', 
-                'client' => $employee->activeProject()?->name ?? 'Internal',
+                'location' => $location,
+                'client' => $client,
                 'duration' => $durationFormatted,
                 'status' => $statusMap[$overtime->status] ?? 'Unknown',
             ];
@@ -90,7 +103,7 @@ class OvertimeController extends Controller
         $user = Auth::user();
 
         if ($user->isIntern()) {
-            abort(403, 'Mahasiswa magang tidak diizinkan mengajukan lembur.');
+            abort(403, 'Magang tidak diizinkan mengajukan lembur.');
         }
 
         return Inertia::render('employee/overtime/create');

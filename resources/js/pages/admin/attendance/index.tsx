@@ -309,7 +309,7 @@ return false;
                             Monitoring Kehadiran
                         </h1>
                         <p className="text-neutral-500 font-medium mt-1">
-                            Pantau presensi harian karyawan & mahasiswa magang serta kelola master hari libur kerja.
+                            Pantau presensi harian karyawan & peserta magang serta kelola master hari libur kerja.
                         </p>
                     </div>
 
@@ -505,9 +505,9 @@ return false;
                                                             <span className="font-bold text-neutral-900">{item.employee?.user?.name}</span>
                                                             <span className="text-[11px] font-bold">
                                                                 {isIntern ? (
-                                                                    <span className="text-[#00A099]">Mahasiswa Magang</span>
+                                                                    <span className="text-[#00A099]">Magang</span>
                                                                 ) : (
-                                                                    <span className="text-[#035EA9]">Karyawan PTT</span>
+                                                                    <span className="text-[#035EA9]">PTT Proyek</span>
                                                                 )}
                                                             </span>
                                                         </div>
