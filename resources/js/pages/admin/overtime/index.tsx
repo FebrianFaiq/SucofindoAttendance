@@ -411,7 +411,7 @@ export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours
                             </thead>
                             {filteredData.length > 0 && (
                                 <tbody className="divide-y divide-neutral-200 text-neutral-700">
-                                    {filteredData.map((item) => {
+                                    {filteredData.map((item: any) => {
                                         const isIntern = item.employee.role === 'intern';
 
                                         return (

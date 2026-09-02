@@ -20,31 +20,39 @@ interface PrintData {
 }
 
 function generateTasksHTML(tasks: Task[]): string {
-    const validTasks = tasks.filter(t => t.description.trim() !== '' && t.startTime && t.endTime);
+    const TOTAL_SLOTS = 4;
+    let html = '';
 
-    if (validTasks.length === 0) {
-        return `
-            <div style="display:flex;">
-                <div style="width:5%;">:</div>
-                <div style="flex:1; border-bottom:1px dotted #000; min-height:20px;"></div>
-            </div>
-        `;
+    for (let i = 0; i < TOTAL_SLOTS; i++) {
+        const task = tasks[i];
+        const isFilled = task && task.description.trim() !== '' && task.startTime && task.endTime;
+
+        if (isFilled) {
+            html += `
+                <div style="display:flex; margin-bottom:16px;">
+                    <div style="width:5%; text-align:center;">${i === 0 ? ':' : ''}</div>
+                    <div style="flex:1;">
+                        <div>Jam ${task.startTime} - ${task.endTime} melaksanakan pekerjaan</div>
+                        <div style="width:100%; border-bottom:1px dotted #000; margin-top:8px;">${task.description}</div>
+                        <div style="width:100%; border-bottom:1px dotted #000; margin-top:16px;"></div>
+                    </div>
+                </div>
+            `;
+        } else {
+            html += `
+                <div style="display:flex; margin-bottom:16px;">
+                    <div style="width:5%; text-align:center;">${i === 0 ? ':' : ''}</div>
+                    <div style="flex:1;">
+                        <div>Jam --:-- - --:-- melaksanakan pekerjaan</div>
+                        <div style="width:100%; border-bottom:1px dotted #000; margin-top:8px;"></div>
+                        <div style="width:100%; border-bottom:1px dotted #000; margin-top:16px;"></div>
+                    </div>
+                </div>
+            `;
+        }
     }
 
-    let html = '';
-    validTasks.forEach((task, idx) => {
-        html += `
-            <div style="display:flex; margin-bottom:6px;">
-                <div style="width:5%; text-align:center;">${idx === 0 ? ':' : ''}</div>
-                <div style="flex:1;">
-                    <div>Jam ${task.startTime} - ${task.endTime} melaksanakan pekerjaan</div>
-                    <div style="width:100%; border-bottom:1px dotted #000; margin-top:3px;">${task.description}</div>
-                    <div style="width:100%; border-bottom:1px dotted #000; margin-top:10px;"></div>
-                </div>
-            </div>
-        `;
-    });
-    html += `<div style="margin-top:4px; margin-left:5%;">dan seterusnya</div>`;
+    html += `<div style="margin-top:12px; margin-left:5%;">dan seterusnya</div>`;
     return html;
 }
 
@@ -105,19 +113,16 @@ export function handlePrintExport(data: PrintData) {
             margin-bottom: 8px;
             font-weight: bold;
         }
-        .outer-border {
-            border: 2px solid #000;
-            padding: 3px;
+        .single-border {
+            border: 1px solid #000;
+            padding: 16px;
             flex: 1;
             display: flex;
             flex-direction: column;
         }
-        .inner-border {
+        .section-box {
             border: 1px solid #000;
-            padding: 16px;
-            flex: 1;
-            position: relative;
-            padding-bottom: 180px; /* Space for absolute sig-container */
+            padding: 10px 12px;
         }
         .inner-border-compact {
             border: 1px solid #000;
@@ -126,7 +131,7 @@ export function handlePrintExport(data: PrintData) {
         .title {
             text-align: center;
             font-weight: bold;
-            margin-bottom: 16px;
+            margin-bottom: 0;
         }
         .title-text {
             text-decoration: underline;
@@ -222,12 +227,7 @@ export function handlePrintExport(data: PrintData) {
             text-align: center;
             margin-top: auto;
         }
-        .sig-container {
-            position: absolute;
-            bottom: 16px;
-            left: 16px;
-            right: 16px;
-        }
+
     </style>
 </head>
 <body>
@@ -246,92 +246,97 @@ export function handlePrintExport(data: PrintData) {
             </div>
         </div>
 
-        <div class="outer-border">
-            <div class="inner-border">
-                <div class="title">
-                    <div class="title-text">SURAT PERINTAH KERJA LEMBUR</div>
-                    <div>No. : ${data.spklNumber ? data.spklNumber : '...................................'}</div>
-                </div>
-
-                <div style="margin-bottom:12px; font-weight:bold;">Diperintahkan kepada :</div>
-                <div class="field-row" style="margin-bottom:20px;">
-                    <div>Nama / NPP</div>
-                    <div class="field-value"><span>:</span> <span class="val" style="font-weight:bold; text-transform:uppercase;">${userName}</span></div>
-                    
-                    <div>Status Pegawai</div>
-                    <div class="field-value"><span>:</span> <span class="val" style="text-transform:uppercase;">${userStatus}</span></div>
-                    
-                    <div>Strata (Grade)</div>
-                    <div class="field-value"><span>:</span> <span class="val"></span></div>
-                </div>
-
-                <div style="margin-bottom:6px; font-weight:bold;">Untuk melaksanakan kerja lembur pada :</div>
-                <div class="field-row" style="margin-bottom:10px;">
-                    <div>Hari / Tanggal</div>
-                    <div class="field-value"><span>:</span> <span class="val">${formattedDate}</span></div>
-                    
-                    <div>Waktu</div>
-                    <div class="field-value">
-                        <span>:</span>
-                        <span style="width:80px; text-align:center; border-bottom:1px solid #000;">${startTime || '......'}</span>
-                        <span style="margin:0 8px;">s/d</span>
-                        <span style="width:80px; text-align:center; border-bottom:1px solid #000;">${endTime || '......'}</span>
+        <div class="single-border">
+                <div class="section-box" style="margin-bottom:10px;">
+                    <div class="title">
+                        <div class="title-text">SURAT PERINTAH KERJA LEMBUR</div>
+                        <div>No. : ${data.spklNumber ? data.spklNumber : '...................................'}</div>
                     </div>
                 </div>
 
-                <div class="field-row" style="margin-bottom:20px;">
-                    <div>
-                        <div>Untuk pelaksanaan pekerjaan</div>
-                        <div>(Ditulis secara rinci dan wajib</div>
-                        <div>diisi)</div>
+                <div class="section-box" style="padding:8px 12px; flex:1; display:flex; flex-direction:column;">
+                    <div style="margin-bottom:4px; font-weight:bold;">Diperintahkan kepada :</div>
+                    <div class="field-row" style="margin-bottom:12px;">
+                        <div>Nama / NPP</div>
+                        <div class="field-value"><span>:</span> <span class="val" style="font-weight:bold; text-transform:uppercase;">${userName}</span></div>
+                        
+                        <div>Status Pegawai</div>
+                        <div class="field-value"><span>:</span> <span class="val" style="text-transform:uppercase;">${userStatus}</span></div>
+                        
+                        <div>Strata (Grade)</div>
+                        <div class="field-value"><span>:</span> <span class="val"></span></div>
                     </div>
-                    <div>
-                        ${tasksHTML}
-                    </div>
-                </div>
 
-                <div class="field-row" style="margin-bottom:10px;">
-                    <div>Tempat kerja lembur</div>
-                    <div class="field-value"><span>:</span> <span class="val">${location}</span></div>
-                    
-                    <div>Nama Pelanggan (Jika ada)</div>
-                    <div class="field-value"><span>:</span> <span class="val">${client}</span></div>
-                    
-                    <div>Nomor Order (Jika ada)</div>
-                    <div class="field-value"><span>:</span> <span class="val">${orderNumber}</span></div>
-                </div>
-
-                <div class="sig-container">
-                    <div class="sig-grid">
-                        <div class="sig-col">
-                            <div>
-                                <div style="height:20px;"></div>
-                                <div>Menyetujui,</div>
-                                <div>Yang diperintah,</div>
-                            </div>
-                            <div class="sig-space"></div>
-                            <div class="sig-name">
-                                <div class="sig-line">( <span class="sig-underline">${userName}</span> )</div>
-                                <div class="sig-label">&nbsp;</div>
-                            </div>
+                    <div style="margin-bottom:4px; font-weight:bold;">Untuk melaksanakan kerja lembur pada :</div>
+                    <div class="field-row" style="margin-bottom:8px;">
+                        <div>Hari / Tanggal</div>
+                        <div class="field-value"><span>:</span> <span class="val">${formattedDate}</span></div>
+                        
+                        <div>Waktu</div>
+                        <div class="field-value">
+                            <span>:</span>
+                            <span style="width:80px; text-align:center; border-bottom:1px solid #000;">${startTime || '......'}</span>
+                            <span style="margin:0 8px;">s/d</span>
+                            <span style="width:80px; text-align:center; border-bottom:1px solid #000;">${endTime || '......'}</span>
                         </div>
-                        <div class="sig-col">
-                            <div>
-                                <div class="date-line">
-                                    <span class="date-dots"></span>
-                                    <span>, ${shortDate}</span>
+                    </div>
+
+                    <div class="field-row">
+                        <div>
+                            <div>Untuk pelaksanaan pekerjaan</div>
+                            <div>(Ditulis secara rinci dan wajib</div>
+                            <div>diisi)</div>
+                        </div>
+                        <div>
+                            ${tasksHTML}
+                        </div>
+                    </div>
+
+                    <!-- Spacer to push bottom content down -->
+                    <div style="flex:1;"></div>
+
+                    <div class="field-row" style="margin-bottom:10px;">
+                        <div>Tempat kerja lembur</div>
+                        <div class="field-value"><span>:</span> <span class="val">${location}</span></div>
+                        
+                        <div>Nama Pelanggan (Jika ada)</div>
+                        <div class="field-value"><span>:</span> <span class="val">${client}</span></div>
+                        
+                        <div>Nomor Order (Jika ada)</div>
+                        <div class="field-value"><span>:</span> <span class="val">${orderNumber}</span></div>
+                    </div>
+
+                    <div class="section-box" style="padding:8px 12px;">
+                        <div class="sig-grid" style="margin-top:0;">
+                            <div class="sig-col">
+                                <div>
+                                    <div style="height:20px;"></div>
+                                    <div>Menyetujui,</div>
+                                    <div>Yang diperintah,</div>
                                 </div>
-                                <div>Yang memerintahkan</div>
+                                <div class="sig-space"></div>
+                                <div class="sig-name">
+                                    <div class="sig-line">( <span class="sig-underline">${userName}</span> )</div>
+                                    <div class="sig-label">&nbsp;</div>
+                                </div>
                             </div>
-                            <div class="sig-space"></div>
-                            <div class="sig-name">
-                                <div class="sig-line">( <span class="sig-underline-empty"></span> )</div>
-                                <div class="sig-label">Atasan Langsung</div>
+                            <div class="sig-col">
+                                <div>
+                                    <div class="date-line">
+                                        <span class="date-dots"></span>
+                                        <span>, ${shortDate}</span>
+                                    </div>
+                                    <div>Yang memerintahkan</div>
+                                </div>
+                                <div class="sig-space"></div>
+                                <div class="sig-name">
+                                    <div class="sig-line">( <span class="sig-underline-empty"></span> )</div>
+                                    <div class="sig-label">Atasan Langsung</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     </div>
 
@@ -350,81 +355,86 @@ export function handlePrintExport(data: PrintData) {
             </div>
         </div>
 
-        <div class="outer-border">
-            <div class="inner-border">
-                <div class="title">
-                    <div class="title-text">LAPORAN HASIL KERJA LEMBUR</div>
-                </div>
-
-                <div style="display:flex; margin-bottom:12px;">
-                    berdasarkan Surat Perintah Kerja Lembur No : <span style="flex:1; border-bottom:1px dotted #000; margin:0 8px; text-align:center;">${data.spklNumber ? data.spklNumber : ''}</span> Tanggal : <span style="flex:1; border-bottom:1px dotted #000; text-align:center; padding-left:8px;">${data.spklNumber ? formattedDate : ''}</span>
-                </div>
-
-                <div style="margin-bottom:6px; font-weight:bold;">Telah dilaksanakan kerja lembur pada :</div>
-                <div class="field-row" style="margin-bottom:10px;">
-                    <div>Hari / Tanggal</div>
-                    <div class="field-value"><span>:</span> <span class="val">${formattedDate}</span></div>
-                    
-                    <div>Waktu</div>
-                    <div class="field-value">
-                        <span>:</span>
-                        <span style="width:80px; text-align:center; border-bottom:1px solid #000;">${startTime || '......'}</span>
-                        <span style="margin:0 8px;">s/d</span>
-                        <span style="width:80px; text-align:center; border-bottom:1px solid #000;">${endTime || '......'}</span>
+        <div class="single-border">
+                <div class="section-box" style="margin-bottom:10px;">
+                    <div class="title">
+                        <div class="title-text">LAPORAN HASIL KERJA LEMBUR</div>
                     </div>
                 </div>
 
-                <div class="field-row" style="margin-bottom:20px;">
-                    <div>
-                        <div>Untuk pelaksanaan pekerjaan</div>
-                        <div>(Ditulis secara rinci dan wajib</div>
-                        <div>diisi)</div>
+                <div class="section-box" style="padding:8px 12px; flex:1; display:flex; flex-direction:column;">
+                    <div style="display:flex; margin-bottom:12px;">
+                        berdasarkan Surat Perintah Kerja Lembur No : <span style="flex:1; border-bottom:1px dotted #000; margin:0 8px; text-align:center;">${data.spklNumber ? data.spklNumber : ''}</span> Tanggal : <span style="flex:1; border-bottom:1px dotted #000; text-align:center; padding-left:8px;">${data.spklNumber ? formattedDate : ''}</span>
                     </div>
-                    <div>
-                        ${tasksHTML}
-                    </div>
-                </div>
 
-                <!-- Signatures -->
-                <div class="sig-container">
-                    <div class="sig-grid">
-                        <div class="sig-col">
-                            <div>
-                                <div style="height:20px;"></div>
-                                <div>Disetujui,</div>
-                            </div>
-                            <div class="sig-space"></div>
-                            <div class="sig-name">
-                                <div class="sig-line">( <span class="sig-underline-empty"></span> )</div>
-                                <div class="sig-label">Atasan Langsung</div>
-                            </div>
+                    <div style="margin-bottom:6px; font-weight:bold;">Telah dilaksanakan kerja lembur pada :</div>
+                    <div class="field-row" style="margin-bottom:10px;">
+                        <div>Hari / Tanggal</div>
+                        <div class="field-value"><span>:</span> <span class="val">${formattedDate}</span></div>
+                        
+                        <div>Waktu</div>
+                        <div class="field-value">
+                            <span>:</span>
+                            <span style="width:80px; text-align:center; border-bottom:1px solid #000;">${startTime || '......'}</span>
+                            <span style="margin:0 8px;">s/d</span>
+                            <span style="width:80px; text-align:center; border-bottom:1px solid #000;">${endTime || '......'}</span>
                         </div>
-                        <div class="sig-col">
-                            <div>
-                                <div class="date-line">
-                                    <span class="date-dots"></span>
-                                    <span>, ${shortDate}</span>
+                    </div>
+
+                    <div class="field-row">
+                        <div>
+                            <div>Untuk pelaksanaan pekerjaan</div>
+                            <div>(Ditulis secara rinci dan wajib</div>
+                            <div>diisi)</div>
+                        </div>
+                        <div>
+                            ${tasksHTML}
+                        </div>
+                    </div>
+
+                    <!-- Spacer to push bottom content down -->
+                    <div style="flex:1;"></div>
+
+                    <!-- Signatures -->
+                    <div class="section-box" style="padding:8px 12px;">
+                        <div class="sig-grid" style="margin-top:0;">
+                            <div class="sig-col">
+                                <div>
+                                    <div style="height:20px;"></div>
+                                    <div>Disetujui,</div>
                                 </div>
-                                <div>Yang melaksanakan</div>
+                                <div class="sig-space"></div>
+                                <div class="sig-name">
+                                    <div class="sig-line">( <span class="sig-underline-empty"></span> )</div>
+                                    <div class="sig-label">Atasan Langsung</div>
+                                </div>
                             </div>
-                            <div class="sig-space"></div>
-                            <div class="sig-name">
-                                <div class="sig-line">( <span class="sig-underline">${userName}</span> )</div>
-                                <div class="sig-label">NPP .................../Jabatan</div>
+                            <div class="sig-col">
+                                <div>
+                                    <div class="date-line">
+                                        <span class="date-dots"></span>
+                                        <span>, ${shortDate}</span>
+                                    </div>
+                                    <div>Yang melaksanakan</div>
+                                </div>
+                                <div class="sig-space"></div>
+                                <div class="sig-name">
+                                    <div class="sig-line">( <span class="sig-underline">${userName}</span> )</div>
+                                    <div class="sig-label">NPP .................../Jabatan</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="mengetahui" style="margin-top:12px;">
-                        <div>Mengetahui</div>
-                        <div class="sig-space"></div>
-                        <div class="sig-name">
-                            <div class="sig-line">( <span class="sig-underline-empty" style="width:240px;"></span> )</div>
-                            <div class="sig-label">Kepala Cabang</div>
+                        <div class="mengetahui" style="margin-top:12px;">
+                            <div>Mengetahui</div>
+                            <div class="sig-space"></div>
+                            <div class="sig-name">
+                                <div class="sig-line">( <span class="sig-underline-empty" style="width:240px;"></span> )</div>
+                                <div class="sig-label">Kepala Cabang</div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
 
         <div class="footer-note">
