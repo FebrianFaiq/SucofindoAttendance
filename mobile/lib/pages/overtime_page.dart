@@ -5,6 +5,8 @@ import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
 import 'overtime_form_page.dart';
 import '../services/overtime_service.dart';
+import '../services/auth_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class OvertimePage extends StatefulWidget {
   const OvertimePage({super.key});
@@ -55,6 +57,32 @@ class _OvertimePageState extends State<OvertimePage> {
     await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const OvertimeFormPage()),
     );
+  }
+
+  Future<void> _handlePrint(dynamic item) async {
+    final scaffoldContext = ScaffoldMessenger.of(context);
+    try {
+      final response = await OvertimeService.getExportPdfUrl(item['id']);
+      if (response['success']) {
+        final urlStr = response['url'];
+        final uri = Uri.parse(urlStr);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          scaffoldContext.showSnackBar(
+            const SnackBar(content: Text('Tidak dapat membuka link PDF')),
+          );
+        }
+      } else {
+        scaffoldContext.showSnackBar(
+          SnackBar(content: Text(response['message'] ?? 'Gagal mendapatkan link PDF')),
+        );
+      }
+    } catch (e) {
+      scaffoldContext.showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
 
   @override
@@ -332,6 +360,17 @@ class _OvertimePageState extends State<OvertimePage> {
       }
     }
 
+    String _formatDateString(String? dateStr) {
+      if (dateStr == null || dateStr.isEmpty) return '-';
+      try {
+        final dt = DateTime.parse(dateStr);
+        final months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
+      } catch (_) {
+        return dateStr.contains('T') ? dateStr.split('T')[0] : dateStr;
+      }
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -354,21 +393,37 @@ class _OvertimePageState extends State<OvertimePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    Icon(Icons.calendar_today_outlined, size: 15, color: AppColors.textSecondary),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        _formatDateString(item['date']),
+                        style: GoogleFonts.mulish(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Row(
                 children: [
-                  Icon(Icons.calendar_today_outlined, size: 15, color: AppColors.textSecondary),
-                  const SizedBox(width: 6),
-                  Text(
-                    item['date'] ?? '-',
-                    style: GoogleFonts.mulish(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
+                  IconButton(
+                    icon: const Icon(Icons.print_outlined, size: 20, color: AppColors.primary),
+                    onPressed: () => _handlePrint(item),
+                    tooltip: 'Cetak SPKL',
+                    padding: const EdgeInsets.only(right: 12),
+                    constraints: const BoxConstraints(),
                   ),
+                  _buildStatusBadge(item['status'] ?? 'Pending'),
                 ],
               ),
-              _buildStatusBadge(item['status'] ?? 'Pending'),
             ],
           ),
           const SizedBox(height: 16),

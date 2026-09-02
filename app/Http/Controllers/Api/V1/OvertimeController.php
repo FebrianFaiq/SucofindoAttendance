@@ -96,4 +96,42 @@ class OvertimeController extends Controller
             ],
         ], 201);
     }
+
+    /**
+     * Get daftar hari libur — GET /api/v1/overtime/holidays
+     */
+    public function holidays(Request $request): JsonResponse
+    {
+        $holidays = \App\Models\Holiday::select('date', 'name')
+            ->whereYear('date', '>=', now()->year)
+            ->get()
+            ->map(fn ($h) => [
+                'date' => $h->date->format('Y-m-d'),
+                'name' => $h->name,
+            ]);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $holidays,
+        ]);
+    }
+
+    public function exportPdfUrl(\App\Models\Overtime $overtime)
+    {
+        if ($overtime->employee->user_id !== auth()->id()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+
+        $url = \Illuminate\Support\Facades\URL::signedRoute('export.spkl', ['overtime' => $overtime->id]);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'url' => $url,
+            ]
+        ]);
+    }
 }

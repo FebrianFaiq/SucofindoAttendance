@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:table_calendar/table_calendar.dart';
 import '../theme/app_colors.dart';
 import '../widgets/custom_app_bar.dart';
 import '../services/overtime_service.dart';
@@ -15,15 +16,49 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
   DateTime? _selectedDate;
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
+
   final _tempatController = TextEditingController();
   final _pelangganController = TextEditingController();
-  final _deskripsiController = TextEditingController();
+  final _nomorOrderController = TextEditingController();
+
+  final List<Map<String, dynamic>> _tasks = List.generate(
+    4,
+    (index) => {
+      'startTime': null,
+      'endTime': null,
+      'controller': TextEditingController(),
+    },
+  );
+
+  List<String> _holidayDates = [];
+  bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchHolidays();
+  }
+
+  Future<void> _fetchHolidays() async {
+    final res = await OvertimeService.getHolidays();
+    if (res['success'] == true) {
+      final List data = res['data'];
+      if (mounted) {
+        setState(() {
+          _holidayDates = data.map((e) => e['date'].toString()).toList();
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {
     _tempatController.dispose();
     _pelangganController.dispose();
-    _deskripsiController.dispose();
+    _nomorOrderController.dispose();
+    for (var task in _tasks) {
+      task['controller'].dispose();
+    }
     super.dispose();
   }
 
@@ -39,6 +74,11 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
     return '${hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')} $period';
   }
 
+  String _formatTimeOnly24h(TimeOfDay? time) {
+    if (time == null) return '--:--';
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
   String _getDuration() {
     if (_startTime == null || _endTime == null) return '0 Jam 0 Menit';
     final startMinutes = _startTime!.hour * 60 + _startTime!.minute;
@@ -51,34 +91,102 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
   }
 
   Future<void> _pickDate() async {
-    final picked = await showDatePicker(
+    DateTime focusedDay = _selectedDate ?? DateTime.now();
+    DateTime? tempSelectedDay = _selectedDate;
+
+    final selected = await showDialog<DateTime>(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primary,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: AppColors.textPrimary,
-            ),
-          ),
-          child: child!,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateBuilder) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TableCalendar(
+                      firstDay: DateTime(2020),
+                      lastDay: DateTime(2030),
+                      focusedDay: focusedDay,
+                      selectedDayPredicate: (day) =>
+                          isSameDay(tempSelectedDay, day),
+                      onDaySelected: (selected, focused) {
+                        setStateBuilder(() {
+                          tempSelectedDay = selected;
+                          focusedDay = focused;
+                        });
+                      },
+                      calendarBuilders: CalendarBuilders(
+                        defaultBuilder: (context, day, focusedDay) {
+                          final dateStr =
+                              '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
+                          final isHoliday =
+                              day.weekday == DateTime.saturday ||
+                              day.weekday == DateTime.sunday ||
+                              _holidayDates.contains(dateStr);
+
+                          return Center(
+                            child: Text(
+                              '${day.day}',
+                              style: TextStyle(
+                                color: isHoliday
+                                    ? Colors.red
+                                    : AppColors.textPrimary,
+                                fontWeight: isHoliday
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Batal'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () =>
+                              Navigator.pop(context, tempSelectedDay),
+                          child: const Text('Pilih'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         );
       },
     );
-    if (picked != null) {
-      setState(() => _selectedDate = picked);
+
+    if (selected != null) {
+      setState(() => _selectedDate = selected);
     }
   }
 
-  Future<void> _pickTime({required bool isStart}) async {
-    final initial = isStart
-        ? (_startTime ?? const TimeOfDay(hour: 17, minute: 0))
-        : (_endTime ?? const TimeOfDay(hour: 19, minute: 0));
+  Future<void> _pickTime({required bool isStart, int? taskIndex}) async {
+    TimeOfDay initial;
+    if (taskIndex != null) {
+      initial = isStart
+          ? (_tasks[taskIndex]['startTime'] ??
+                const TimeOfDay(hour: 17, minute: 0))
+          : (_tasks[taskIndex]['endTime'] ??
+                const TimeOfDay(hour: 19, minute: 0));
+    } else {
+      initial = isStart
+          ? (_startTime ?? const TimeOfDay(hour: 17, minute: 0))
+          : (_endTime ?? const TimeOfDay(hour: 19, minute: 0));
+    }
 
     final picked = await showTimePicker(
       context: context,
@@ -97,44 +205,125 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
         );
       },
     );
+
     if (picked != null) {
       setState(() {
-        if (isStart) {
-          _startTime = picked;
+        if (taskIndex != null) {
+          if (isStart) {
+            _tasks[taskIndex]['startTime'] = picked;
+          } else {
+            _tasks[taskIndex]['endTime'] = picked;
+            // Auto-fill next task start time
+            if (taskIndex + 1 < 4 &&
+                _tasks[taskIndex + 1]['startTime'] == null) {
+              _tasks[taskIndex + 1]['startTime'] = picked;
+            }
+          }
         } else {
-          _endTime = picked;
+          if (isStart) {
+            _startTime = picked;
+          } else {
+            _endTime = picked;
+          }
         }
       });
     }
   }
 
-  bool _isSubmitting = false;
-
   Future<void> _handleSubmit() async {
-    if (_selectedDate == null ||
-        _startTime == null ||
-        _endTime == null ||
-        _deskripsiController.text.isEmpty) {
+    if (_selectedDate == null || _startTime == null || _endTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Lengkapi semua data!'),
+        const SnackBar(
+          content: Text('Lengkapi tanggal dan jam mulai/selesai lembur utama!'),
           backgroundColor: AppColors.danger,
         ),
       );
       return;
     }
 
+    List<String> taskLines = [];
+    int taskCount = 0;
+
+    for (int i = 0; i < 4; i++) {
+      final task = _tasks[i];
+      final desc = task['controller'].text.trim();
+
+      if (desc.isNotEmpty) {
+        if (task['startTime'] == null || task['endTime'] == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Tugas ke-${i + 1}: Jam mulai dan selesai wajib diisi!',
+              ),
+              backgroundColor: AppColors.danger,
+            ),
+          );
+          return;
+        }
+
+        final startMin = task['startTime'].hour * 60 + task['startTime'].minute;
+        final endMin = task['endTime'].hour * 60 + task['endTime'].minute;
+        int diff = endMin - startMin;
+        if (diff < 0) diff += 24 * 60;
+
+        if (diff > 4 * 60) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Tugas ke-${i + 1} melebihi batas durasi 4 jam!'),
+              backgroundColor: AppColors.danger,
+            ),
+          );
+          return;
+        }
+
+        taskCount++;
+        final st = _formatTimeOnly24h(task['startTime']);
+        final et = _formatTimeOnly24h(task['endTime']);
+        taskLines.add('$taskCount. [$st - $et] $desc');
+      }
+    }
+
+    if (taskCount == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Minimal isi satu pekerjaan!'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+      return;
+    }
+
+    String taskListStr = taskLines.join('\n');
+    String finalDescription = taskListStr;
+
+    final loc = _tempatController.text.trim();
+    final cli = _pelangganController.text.trim();
+    final ord = _nomorOrderController.text.trim();
+
+    if (loc.isNotEmpty || cli.isNotEmpty || ord.isNotEmpty) {
+      final l = loc.isEmpty ? '-' : loc;
+      final c = cli.isEmpty ? '-' : cli;
+      final o = ord.isEmpty ? '-' : ord;
+      finalDescription =
+          '[Lokasi: $l | Klien: $c | No Order: $o]\n\nPekerjaan:\n$taskListStr';
+    } else {
+      finalDescription = 'Pekerjaan:\n$taskListStr';
+    }
+
     setState(() => _isSubmitting = true);
 
-    String start = '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}';
-    String end = '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}';
-    String dateStr = '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}';
+    String start =
+        '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}';
+    String end =
+        '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}';
+    String dateStr =
+        '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}';
 
     final result = await OvertimeService.submitOvertime(
       dateStr,
       start,
       end,
-      _deskripsiController.text,
+      finalDescription,
     );
 
     if (!mounted) return;
@@ -149,7 +338,9 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
           ),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
       Navigator.of(context).pop(true);
@@ -170,20 +361,17 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
       appBar: const CustomAppBar(),
       body: Column(
         children: [
-          // Scrollable form
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Tanggal Lembur
                   _buildLabel('Tanggal Lembur'),
                   const SizedBox(height: 8),
                   _buildDateField(),
                   const SizedBox(height: 20),
 
-                  // Jam Mulai & Jam Selesai
                   Row(
                     children: [
                       Expanded(
@@ -217,25 +405,21 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Total Durasi
                   _buildLabel('Total Durasi'),
                   const SizedBox(height: 8),
                   _buildDurationField(),
                   const SizedBox(height: 4),
                   Text(
-                    'Durasi dihitung secara otomatis berdasarkan jam mulai dan selesai.',
+                    'Durasi keseluruhan lembur yang diajukan.',
                     style: GoogleFonts.mulish(
                       fontSize: 12,
                       color: AppColors.textMuted,
                     ),
                   ),
                   const SizedBox(height: 20),
-
-                  // Divider
                   const Divider(color: AppColors.divider, thickness: 1),
                   const SizedBox(height: 20),
 
-                  // Tempat Kerja Lembur
                   _buildLabel('Tempat Kerja Lembur'),
                   const SizedBox(height: 8),
                   _buildInputField(
@@ -245,7 +429,6 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Nama Pelanggan
                   _buildLabel('Nama Pelanggan (Jika ada)'),
                   const SizedBox(height: 8),
                   _buildInputField(
@@ -255,22 +438,91 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Divider
+                  _buildLabel('Nomor Order (Jika ada)'),
+                  const SizedBox(height: 8),
+                  _buildInputField(
+                    controller: _nomorOrderController,
+                    hint: 'Masukkan nomor order',
+                    icon: Icons.tag_outlined,
+                  ),
+                  const SizedBox(height: 20),
                   const Divider(color: AppColors.divider, thickness: 1),
                   const SizedBox(height: 20),
 
-                  // Job Deskripsi
-                  _buildLabel('Job Deskripsi'),
-                  const SizedBox(height: 8),
-                  _buildTextAreaField(),
+                  _buildLabel('Rincian Pekerjaan (Maks. 4 Jam per tugas)'),
+                  const SizedBox(height: 16),
+                  ...List.generate(4, (index) => _buildTaskItem(index)),
                   const SizedBox(height: 24),
                 ],
               ),
             ),
           ),
-
-          // Bottom buttons
           _buildBottomButtons(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTaskItem(int index) {
+    final task = _tasks[index];
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Tugas ${index + 1}',
+            style: GoogleFonts.mulish(
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildTimeField(
+                  value: _formatTimeOnly24h(task['startTime']),
+                  onTap: () => _pickTime(isStart: true, taskIndex: index),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text('-'),
+              ),
+              Expanded(
+                child: _buildTimeField(
+                  value: _formatTimeOnly24h(task['endTime']),
+                  onTap: () => _pickTime(isStart: false, taskIndex: index),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: task['controller'],
+            maxLines: 2,
+            style: GoogleFonts.mulish(fontSize: 14),
+            decoration: InputDecoration(
+              hintText: 'Deskripsi pekerjaan...',
+              hintStyle: GoogleFonts.mulish(
+                fontSize: 14,
+                color: AppColors.textMuted,
+              ),
+              filled: true,
+              fillColor: const Color(0xFFF9F9FF),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -363,11 +615,7 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.access_time,
-            size: 20,
-            color: AppColors.primary,
-          ),
+          Icon(Icons.access_time, size: 20, color: AppColors.primary),
           const SizedBox(width: 12),
           Text(
             _getDuration(),
@@ -398,35 +646,18 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
         style: GoogleFonts.mulish(fontSize: 14, color: AppColors.textPrimary),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.mulish(fontSize: 14, color: AppColors.textMuted),
+          hintStyle: GoogleFonts.mulish(
+            fontSize: 14,
+            color: AppColors.textMuted,
+          ),
           prefixIcon: Icon(icon, size: 20, color: AppColors.textMuted),
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextAreaField() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: TextField(
-        controller: _deskripsiController,
-        maxLines: 4,
-        style: GoogleFonts.mulish(fontSize: 14, color: AppColors.textPrimary),
-        decoration: InputDecoration(
-          hintText: 'Jelaskan pekerjaan atau aktivitas yang dilakukan selama lembur...',
-          hintStyle: GoogleFonts.mulish(fontSize: 14, color: AppColors.textMuted),
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          contentPadding: const EdgeInsets.all(16),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
         ),
       ),
     );
@@ -449,7 +680,6 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
         top: false,
         child: Row(
           children: [
-            // Batal button
             Expanded(
               flex: 2,
               child: SizedBox(
@@ -475,7 +705,6 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
               ),
             ),
             const SizedBox(width: 16),
-            // Submit button
             Expanded(
               flex: 3,
               child: SizedBox(
@@ -493,7 +722,7 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
                         )
                       : const Icon(Icons.send, size: 20, color: Colors.white),
                   label: Text(
-                    _isSubmitting ? 'Memproses...' : 'Submit Overtime',
+                    _isSubmitting ? 'Memproses...' : 'Submit',
                     style: GoogleFonts.mulish(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,

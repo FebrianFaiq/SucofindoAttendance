@@ -21,6 +21,11 @@ use Illuminate\Support\Facades\Route;
 // Redirect root ke login (atau dashboard jika sudah login, ditangani AuthController/Middleware)
 Route::redirect('/', '/login');
 
+// Signed Route for Mobile PDF Download
+Route::get('export-spkl/{overtime}', [Employee\OvertimeController::class, 'exportSpkl'])
+    ->name('export.spkl')
+    ->middleware('signed');
+
 // ───────────────────────────────────────────
 // Guest Routes (belum login)
 // ───────────────────────────────────────────
@@ -71,6 +76,8 @@ Route::prefix('employee')
             ->name('employee.overtime.create');
         Route::post('overtime', [Employee\OvertimeController::class, 'store'])
             ->name('employee.overtime.store');
+        Route::get('overtime/{overtime}/export-spkl', [Employee\OvertimeController::class, 'exportSpkl'])
+            ->name('employee.overtime.export-spkl');
 
         // Riwayat Kehadiran (History)
         Route::get('history', [Employee\HistoryController::class, 'index'])
