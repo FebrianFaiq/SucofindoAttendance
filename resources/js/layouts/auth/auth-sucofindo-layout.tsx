@@ -44,11 +44,8 @@ export default function AuthSucofindoLayout({
                         className="absolute bottom-12 left-10 right-10 text-white"
                     >
                         <h2 className="text-[28px] font-extrabold mb-3 font-mulish leading-tight drop-shadow-md">
-                            Supervise with Confidence
+                            Ensuring Quality Protecting Trust
                         </h2>
-                        <p className="text-white/90 text-[15px] font-medium leading-relaxed drop-shadow-sm max-w-sm">
-                            Sistem Manajemen Terpadu untuk menunjang produktivitas dan kedisiplinan kerja.
-                        </p>
                     </motion.div>
                 </div>
 

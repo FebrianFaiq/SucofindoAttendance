@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Employee\OvertimeStoreRequest;
+use App\Models\Holiday;
 use App\Models\Overtime;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -106,7 +107,17 @@ class OvertimeController extends Controller
             abort(403, 'Magang tidak diizinkan mengajukan lembur.');
         }
 
-        return Inertia::render('employee/overtime/create');
+        $holidays = Holiday::select('date', 'name')
+            ->whereYear('date', '>=', now()->year)
+            ->get()
+            ->map(fn ($h) => [
+                'date' => $h->date->format('Y-m-d'),
+                'name' => $h->name,
+            ]);
+
+        return Inertia::render('employee/overtime/create', [
+            'holidays' => $holidays,
+        ]);
     }
 
     /**

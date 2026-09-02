@@ -15,7 +15,7 @@ import { parseISO, format } from 'date-fns';
 import { Clock } from 'lucide-react';
 
 export default function OvertimeCreate() {
-    const { auth } = usePage().props as any;
+    const { auth, holidays = [] } = usePage().props as any;
     const user = auth?.user || {};
 
     const [date, setDate] = useState('');
@@ -32,6 +32,47 @@ export default function OvertimeCreate() {
     ]);
 
     const [processing, setProcessing] = useState(false);
+    const [taskWarnings, setTaskWarnings] = useState<boolean[]>([false, false, false, false]);
+
+    // ── Helper: hitung durasi per-task (menit) ──
+    const getTaskDurationMinutes = (task: { startTime: string; endTime: string }) => {
+        if (!task.startTime || !task.endTime) return 0;
+        const [sh, sm] = task.startTime.split(':').map(Number);
+        const [eh, em] = task.endTime.split(':').map(Number);
+        let start = sh * 60 + sm;
+        let end = eh * 60 + em;
+        if (end < start) end += 24 * 60;
+        return end - start;
+    };
+
+    // ── Helper: hitung maxEndTime per-task (clamp 4 jam = 240 menit) ──
+    const getTaskMaxEndTime = (taskStartTime: string) => {
+        if (!taskStartTime) return endTime;
+        const [sh, sm] = taskStartTime.split(':').map(Number);
+        if (isNaN(sh) || isNaN(sm)) return endTime;
+
+        // 4 jam dari start task
+        const maxMinutes = (sh * 60 + sm) + 240;
+        const maxH = Math.floor(maxMinutes / 60) % 24;
+        const maxM = maxMinutes % 60;
+        const fourHourLimit = `${maxH.toString().padStart(2, '0')}:${maxM.toString().padStart(2, '0')}`;
+
+        if (!endTime) return fourHourLimit;
+
+        // Bandingkan dengan overtime end time, ambil yang lebih awal
+        const [oeh, oem] = endTime.split(':').map(Number);
+        if (isNaN(oeh) || isNaN(oem)) return fourHourLimit;
+
+        const taskStart = sh * 60 + sm;
+        let overtimeEndMin = oeh * 60 + oem;
+        let fourHourMax = maxMinutes;
+
+        // Handle overnight (misal lembur 22:00 - 06:00)
+        if (overtimeEndMin < taskStart) overtimeEndMin += 24 * 60;
+        if (fourHourMax < taskStart) fourHourMax += 24 * 60;
+
+        return fourHourMax <= overtimeEndMin ? fourHourLimit : endTime;
+    };
 
     const durationMinutes = (() => {
         if (!startTime || !endTime) return 0;
@@ -66,6 +107,16 @@ export default function OvertimeCreate() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validasi: pastikan tidak ada task yang melebihi 4 jam
+        const overLimitTask = tasks.find(t => {
+            if (!t.startTime || !t.endTime) return false;
+            return getTaskDurationMinutes(t) > 240;
+        });
+        if (overLimitTask) {
+            alert('Terdapat form deskripsi pekerjaan yang melebihi 4 jam. Silakan koreksi terlebih dahulu.');
+            return;
+        }
 
         setProcessing(true);
 
@@ -118,6 +169,7 @@ export default function OvertimeCreate() {
                                         setDate={(d) => setDate(d ? format(d, 'yyyy-MM-dd') : '')}
                                         placeholder="dd/mm/yyyy"
                                         className="w-full h-10 border-neutral-300 font-medium text-neutral-900 shadow-sm"
+                                        holidays={holidays}
                                     />
                                 </div>
                             </div>
@@ -222,15 +274,56 @@ export default function OvertimeCreate() {
                                                         onChange={(val) => {
                                                             const newTasks = [...tasks];
                                                             newTasks[index].endTime = val;
+                                                            // Auto-fill startTime form berikutnya
+                                                            if (val && index + 1 < newTasks.length && !newTasks[index + 1].startTime) {
+                                                                newTasks[index + 1].startTime = val;
+                                                            }
                                                             setTasks(newTasks);
+                                                            // Clear warning saat input valid
+                                                            if (val) {
+                                                                const newWarnings = [...taskWarnings];
+                                                                newWarnings[index] = false;
+                                                                setTaskWarnings(newWarnings);
+                                                            }
                                                         }}
-                                                        minTime={startTime}
-                                                        maxTime={endTime}
-                                                        placeholder="Selesai"
+                                                        onReject={() => {
+                                                            const newWarnings = [...taskWarnings];
+                                                            newWarnings[index] = true;
+                                                            setTaskWarnings(newWarnings);
+                                                        }}
+                                                        minTime={task.startTime || startTime}
+                                                        maxTime={getTaskMaxEndTime(task.startTime)}
+                                                        placeholder={task.startTime ? `Maks. ${getTaskMaxEndTime(task.startTime)}` : 'Selesai'}
                                                         className="h-10 bg-white"
                                                     />
                                                 </div>
                                             </div>
+                                            {/* Durasi per-task & Warning 4 jam */}
+                                            {task.startTime && task.endTime && (() => {
+                                                const dur = getTaskDurationMinutes(task);
+                                                const h = Math.floor(dur / 60);
+                                                const m = dur % 60;
+                                                return (
+                                                    <div className="flex items-center gap-2 ml-9">
+                                                        <span className="text-xs font-semibold text-neutral-500">
+                                                            Durasi: {h} Jam {m} Menit
+                                                        </span>
+                                                        {dur >= 240 && (
+                                                            <span className="text-xs font-bold text-red-500 flex items-center gap-1">
+                                                                — Maks. 4 jam tercapai! Gunakan form berikutnya.
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })()}
+                                            {/* Warning saat input ketik melebihi 4 jam */}
+                                            {taskWarnings[index] && !task.endTime && (
+                                                <div className="flex items-center gap-1.5 ml-9">
+                                                    <span className="text-xs font-bold text-red-500">
+                                                        ⚠ Input melebihi 4 jam! Maksimal 4 jam per form deskripsi pekerjaan.
+                                                    </span>
+                                                </div>
+                                            )}
                                             <textarea
                                                 placeholder={index === 0 ? "Deskripsi pekerjaan 1..." : `Deskripsi pekerjaan ${index + 1}...`}
                                                 rows={2}
