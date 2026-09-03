@@ -25,8 +25,15 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+    return RefreshIndicator(
+      onRefresh: () async {
+        setState(() {}); // Triggers the FutureBuilder to reload
+      },
+      color: AppColors.primary,
+      backgroundColor: Colors.white,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(24),
         child: Column(
           children: [
             // Profile Card
@@ -141,7 +148,8 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ],
         ),
-      );
+      ),
+    );
   }
 
 

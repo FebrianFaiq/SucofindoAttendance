@@ -85,9 +85,14 @@ class DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
+    return RefreshIndicator(
+      onRefresh: loadDashboardData,
+      color: AppColors.primary,
+      backgroundColor: Colors.white,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(20),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header Text
@@ -148,6 +153,7 @@ class DashboardPageState extends State<DashboardPage> {
           ..._recentAttendances.map((record) => _buildHistoryCard(record)),
           const SizedBox(height: 40),
         ],
+      ),
       ),
     );
   }

@@ -80,8 +80,15 @@ class _HistoryPageState extends State<HistoryPage> {
           }
         },
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await _fetchHistory(loadMore: false);
+        },
+        color: AppColors.primary,
+        backgroundColor: Colors.white,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         children: [
           // Month Header
           Text(
@@ -122,6 +129,7 @@ class _HistoryPageState extends State<HistoryPage> {
           ],
           const SizedBox(height: 16),
         ],
+      ),
       ),
     );
   }

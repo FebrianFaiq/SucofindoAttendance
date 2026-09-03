@@ -110,7 +110,7 @@
         <tr>
             <td align="left" valign="top">
                 PT SUCOFINDO(PERSERO)<br>
-                UNIT KERJA : ..........................
+                UNIT KERJA : CABANG SURABAYA   
             </td>
 
             <td align="right" valign="top">
@@ -522,7 +522,7 @@
         <tr>
             <td align="left" valign="top">
                 PT SUCOFINDO(PERSERO)<br>
-                UNIT KERJA : ..........................
+                UNIT KERJA : CABANG SURABAYA
             </td>
             <td align="right" valign="top">
                 Lampiran 2<br>

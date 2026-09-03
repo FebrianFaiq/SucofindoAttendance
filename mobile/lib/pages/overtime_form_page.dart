@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../theme/app_colors.dart';
@@ -68,10 +69,8 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
   }
 
   String _formatTime(TimeOfDay? time) {
-    if (time == null) return '--:-- --';
-    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
-    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
-    return '${hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')} $period';
+    if (time == null) return '--:--';
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
   }
 
   String _formatTimeOnly24h(TimeOfDay? time) {
@@ -188,20 +187,75 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
           : (_endTime ?? const TimeOfDay(hour: 19, minute: 0));
     }
 
-    final picked = await showTimePicker(
+    TimeOfDay? picked = initial;
+
+    await showModalBottomSheet(
       context: context,
-      initialTime: initial,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primary,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: AppColors.textPrimary,
-            ),
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext builder) {
+        return SizedBox(
+          height: 300,
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: const BoxDecoration(
+                  border: Border(bottom: BorderSide(color: AppColors.border)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        picked = null;
+                        Navigator.of(context).pop();
+                      },
+                      child: Text(
+                        'Batal',
+                        style: GoogleFonts.mulish(color: AppColors.textSecondary),
+                      ),
+                    ),
+                    Text(
+                      isStart ? 'Jam Mulai' : 'Jam Selesai',
+                      style: GoogleFonts.mulish(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text(
+                        'Selesai',
+                        style: GoogleFonts.mulish(color: AppColors.primary, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: CupertinoTheme(
+                  data: const CupertinoThemeData(
+                    textTheme: CupertinoTextThemeData(
+                      dateTimePickerTextStyle: TextStyle(
+                        fontSize: 22,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  child: CupertinoDatePicker(
+                    mode: CupertinoDatePickerMode.time,
+                    initialDateTime: DateTime(2020, 1, 1, initial.hour, initial.minute),
+                    use24hFormat: true, // Ubah jadi false jika ingin format AM/PM
+                    onDateTimeChanged: (DateTime newDateTime) {
+                      picked = TimeOfDay.fromDateTime(newDateTime);
+                    },
+                  ),
+                ),
+              ),
+            ],
           ),
-          child: child!,
         );
       },
     );

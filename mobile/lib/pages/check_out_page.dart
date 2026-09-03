@@ -281,9 +281,14 @@ class _CheckOutPageState extends State<CheckOutPage> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
+      body: RefreshIndicator(
+        onRefresh: _fetchLocation,
+        color: AppColors.primary,
+        backgroundColor: Colors.white,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(24),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Main Time Card
@@ -325,6 +330,7 @@ class _CheckOutPageState extends State<CheckOutPage> {
             _buildNotesField(),
           ],
         ),
+      ),
       ),
     );
   }

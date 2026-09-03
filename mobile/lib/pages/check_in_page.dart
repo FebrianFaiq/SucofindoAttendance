@@ -258,10 +258,15 @@ class _CheckInPageState extends State<CheckInPage> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
+      body: RefreshIndicator(
+        onRefresh: _fetchLocation,
+        color: AppColors.primary,
+        backgroundColor: Colors.white,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
             // Time Section
             const SizedBox(height: 8),
             Text(
@@ -307,6 +312,7 @@ class _CheckInPageState extends State<CheckInPage> {
             _buildLocationCard(),
           ],
         ),
+      ),
       ),
     );
   }

@@ -61,27 +61,36 @@ class _OvertimePageState extends State<OvertimePage> {
 
   Future<void> _handlePrint(dynamic item) async {
     final scaffoldContext = ScaffoldMessenger.of(context);
+    
+    void showFloatingSnackBar(String message, {bool isError = true}) {
+      scaffoldContext.showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: isError ? AppColors.danger : AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
     try {
       final response = await OvertimeService.getExportPdfUrl(item['id']);
       if (response['success']) {
         final urlStr = response['url'];
         final uri = Uri.parse(urlStr);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        } else {
-          scaffoldContext.showSnackBar(
-            const SnackBar(content: Text('Tidak dapat membuka link PDF')),
-          );
+        try {
+          if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+            showFloatingSnackBar('Tidak dapat membuka link PDF');
+          }
+        } catch (_) {
+          showFloatingSnackBar('Tidak dapat membuka link PDF');
         }
       } else {
-        scaffoldContext.showSnackBar(
-          SnackBar(content: Text(response['message'] ?? 'Gagal mendapatkan link PDF')),
-        );
+        showFloatingSnackBar(response['message'] ?? 'Gagal mendapatkan link PDF');
       }
     } catch (e) {
-      scaffoldContext.showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      showFloatingSnackBar('Error: $e');
     }
   }
 
@@ -115,8 +124,15 @@ class _OvertimePageState extends State<OvertimePage> {
     
     String _totalDurasi = '${_totalMinutes ~/ 60}j ${_totalMinutes % 60}m';
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+    return RefreshIndicator(
+      onRefresh: () async {
+        await _fetchOvertimes(loadMore: false);
+      },
+      color: AppColors.primary,
+      backgroundColor: Colors.white,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -209,7 +225,8 @@ class _OvertimePageState extends State<OvertimePage> {
             const SizedBox(height: 40),
           ],
         ),
-      );
+      ),
+    );
   }
 
 
@@ -371,6 +388,32 @@ class _OvertimePageState extends State<OvertimePage> {
       }
     }
 
+    String lokasi = '-';
+    String klien = '-';
+    final desc = item['description']?.toString() ?? '';
+    
+    // Parse Lokasi and Klien from description if formatted as [Lokasi: xxx | Klien: yyy | No Order: zzz]
+    if (desc.startsWith('[Lokasi:')) {
+      final endBracket = desc.indexOf(']');
+      if (endBracket != -1) {
+        final infoStr = desc.substring(1, endBracket);
+        final parts = infoStr.split('|');
+        for (var part in parts) {
+          final p = part.trim();
+          if (p.startsWith('Lokasi:')) {
+            lokasi = p.substring(7).trim();
+          } else if (p.startsWith('Klien:')) {
+            klien = p.substring(6).trim();
+          }
+        }
+      }
+    } else {
+      // Fallback if description is not formatted: show a snippet in 'lokasi'
+      if (desc.isNotEmpty) {
+        lokasi = desc.length > 20 ? '${desc.substring(0, 20)}...' : desc;
+      }
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -389,94 +432,133 @@ class _OvertimePageState extends State<OvertimePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Date & Status row
+          // Row 1: Date & Status
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Row(
+                children: [
+                  Icon(Icons.calendar_today_outlined, size: 16, color: AppColors.textPrimary),
+                  const SizedBox(width: 8),
+                  Text(
+                    _formatDateString(item['date']),
+                    style: GoogleFonts.mulish(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              _buildStatusBadge(item['status'] ?? 'Pending'),
+            ],
+          ),
+          
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Divider(height: 1, color: AppColors.border),
+          ),
+          
+          // Row 2: Lokasi & Klien
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Expanded(
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.calendar_today_outlined, size: 15, color: AppColors.textSecondary),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        _formatDateString(item['date']),
-                        style: GoogleFonts.mulish(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                    Text(
+                      'Tempat Kerja',
+                      style: GoogleFonts.mulish(fontSize: 11, color: AppColors.textMuted),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      lokasi.isEmpty ? '-' : lokasi,
+                      style: GoogleFonts.mulish(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.print_outlined, size: 20, color: AppColors.primary),
-                    onPressed: () => _handlePrint(item),
-                    tooltip: 'Cetak SPKL',
-                    padding: const EdgeInsets.only(right: 12),
-                    constraints: const BoxConstraints(),
-                  ),
-                  _buildStatusBadge(item['status'] ?? 'Pending'),
-                ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Nama Pelanggan',
+                      style: GoogleFonts.mulish(fontSize: 11, color: AppColors.textMuted),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      klien.isEmpty ? '-' : klien,
+                      style: GoogleFonts.mulish(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
+          
           const SizedBox(height: 16),
-
-          // Description row
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          
+          // Row 3: Durasi & Cetak
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Keterangan',
-                style: GoogleFonts.mulish(
-                  fontSize: 12,
-                  color: AppColors.textMuted,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                item['description'] ?? '-',
-                style: GoogleFonts.mulish(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Durasi
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Durasi',
-                style: GoogleFonts.mulish(
-                  fontSize: 12,
-                  color: AppColors.textMuted,
-                ),
-              ),
-              const SizedBox(height: 2),
               Row(
                 children: [
-                  Icon(Icons.access_time, size: 16, color: AppColors.primary),
-                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.access_time, size: 14, color: AppColors.primary),
+                  ),
+                  const SizedBox(width: 8),
                   Text(
                     duration,
                     style: GoogleFonts.mulish(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
                       color: AppColors.primaryDark,
                     ),
                   ),
                 ],
+              ),
+              SizedBox(
+                height: 32,
+                child: OutlinedButton.icon(
+                  onPressed: () => _handlePrint(item),
+                  icon: const Icon(Icons.print_outlined, size: 14, color: AppColors.primary),
+                  label: Text(
+                    'Cetak',
+                    style: GoogleFonts.mulish(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    side: BorderSide(color: AppColors.primary.withOpacity(0.4)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
