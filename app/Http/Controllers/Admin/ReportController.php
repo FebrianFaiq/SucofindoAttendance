@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Employee;
 use App\Models\Holiday;
+use App\Models\Project;
+use App\Services\Overtime\OvertimeExportService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -69,10 +71,10 @@ class ReportController extends Controller
         $daysInMonth = $date->daysInMonth;
 
         // Ambil data hari libur bulan ini
-        $holidays = \App\Models\Holiday::whereMonth('date', $month)
+        $holidays = Holiday::whereMonth('date', $month)
             ->whereYear('date', $year)
             ->pluck('date')
-            ->map(fn($d) => \Carbon\Carbon::parse($d)->format('Y-m-d'))
+            ->map(fn ($d) => Carbon::parse($d)->format('Y-m-d'))
             ->toArray();
 
         // Ambil pegawai sesuai role
@@ -176,7 +178,7 @@ class ReportController extends Controller
             for ($day = 1; $day <= $daysInMonth; $day++) {
                 $colLetter = Coordinate::stringFromColumnIndex($day + 3);
                 $key = $employee->id.'_'.$day;
-                
+
                 $currentDate = Carbon::createFromDate($year, $month, $day);
                 $isWeekend = $currentDate->isWeekend();
                 $isHoliday = in_array($currentDate->format('Y-m-d'), $holidays);
@@ -227,10 +229,11 @@ class ReportController extends Controller
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ])->deleteFileAfterSend(true);
     }
+
     /**
      * Export rekap lembur ke Excel menggunakan format template HRD.
      */
-    public function exportOvertimeExcel(Request $request, \App\Services\Overtime\OvertimeExportService $exportService)
+    public function exportOvertimeExcel(Request $request, OvertimeExportService $exportService)
     {
         $request->validate([
             'start_date' => 'required|date',
@@ -244,21 +247,21 @@ class ReportController extends Controller
 
         try {
             $tempFile = $exportService->export($startDate, $endDate, $projectId);
-            
-            $monthName = \Carbon\Carbon::parse($startDate)->format('F_Y');
+
+            $monthName = Carbon::parse($startDate)->format('F_Y');
             $projectSuffix = '';
             if ($projectId) {
-                $project = \App\Models\Project::find($projectId);
-                $projectSuffix = '_' . str_replace(' ', '_', $project->name ?? '');
+                $project = Project::find($projectId);
+                $projectSuffix = '_'.str_replace(' ', '_', $project->name ?? '');
             }
             $filename = "Rekap_Lembur_HRD_{$monthName}{$projectSuffix}.xlsx";
 
             return response()->download($tempFile, $filename, [
                 'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             ])->deleteFileAfterSend(true);
-            
+
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal melakukan export: ' . $e->getMessage());
+            return back()->with('error', 'Gagal melakukan export: '.$e->getMessage());
         }
     }
 }

@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 class CheckInController extends Controller
 {
@@ -42,10 +44,26 @@ class CheckInController extends Controller
         $user = Auth::user();
         $employee = $user->employee;
 
-        // Simpan foto bukti check-in
         $photoPath = null;
         if ($request->hasFile('photo')) {
-            $photoPath = $request->file('photo')->store('attendance/check-in', 'public');
+            $photo = $request->file('photo');
+            $year = date('Y');
+            $targetDir = storage_path("app/public/attendance/check-in/{$year}");
+            if (! is_dir($targetDir)) {
+                mkdir($targetDir, 0755, true);
+            }
+
+            $extension = $photo->getClientOriginalExtension() ?: 'jpg';
+            $fileName = Str::uuid().'.'.$extension;
+            $targetPath = $targetDir.'/'.$fileName;
+
+            // Compress and resize image using Intervention Image
+            $manager = new ImageManager(new Driver());
+            $image = $manager->decode($photo->getRealPath());
+            $image->scaleDown(width: 800);
+            $image->save($targetPath, 75);
+
+            $photoPath = "attendance/check-in/{$year}/{$fileName}";
         }
 
         Attendance::create([

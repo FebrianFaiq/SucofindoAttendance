@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\PasswordChangeLog;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -10,7 +11,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Autentikasi API Mobile — Token-based (Sanctum).
@@ -104,7 +104,7 @@ class AuthController extends Controller
                         'id' => $user->employee->id,
                         'nik' => $user->employee->nik,
                         'division' => $user->employee->division,
-                        'phone' => $user->employee->phone,
+                        'jabatan' => $user->employee->jabatan,
                     ] : null,
                 ],
             ],
@@ -146,7 +146,7 @@ class AuthController extends Controller
             'must_change_password' => false,
         ]);
 
-        \App\Models\PasswordChangeLog::create([
+        PasswordChangeLog::create([
             'user_id' => $user->id,
             'changed_by' => $user->id,
             'method' => 'self_change',
@@ -158,7 +158,7 @@ class AuthController extends Controller
             'message' => 'Password berhasil diubah',
             'data' => [
                 'must_change_password' => false,
-            ]
+            ],
         ]);
     }
 }

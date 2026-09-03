@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -44,6 +45,7 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'default_password' => User::DEFAULT_PASSWORD,
             'auth' => [
                 'user' => $user ? [
                     'id' => $user->id,
@@ -55,7 +57,7 @@ class HandleInertiaRequests extends Middleware
                 'employee' => $employee ? [
                     'id' => $employee->id,
                     'nik' => $employee->nik,
-                    'phone' => $employee->phone,
+                    'jabatan' => $employee->jabatan,
                 ] : null,
                 'activeProject' => $employee?->activeProject()?->only('id', 'name', 'code'),
             ],

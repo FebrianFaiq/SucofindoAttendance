@@ -8,6 +8,7 @@ use App\Models\Overtime;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -42,7 +43,7 @@ class OvertimeController extends Controller
         $data = $overtimes->through(function ($overtime) {
             return [
                 'id' => $overtime->id,
-                'date' => $overtime->date instanceof \Illuminate\Support\Carbon
+                'date' => $overtime->date instanceof Carbon
                     ? $overtime->date->format('Y-m-d')
                     : $overtime->date,
                 'start_time' => $overtime->start_time,
@@ -89,7 +90,7 @@ class OvertimeController extends Controller
             'message' => 'Entri lembur berhasil disimpan',
             'data' => [
                 'overtime_id' => $overtime->id,
-                'date' => $overtime->date instanceof \Illuminate\Support\Carbon
+                'date' => $overtime->date instanceof Carbon
                     ? $overtime->date->format('Y-m-d')
                     : $overtime->date,
                 'status' => $overtime->status,

@@ -21,11 +21,6 @@ use Inertia\Response;
 class EmployeeController extends Controller
 {
     /**
-     * Default password untuk pegawai baru.
-     */
-    private const DEFAULT_PASSWORD = 'Sucofindo123';
-
-    /**
      * Tampilkan daftar karyawan.
      * (FR-EMP)
      */
@@ -42,7 +37,7 @@ class EmployeeController extends Controller
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('nik', 'like', "%{$search}%")
-                        ->orWhere('phone', 'like', "%{$search}%")
+                        ->orWhere('jabatan', 'like', "%{$search}%")
                         ->orWhereHas('user', function ($uq) use ($search) {
                             $uq->where('name', 'like', "%{$search}%")
                                 ->orWhere('email', 'like', "%{$search}%");
@@ -90,7 +85,7 @@ class EmployeeController extends Controller
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
-                'password' => Hash::make(self::DEFAULT_PASSWORD),
+                'password' => Hash::make(User::DEFAULT_PASSWORD),
                 'role' => $role,
                 'must_change_password' => true,
                 'is_active' => $validated['is_active'] ?? true,
@@ -101,7 +96,7 @@ class EmployeeController extends Controller
                 'user_id' => $user->id,
                 'nik' => $validated['nik'],
                 'division' => $role === 'intern' ? ($validated['division'] ?? null) : null,
-                'phone' => $validated['phone'] ?? null,
+                'jabatan' => $role === 'employee' ? ($validated['jabatan'] ?? null) : null,
             ]);
 
             // 3. Assign ke proyek jika diberikan dan role adalah employee (FR-EMP-04)
@@ -128,7 +123,7 @@ class EmployeeController extends Controller
         });
 
         return redirect()->route('admin.employees.index')
-            ->with('success', 'Data Karyawan Berhasil di Tambahkan (Password default: '.self::DEFAULT_PASSWORD.')');
+            ->with('success', 'Data Karyawan Berhasil di Tambahkan (Password default: '.User::DEFAULT_PASSWORD.')');
     }
 
     /**
@@ -191,7 +186,7 @@ class EmployeeController extends Controller
             $employee->update([
                 'nik' => $validated['nik'],
                 'division' => $role === 'intern' ? ($validated['division'] ?? null) : null,
-                'phone' => $validated['phone'] ?? $employee->phone,
+                'jabatan' => $role === 'employee' ? ($validated['jabatan'] ?? null) : null,
             ]);
 
             // 3. Handle project assignment

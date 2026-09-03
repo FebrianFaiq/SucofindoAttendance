@@ -43,6 +43,7 @@ class HolidayController extends Controller
             'availableYears' => $availableYears,
         ]);
     }
+
     /**
      * Simpan hari libur baru (nasional atau khusus perusahaan).
      */

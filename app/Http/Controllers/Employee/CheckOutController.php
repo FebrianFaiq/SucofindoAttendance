@@ -7,8 +7,11 @@ use App\Http\Requests\Employee\CheckOutRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 class CheckOutController extends Controller
 {
@@ -50,7 +53,24 @@ class CheckOutController extends Controller
 
         $photoPath = null;
         if ($request->hasFile('photo')) {
-            $photoPath = $request->file('photo')->store('attendance/check-out', 'public');
+            $photo = $request->file('photo');
+            $year = date('Y');
+            $targetDir = storage_path("app/public/attendance/check-out/{$year}");
+            if (! is_dir($targetDir)) {
+                mkdir($targetDir, 0755, true);
+            }
+
+            $extension = $photo->getClientOriginalExtension() ?: 'jpg';
+            $fileName = Str::uuid().'.'.$extension;
+            $targetPath = $targetDir.'/'.$fileName;
+
+            // Compress and resize image using Intervention Image
+            $manager = new ImageManager(new Driver());
+            $image = $manager->decode($photo->getRealPath());
+            $image->scaleDown(width: 800);
+            $image->save($targetPath, 75);
+
+            $photoPath = "attendance/check-out/{$year}/{$fileName}";
         }
 
         $todayAttendance->update([

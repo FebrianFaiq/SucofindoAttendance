@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Carbon;
+use Laravel\Sanctum\HasApiTokens;
 
 /**
  * Tabel autentikasi tunggal untuk Admin & Karyawan.
@@ -31,6 +31,11 @@ use Illuminate\Support\Carbon;
  */
 class User extends Authenticatable
 {
+    /**
+     * Default password untuk pegawai baru.
+     */
+    public const DEFAULT_PASSWORD = 'Sucofindo123';
+
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 

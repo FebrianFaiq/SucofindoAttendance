@@ -37,7 +37,7 @@ class ProfileController extends Controller
                 'employee' => $employee ? [
                     'nik' => $employee->nik,
                     'division' => $employee->division,
-                    'phone' => $employee->phone,
+                    'jabatan' => $employee->jabatan,
                 ] : null,
                 'active_project' => $activeProject && ! $isIntern ? [
                     'id' => $activeProject->id,

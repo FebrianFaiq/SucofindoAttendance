@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\PasswordChangeLog;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,11 +14,6 @@ use Illuminate\Support\Facades\Hash;
 
 class EmployeePasswordController extends Controller
 {
-    /**
-     * Default password untuk reset.
-     */
-    private const DEFAULT_PASSWORD = '123';
-
     /**
      * Reset password karyawan ke password default.
      * (FR-AUTH-03)
@@ -32,7 +28,7 @@ class EmployeePasswordController extends Controller
 
             // 1. Reset password ke default
             $user->update([
-                'password' => Hash::make(self::DEFAULT_PASSWORD),
+                'password' => Hash::make(User::DEFAULT_PASSWORD),
                 'must_change_password' => true,
             ]);
 
@@ -46,6 +42,6 @@ class EmployeePasswordController extends Controller
         });
 
         return redirect()->back()
-            ->with('success', 'Password karyawan berhasil di-reset. Password default: '.self::DEFAULT_PASSWORD);
+            ->with('success', 'Password karyawan berhasil di-reset. Password default: '.User::DEFAULT_PASSWORD);
     }
 }

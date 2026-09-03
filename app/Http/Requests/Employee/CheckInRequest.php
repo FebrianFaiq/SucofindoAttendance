@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Employee;
 
-use App\Models\Holiday;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;

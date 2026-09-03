@@ -11,6 +11,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 /**
  * Attendance API — Check-in, Check-out, History.
@@ -42,15 +44,23 @@ class AttendanceController extends Controller
             ], 422);
         }
 
-        $targetDir = storage_path('app/public/attendance/check-in');
+        $year = date('Y');
+        $targetDir = storage_path("app/public/attendance/check-in/{$year}");
         if (! is_dir($targetDir)) {
             mkdir($targetDir, 0755, true);
         }
 
         $extension = $photo->getClientOriginalExtension() ?: 'jpg';
         $fileName = Str::uuid().'.'.$extension;
-        $photo->move($targetDir, $fileName);
-        $photoPath = 'attendance/check-in/'.$fileName;
+        $targetPath = $targetDir.'/'.$fileName;
+
+        // Compress and resize image using Intervention Image
+        $manager = new ImageManager(new Driver());
+        $image = $manager->decode($photo->getRealPath());
+        $image->scaleDown(width: 800);
+        $image->save($targetPath, 75);
+
+        $photoPath = "attendance/check-in/{$year}/{$fileName}";
 
         $attendance = Attendance::create([
             'employee_id' => $employee->id,
@@ -90,15 +100,23 @@ class AttendanceController extends Controller
         $photoPath = null;
         $photo = $request->file('photo');
         if ($photo && $photo->isValid()) {
-            $targetDir = storage_path('app/public/attendance/check-out');
+            $year = date('Y');
+            $targetDir = storage_path("app/public/attendance/check-out/{$year}");
             if (! is_dir($targetDir)) {
                 mkdir($targetDir, 0755, true);
             }
 
             $extension = $photo->getClientOriginalExtension() ?: 'jpg';
             $fileName = Str::uuid().'.'.$extension;
-            $photo->move($targetDir, $fileName);
-            $photoPath = 'attendance/check-out/'.$fileName;
+            $targetPath = $targetDir.'/'.$fileName;
+
+            // Compress and resize image using Intervention Image
+            $manager = new ImageManager(new Driver());
+            $image = $manager->decode($photo->getRealPath());
+            $image->scaleDown(width: 800);
+            $image->save($targetPath, 75);
+
+            $photoPath = "attendance/check-out/{$year}/{$fileName}";
         }
 
         $todayAttendance->update([

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Employee\OvertimeStoreRequest;
 use App\Models\Overtime;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -42,14 +43,14 @@ class OvertimeController extends Controller
             $durationHours = intval($overtime->duration);
             $durationMinutes = round(($overtime->duration - $durationHours) * 60);
             $durationFormatted = "{$durationHours} Jam {$durationMinutes} Menit";
-            
+
             $location = 'Kantor';
             if (preg_match('/\[Lokasi:\s*(.*?)\s*\|/', $overtime->description, $locMatches)) {
                 if ($locMatches[1] !== '-' && $locMatches[1] !== '') {
                     $location = $locMatches[1];
                 }
             }
-            
+
             $client = $employee->activeProject()?->name ?? 'Internal';
             if (preg_match('/Klien:\s*(.*?)\s*\|/', $overtime->description, $clientMatches)) {
                 if ($clientMatches[1] !== '-' && $clientMatches[1] !== '') {
@@ -61,7 +62,7 @@ class OvertimeController extends Controller
                 'id' => $overtime->id,
                 'spkl_number' => $overtime->spkl_number,
                 'raw_date' => $overtime->date,
-                'date' => \Carbon\Carbon::parse($overtime->date)->translatedFormat('d M Y'),
+                'date' => Carbon::parse($overtime->date)->translatedFormat('d M Y'),
                 'start_time' => $overtime->start_time,
                 'end_time' => $overtime->end_time,
                 'description' => $overtime->description,
@@ -78,7 +79,7 @@ class OvertimeController extends Controller
             ->where('status', 'approved')
             ->get()
             ->sum('duration');
-        
+
         $totalHours = intval($totalDurationMTD);
         $totalMinutes = round(($totalDurationMTD - $totalHours) * 60);
         $totalDurationFormatted = "{$totalHours}h {$totalMinutes}m";
@@ -120,20 +121,20 @@ class OvertimeController extends Controller
         $user = Auth::user();
         $employee = $user->employee;
 
-        $date = \Carbon\Carbon::parse($request->validated('date'));
+        $date = Carbon::parse($request->validated('date'));
 
         $count = Overtime::whereYear('date', $date->year)
             ->whereMonth('date', $date->month)
             ->count();
-            
+
         $sequence = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
-        
+
         $romanMonths = [
             1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI',
-            7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'
+            7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII',
         ];
         $romanMonth = $romanMonths[$date->month];
-        
+
         $spklNumber = "{$sequence}/SBA-{$romanMonth}/LEMBUR/{$date->year}";
 
         Overtime::create([

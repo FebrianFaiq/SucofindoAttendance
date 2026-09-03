@@ -18,7 +18,7 @@ use Illuminate\Support\Carbon;
  * @property int $user_id
  * @property string $nik
  * @property string|null $division
- * @property string|null $phone
+ * @property string|null $jabatan
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
@@ -37,7 +37,7 @@ class Employee extends Model
         'user_id',
         'nik',
         'division',
-        'phone',
+        'jabatan',
     ];
 
     // ───────────────────────────────────────────

@@ -23,7 +23,7 @@ class OvertimeCalculationService
         }
 
         $diffInMinutes = $start->diffInMinutes($end);
-        
+
         // Kembalikan dalam format float (jam)
         return abs($diffInMinutes) / 60;
     }
@@ -35,13 +35,13 @@ class OvertimeCalculationService
     public function isHoliday(string $date): bool
     {
         $carbonDate = Carbon::parse($date);
-        
+
         if ($carbonDate->isWeekend()) {
             return true;
         }
 
         $isNationalHoliday = Holiday::where('date', $date)->exists();
-        
+
         return $isNationalHoliday;
     }
 
@@ -52,10 +52,12 @@ class OvertimeCalculationService
     {
         if ($isHoliday) {
             $holidayRate = Setting::where('key', 'overtime_rate_holiday')->value('value');
+
             return (float) ($holidayRate ?? 0.02); // default 2%
         }
 
         $normalRate = Setting::where('key', 'overtime_rate_normal')->value('value');
+
         return (float) ($normalRate ?? 0.015); // default 1.5%
     }
 

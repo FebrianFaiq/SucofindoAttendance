@@ -21,24 +21,24 @@ class DashboardStreamController extends Controller
             // Ini untuk mencegah proses PHP yang hang tanpa henti di FPM.
             $startTime = time();
             $maxDuration = 120; // 2 menit
-            
+
             while (true) {
                 if (connection_aborted() || (time() - $startTime) > $maxDuration) {
                     break;
                 }
 
                 $data = $this->getDashboardData($request);
-                
+
                 // Format SSE
                 echo "event: message\n";
-                echo "data: " . json_encode($data) . "\n\n";
-                
+                echo 'data: '.json_encode($data)."\n\n";
+
                 // Flush buffer PHP dan server web
                 if (ob_get_level() > 0) {
                     ob_flush();
                 }
                 flush();
-                
+
                 // Tunggu 3 detik sebelum polling berikutnya
                 sleep(3);
             }

@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Search, Plus, ChevronLeft, ChevronRight, IdCard, ClipboardList, Pen, RotateCcw, Trash2, LayoutGrid, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +13,7 @@ interface EmployeeItem {
     user_id: number;
     nik: string;
     division?: string | null;
-    phone: string | null;
+    jabatan: string | null;
     user: {
         id: number;
         name: string;
@@ -62,6 +62,7 @@ interface EmployeesIndexProps {
 }
 
 export default function EmployeesIndex({ employees, filters }: EmployeesIndexProps) {
+    const { default_password } = usePage<any>().props;
     const [selectedEmployee, setSelectedEmployee] = useState<EmployeeItem | null>(null);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState(filters?.search || '');
@@ -185,8 +186,8 @@ return 'EM';
                                     <th className="px-6 py-4 font-bold tracking-wide">Karyawan</th>
                                     <th className="px-6 py-4 font-bold tracking-wide">NIK</th>
                                     <th className="px-6 py-4 font-bold tracking-wide">Email</th>
+                                    <th className="px-6 py-4 font-bold tracking-wide">Jabatan</th>
                                     <th className="px-6 py-4 font-bold tracking-wide">Proyek / Bidang</th>
-                                    <th className="px-6 py-4 font-bold tracking-wide">Gaji Pokok</th>
                                     <th className="px-6 py-4 font-bold tracking-wide">Status</th>
                                     <th className="px-6 py-4 font-bold tracking-wide text-right">Aksi</th>
                                 </tr>
@@ -225,6 +226,13 @@ return 'EM';
                                                     {emp.nik ? emp.nik : <span className="text-neutral-400 font-bold">—</span>}
                                                 </td>
                                                 <td className="px-6 py-4 font-semibold text-neutral-600">{emp.user?.email}</td>
+                                                <td className="px-6 py-4 font-semibold text-neutral-600">
+                                                    {emp.user?.role === 'intern' ? (
+                                                        <span className="text-neutral-400">—</span>
+                                                    ) : (
+                                                        emp.jabatan ? emp.jabatan : <span className="text-neutral-400 font-bold">—</span>
+                                                    )}
+                                                </td>
                                                 <td className="px-6 py-4">
                                                     {!emp.user?.is_active ? (
                                                         <span className="text-neutral-400 font-bold">—</span>
@@ -240,15 +248,6 @@ return 'EM';
                                                         <Badge variant="secondary" className="rounded-md border-none bg-[#035EA9]/10 text-[#035EA9] hover:bg-[#035EA9]/20 px-2.5 py-1 text-[13px] font-bold">
                                                             {activeProject}
                                                         </Badge>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 font-semibold text-neutral-600 whitespace-nowrap">
-                                                    {emp.user?.role === 'intern' ? (
-                                                        <span className="text-neutral-400">—</span>
-                                                    ) : emp.salaries && emp.salaries.length > 0 ? (
-                                                        `Rp ${Number(emp.salaries[0].base_salary).toLocaleString('id-ID')}`
-                                                    ) : (
-                                                        <span className="text-neutral-400">Belum Diset</span>
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -407,7 +406,7 @@ return 'EM';
                                             </div>
                                         </div>
 
-                                        {/* Row 2: Email & No Telepon */}
+                                        {/* Row 2: Email & Jabatan */}
                                         <div className="grid grid-cols-2 gap-x-3 w-full">
                                             <div className="flex flex-col h-full w-full min-w-0">
                                                 <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">EMAIL</span>
@@ -417,14 +416,16 @@ return 'EM';
                                                     </a>
                                                 </div>
                                             </div>
-                                            <div className="flex flex-col h-full w-full min-w-0">
-                                                <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">NO. TELEPON</span>
-                                                <div className="w-full border-b-2 border-[#035EA9] pb-1 mt-1 flex-1 flex flex-col justify-end">
-                                                    <span className="text-xs font-semibold text-neutral-900 break-words block">
-                                                        {selectedEmployee.phone || '—'}
-                                                    </span>
+                                            {selectedEmployee.user?.role !== 'intern' && (
+                                                <div className="flex flex-col h-full w-full min-w-0">
+                                                    <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">JABATAN</span>
+                                                    <div className="w-full border-b-2 border-[#035EA9] pb-1 mt-1 flex-1 flex flex-col justify-end">
+                                                        <span className="text-xs font-semibold text-neutral-900 break-words block">
+                                                            {selectedEmployee.jabatan || '—'}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
                                         </div>
 
                                         {/* Row 3: Gaji Pokok (hanya PTT) */}
@@ -517,8 +518,8 @@ return 'EM';
                                 <AlertTriangle className="h-8 w-8 text-red-600" />
                             </div>
                             <DialogTitle className="text-2xl font-bold text-[#1E293B]">Reset Password?</DialogTitle>
-                            <DialogDescription className="text-[15px] font-medium text-[#64748B] mt-3 leading-relaxed text-center">
-                                Apakah Anda yakin ingin mereset kata sandi karyawan ini? Tindakan ini akan mereset password ke bawaan (Sucofindo123).
+                            <DialogDescription className="text-neutral-500 font-medium">
+                                Apakah Anda yakin ingin mereset kata sandi karyawan ini? Tindakan ini akan mereset password ke bawaan (<b>{default_password}</b>).
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter className="flex flex-col sm:flex-col w-full gap-3 mt-6">
@@ -546,8 +547,8 @@ return 'EM';
                                 <CheckCircle2 className="h-8 w-8 text-emerald-500" />
                             </div>
                             <DialogTitle className="text-2xl font-bold text-[#1E293B]">Reset Berhasil!</DialogTitle>
-                            <DialogDescription className="text-[15px] font-medium text-[#64748B] mt-3 leading-relaxed text-center">
-                                Kata sandi telah berhasil diatur ulang menjadi <b>Sucofindo123</b>. Karyawan dapat login menggunakan password baru ini!
+                            <DialogDescription className="text-neutral-500 font-medium pt-2">
+                                Kata sandi telah berhasil diatur ulang menjadi <b>{default_password}</b>. Karyawan dapat login menggunakan password baru ini!
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter className="w-full mt-6 sm:justify-center">

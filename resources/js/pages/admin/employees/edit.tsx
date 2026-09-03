@@ -1,4 +1,4 @@
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import { RotateCcw, Save, AlertTriangle, CheckCircle2, Briefcase, GraduationCap } from 'lucide-react';
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,7 @@ interface EmployeeData {
     user_id: number;
     nik: string;
     division: string | null;
-    phone: string | null;
+    jabatan: string | null;
     user: {
         id: number;
         name: string;
@@ -46,13 +46,14 @@ interface EmployeesEditProps {
 }
 
 export default function EmployeesEdit({ employee, projects, activeSalary }: EmployeesEditProps) {
+    const { default_password } = usePage<any>().props;
     const activeProjectId = employee.projects?.[0]?.id ? String(employee.projects[0].id) : '';
 
     const { data, setData, put, processing, errors } = useForm({
         name: employee.user?.name || '',
         nik: employee.nik || '',
         email: employee.user?.email || '',
-        phone: employee.phone || '',
+        jabatan: employee.jabatan || '',
         role: employee.user?.role || 'employee',
         division: employee.division || 'BIT',
         project_id: activeProjectId,
@@ -156,22 +157,6 @@ export default function EmployeesEdit({ employee, projects, activeSalary }: Empl
                                     {errors.email && <p className="text-xs text-red-500 font-semibold">{errors.email}</p>}
                                 </div>
 
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-[14px] font-bold text-[#1E293B]">Nomor Telepon</label>
-                                    <Input
-                                        type="text"
-                                        inputMode="numeric"
-                                        pattern="[0-9]*"
-                                        maxLength={15}
-                                        value={data.phone || ''}
-                                        onChange={(e) => {
-                                            const val = e.target.value.replace(/\D/g, '');
-                                            setData('phone', val);
-                                        }}
-                                        className="h-11 bg-[#F8FAFC] border-neutral-200 text-[#1E293B] font-semibold focus-visible:ring-[#035EA9]"
-                                    />
-                                    {errors.phone && <p className="text-xs text-red-500 font-semibold">{errors.phone}</p>}
-                                </div>
                             </div>
                         </section>
 
@@ -265,6 +250,21 @@ export default function EmployeesEdit({ employee, projects, activeSalary }: Empl
                                     </div>
                                 )}
 
+                                {/* Jabatan (hanya untuk PTT Proyek) */}
+                                {data.role === 'employee' && (
+                                    <div className="flex flex-col gap-2">
+                                        <label className="text-[14px] font-bold text-[#1E293B]">Jabatan</label>
+                                        <Input
+                                            type="text"
+                                            value={data.jabatan || ''}
+                                            onChange={(e) => setData('jabatan', e.target.value)}
+                                            placeholder="Contoh: Analis, Koordinator, dll."
+                                            className="h-11 bg-[#F8FAFC] border-neutral-200 text-[#1E293B] font-semibold focus-visible:ring-[#035EA9]"
+                                        />
+                                        {errors.jabatan && <p className="text-xs text-red-500 font-semibold">{errors.jabatan}</p>}
+                                    </div>
+                                )}
+
                                 {/* Gaji Pokok (hanya untuk PTT Proyek) */}
                                 {data.role === 'employee' && (
                                     <div className="flex flex-col gap-2">
@@ -329,8 +329,8 @@ export default function EmployeesEdit({ employee, projects, activeSalary }: Empl
                                     Reset Password
                                 </Button>
 
-                                <p className="text-[13px] font-medium text-[#64748B] mt-1">
-                                    Reset password akan mengembalikan kata sandi karyawan ke default (<b>Sucofindo123</b>).
+                                <p className="text-[13px] font-medium text-[#64748B]">
+                                    Reset password akan mengembalikan kata sandi karyawan ke default (<b>{default_password}</b>).
                                 </p>
                             </div>
                         </section>
@@ -364,8 +364,8 @@ export default function EmployeesEdit({ employee, projects, activeSalary }: Empl
                                 <AlertTriangle className="h-8 w-8 text-red-600" />
                             </div>
                             <DialogTitle className="text-2xl font-bold text-[#1E293B]">Reset Password?</DialogTitle>
-                            <DialogDescription className="text-[15px] font-medium text-[#64748B] mt-3 leading-relaxed text-center">
-                                Apakah Anda yakin ingin mereset kata sandi karyawan ini? Tindakan ini akan mereset password ke bawaan (<b>Sucofindo123</b>).
+                            <DialogDescription className="text-neutral-500 font-medium">
+                                Apakah Anda yakin ingin mereset kata sandi karyawan ini? Tindakan ini akan mereset password ke bawaan (<b>{default_password}</b>).
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter className="flex flex-col sm:flex-col w-full gap-3 mt-6">
@@ -393,8 +393,8 @@ export default function EmployeesEdit({ employee, projects, activeSalary }: Empl
                                 <CheckCircle2 className="h-8 w-8 text-emerald-500" />
                             </div>
                             <DialogTitle className="text-2xl font-bold text-[#1E293B]">Reset Berhasil!</DialogTitle>
-                            <DialogDescription className="text-[15px] font-medium text-[#64748B] mt-3 leading-relaxed text-center">
-                                Kata sandi telah berhasil diatur ulang menjadi <b>Sucofindo123</b>. Karyawan dapat login kembali menggunakan password ini!
+                            <DialogDescription className="text-neutral-500 font-medium pt-2">
+                                Kata sandi telah berhasil diatur ulang menjadi <b>{default_password}</b>. Karyawan dapat login kembali menggunakan password ini!
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter className="w-full mt-6 sm:justify-center">

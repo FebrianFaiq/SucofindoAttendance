@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
 
@@ -21,7 +22,7 @@ class ForceChangePasswordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'password' => ['required', 'confirmed', 'not_in:Sucofindo123', Password::defaults()],
+            'password' => ['required', 'confirmed', 'not_in:'.User::DEFAULT_PASSWORD, Password::defaults()],
         ];
     }
 

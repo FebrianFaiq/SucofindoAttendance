@@ -44,10 +44,12 @@ export default function Profile({ employee, activeProject, activeSalary }: Profi
                             <span className="font-semibold text-neutral-500 uppercase text-[10px] tracking-wider self-center">NIK</span>
                             <span className="font-medium text-neutral-900">{employee?.nik || '—'}</span>
                         </div>
-                        <div className="grid grid-cols-[120px_1fr] gap-2 border-b border-neutral-100 pb-3">
-                            <span className="font-semibold text-neutral-500 uppercase text-[10px] tracking-wider self-center">Telepon</span>
-                            <span className="font-medium text-neutral-900">{employee?.phone || '—'}</span>
-                        </div>
+                        {employee?.user?.role !== 'intern' && (
+                            <div className="grid grid-cols-[120px_1fr] gap-2 border-b border-neutral-100 pb-3">
+                                <span className="font-semibold text-neutral-500 uppercase text-[10px] tracking-wider self-center">Jabatan</span>
+                                <span className="font-medium text-neutral-900">{employee?.jabatan || '—'}</span>
+                            </div>
+                        )}
                         <div className="grid grid-cols-[120px_1fr] gap-2 border-b border-neutral-100 pb-3">
                             <span className="font-semibold text-neutral-500 uppercase text-[10px] tracking-wider self-center">
                                 {employee?.user?.role === 'intern' ? 'Bidang' : 'Proyek Aktif'}

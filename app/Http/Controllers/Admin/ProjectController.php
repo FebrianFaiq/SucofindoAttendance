@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreProjectRequest;
+use App\Models\Employee;
 use App\Models\Project;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -57,16 +59,16 @@ class ProjectController extends Controller
         $project->load([
             'employees' => function ($query) {
                 $query->wherePivot('status', 'active')
-                      ->with('user:id,name,email,role,is_active');
-            }
+                    ->with('user:id,name,email,role,is_active');
+            },
         ]);
 
-        $availableEmployees = \App\Models\Employee::with(['user:id,name,email,role', 'projects' => function($q) {
+        $availableEmployees = Employee::with(['user:id,name,email,role', 'projects' => function ($q) {
             $q->where('employee_projects.status', 'active');
         }])
-        ->whereHas('user', function($q) {
-            $q->where('is_active', true)->where('role', 'employee');
-        })->get();
+            ->whereHas('user', function ($q) {
+                $q->where('is_active', true)->where('role', 'employee');
+            })->get();
 
         return Inertia::render('admin/projects/show', [
             'project' => $project,
@@ -102,8 +104,8 @@ class ProjectController extends Controller
         $project->update($validated);
 
         // Jika proyek di non-aktifkan, unassign semua karyawan yang sedang bertugas
-        if ($wasActive && !$project->is_active) {
-            \Illuminate\Support\Facades\DB::table('employee_projects')
+        if ($wasActive && ! $project->is_active) {
+            DB::table('employee_projects')
                 ->where('project_id', $project->id)
                 ->where('status', 'active')
                 ->update([

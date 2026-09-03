@@ -1,4 +1,4 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { Eye, EyeOff, UserPlus, GraduationCap, Briefcase } from 'lucide-react';
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -17,12 +17,13 @@ interface EmployeesCreateProps {
 
 export default function EmployeesCreate({ projects }: EmployeesCreateProps) {
     const [showPassword, setShowPassword] = useState(false);
+    const { default_password } = usePage<any>().props;
 
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         nik: '',
         email: '',
-        phone: '',
+        jabatan: '',
         role: 'employee',
         division: 'BIT',
         project_id: '',
@@ -106,23 +107,6 @@ export default function EmployeesCreate({ projects }: EmployeesCreateProps) {
                                     {errors.email && <p className="text-xs text-red-500 font-semibold">{errors.email}</p>}
                                 </div>
 
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-[14px] font-bold text-[#1E293B]">Nomor Telepon</label>
-                                    <Input 
-                                        type="text"
-                                        inputMode="numeric"
-                                        pattern="[0-9]*"
-                                        maxLength={15}
-                                        value={data.phone}
-                                        onChange={(e) => {
-                                            const val = e.target.value.replace(/\D/g, '');
-                                            setData('phone', val);
-                                        }}
-                                        placeholder="Contoh: 081234567890" 
-                                        className="h-11 bg-[#F8FAFC] border-neutral-200 text-[#1E293B] font-semibold focus-visible:ring-[#035EA9]"
-                                    />
-                                    {errors.phone && <p className="text-xs text-red-500 font-semibold">{errors.phone}</p>}
-                                </div>
                             </div>
                         </section>
 
@@ -214,6 +198,21 @@ export default function EmployeesCreate({ projects }: EmployeesCreateProps) {
                                     </div>
                                 )}
 
+                                {/* Jabatan (hanya untuk PTT Proyek) */}
+                                {data.role === 'employee' && (
+                                    <div className="flex flex-col gap-2">
+                                        <label className="text-[14px] font-bold text-[#1E293B]">Jabatan</label>
+                                        <Input
+                                            type="text"
+                                            value={data.jabatan}
+                                            onChange={(e) => setData('jabatan', e.target.value)}
+                                            placeholder="Contoh: Analis, Koordinator, dll."
+                                            className="h-11 bg-[#F8FAFC] border-neutral-200 text-[#1E293B] font-semibold focus-visible:ring-[#035EA9]"
+                                        />
+                                        {errors.jabatan && <p className="text-xs text-red-500 font-semibold">{errors.jabatan}</p>}
+                                    </div>
+                                )}
+
                                 {/* Gaji Pokok (hanya untuk PTT Proyek) */}
                                 {data.role === 'employee' && (
                                     <div className="flex flex-col gap-2">
@@ -267,13 +266,13 @@ export default function EmployeesCreate({ projects }: EmployeesCreateProps) {
                                 <div className="relative">
                                     <Input 
                                         type="text"
-                                        defaultValue="Sucofindo123" 
+                                        defaultValue={default_password} 
                                         disabled
                                         className="h-11 bg-[#F1F5F9] border-neutral-200 text-[#64748B] font-semibold focus-visible:ring-0 opacity-100 cursor-not-allowed"
                                     />
                                 </div>
                                 <p className="text-[13px] font-medium text-[#64748B]">
-                                    Password awal diset ke bawaan (<b>Sucofindo123</b>). Karyawan dapat mengganti password setelah login.
+                                    Password awal diset ke bawaan (<b>{default_password}</b>). Karyawan dapat mengganti password setelah login.
                                 </p>
                             </div>
                         </section>

@@ -25,7 +25,7 @@ class StoreEmployeeRequest extends FormRequest
             'nik' => ['nullable', 'numeric', 'digits:16', 'unique:employees,nik'],
             'role' => ['required', 'in:employee,intern'],
             'division' => ['nullable', 'required_if:role,intern', 'in:LSI,DukBis,BIT,KSP'],
-            'phone' => ['nullable', 'numeric'],
+            'jabatan' => ['nullable', 'string', 'max:100'],
             'project_id' => ['nullable', 'exists:projects,id'],
             'is_active' => ['nullable', 'boolean'],
             'base_salary' => ['nullable', 'required_if:role,employee', 'numeric', 'min:0'],
@@ -45,7 +45,7 @@ class StoreEmployeeRequest extends FormRequest
             'nik.unique' => 'NIK sudah terdaftar.',
             'nik.numeric' => 'NIK harus berupa angka.',
             'nik.digits' => 'NIK harus tepat 16 digit.',
-            'phone.numeric' => 'Nomor telepon harus berupa angka.',
+
             'project_id.exists' => 'Proyek tidak ditemukan.',
             'base_salary.required_if' => 'Gaji pokok wajib diisi untuk PTT Proyek.',
             'base_salary.numeric' => 'Gaji pokok harus berupa angka.',

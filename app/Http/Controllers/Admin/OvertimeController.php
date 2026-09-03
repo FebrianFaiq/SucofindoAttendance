@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Holiday;
 use App\Models\Overtime;
+use App\Models\Project;
 use App\Models\Setting;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -24,7 +28,9 @@ class OvertimeController extends Controller
 
         if ($request->filled('status') && $request->input('status') !== 'all') {
             $statusInput = $request->input('status');
-            if ($statusInput === 'canceled') $statusInput = 'rejected';
+            if ($statusInput === 'canceled') {
+                $statusInput = 'rejected';
+            }
             $query->where('status', $statusInput);
         }
 
@@ -45,36 +51,36 @@ class OvertimeController extends Controller
             $project = $employee->activeProject();
             $salary = $employee->activeSalary();
 
-                $description = $overtime->description ?? '';
-                $locationClient = '-';
-                if (preg_match('/^\[Lokasi: (.*?) \| Klien: (.*?) \| No Order: (.*?)\]\n?(.*)$/s', $description, $matches)) {
-                    $locationClient = $matches[1] . ' / ' . $matches[2];
-                    $description = trim($matches[4]);
-                } elseif (preg_match('/^\[Lokasi: (.*?) \| Klien: (.*?)\]\n?(.*)$/s', $description, $matches)) {
-                    $locationClient = $matches[1] . ' / ' . $matches[2];
-                    $description = trim($matches[3]);
-                }
+            $description = $overtime->description ?? '';
+            $locationClient = '-';
+            if (preg_match('/^\[Lokasi: (.*?) \| Klien: (.*?) \| No Order: (.*?)\]\n?(.*)$/s', $description, $matches)) {
+                $locationClient = $matches[1].' / '.$matches[2];
+                $description = trim($matches[4]);
+            } elseif (preg_match('/^\[Lokasi: (.*?) \| Klien: (.*?)\]\n?(.*)$/s', $description, $matches)) {
+                $locationClient = $matches[1].' / '.$matches[2];
+                $description = trim($matches[3]);
+            }
 
-                return [
-                    'id' => $overtime->id,
-                    'spkl_no' => $overtime->spkl_number ?? '-',
-                    'employee' => [
-                        'nik' => $employee->nik,
-                        'name' => $user->name,
-                        'role' => $user->role,
-                        'division' => $employee->division,
-                        'project' => $project?->name,
-                    ],
+            return [
+                'id' => $overtime->id,
+                'spkl_no' => $overtime->spkl_number ?? '-',
+                'employee' => [
+                    'nik' => $employee->nik,
+                    'name' => $user->name,
+                    'role' => $user->role,
+                    'division' => $employee->division,
                     'project' => $project?->name,
-                    'location_client' => $locationClient,
-                    'date' => $overtime->date->format('Y-m-d'),
-                    'start_time' => \Carbon\Carbon::parse($overtime->start_time)->format('H:i'),
-                    'end_time' => \Carbon\Carbon::parse($overtime->end_time)->format('H:i'),
-                    'duration_hours' => $overtime->duration,
-                    'status' => $overtime->status === 'rejected' ? 'canceled' : $overtime->status,
-                    'work_notes' => $description,
-                    'gaji_pokok' => $salary?->base_salary ?? 0,
-                    'is_holiday' => $overtime->date->isWeekend() || \App\Models\Holiday::isHoliday($overtime->date),
+                ],
+                'project' => $project?->name,
+                'location_client' => $locationClient,
+                'date' => $overtime->date->format('Y-m-d'),
+                'start_time' => Carbon::parse($overtime->start_time)->format('H:i'),
+                'end_time' => Carbon::parse($overtime->end_time)->format('H:i'),
+                'duration_hours' => $overtime->duration,
+                'status' => $overtime->status === 'rejected' ? 'canceled' : $overtime->status,
+                'work_notes' => $description,
+                'gaji_pokok' => $salary?->base_salary ?? 0,
+                'is_holiday' => $overtime->date->isWeekend() || Holiday::isHoliday($overtime->date),
             ];
         });
 
@@ -84,15 +90,19 @@ class OvertimeController extends Controller
 
         // Ambil threshold dari settings
         $thresholdHours = Setting::getValue('overtime_threshold_hours', 3);
-        $projects = \App\Models\Project::orderBy('name')->get();
+        $projects = Project::orderBy('name')->get();
 
         // Total count tanpa pagination, tapi dengan filter date & project
         // Note: $query sudah difilter status. Jika kita ingin melihat TOTAL (semua status),
         // kita perlu query ulang hanya dengan filter tanggal & project.
         $totalQuery = Overtime::query();
-        if ($request->filled('date_from')) $totalQuery->where('date', '>=', $request->input('date_from'));
-        if ($request->filled('date_to')) $totalQuery->where('date', '<=', $request->input('date_to'));
-        
+        if ($request->filled('date_from')) {
+            $totalQuery->where('date', '>=', $request->input('date_from'));
+        }
+        if ($request->filled('date_to')) {
+            $totalQuery->where('date', '<=', $request->input('date_to'));
+        }
+
         $kpi = [
             'pending' => (clone $totalQuery)->where('status', 'pending')->count(),
             'approved' => (clone $totalQuery)->where('status', 'approved')->count(),
@@ -115,7 +125,7 @@ class OvertimeController extends Controller
     {
         $overtime->update([
             'status' => 'approved',
-            'approved_by' => \Illuminate\Support\Facades\Auth::id(),
+            'approved_by' => Auth::id(),
             'approved_at' => now(),
         ]);
 
@@ -129,7 +139,7 @@ class OvertimeController extends Controller
     {
         $overtime->update([
             'status' => 'rejected',
-            'approved_by' => \Illuminate\Support\Facades\Auth::id(),
+            'approved_by' => Auth::id(),
             'approved_at' => now(),
         ]);
 
