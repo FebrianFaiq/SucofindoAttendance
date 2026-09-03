@@ -543,7 +543,7 @@
         <!-- BODY BOX -->
         <div style="border: 1px solid #000; padding: 20px; position: relative; height: 198mm;">
 
-            <div style="padding-bottom: 260px;">
+            <div style="padding-bottom: 320px;">
                 <!-- ================================
      INFORMASI SURAT & WAKTU LEMBUR
 ================================= -->
@@ -593,7 +593,7 @@
 <table width="100%"
        cellpadding="6"
        cellspacing="0"
-       style="margin-bottom: 20px;">
+       style="margin-bottom: 16px;">
 
     <tr>
         <td width="200">
@@ -647,7 +647,7 @@
 
 </table>
 
-                <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 18px;">
                     <tr>
                         <td width="200" valign="top" style="font-weight: bold;">
                             Hasil Pelaksanaan Pekerjaan<br>
@@ -660,17 +660,22 @@
                                     $task = $tasks[$i] ?? null;
                                     $isFilled = $task && !empty(trim($task['description']));
                                 @endphp
-                                @if($isFilled)
-                                    <div style="margin-bottom: 16px;">
-                                        <div style="margin-bottom: 4px;">
+
+                                <div style="margin-bottom: 12px;">
+                                    <div style="margin-bottom: 4px;">
+                                        @if($isFilled)
                                             Jam {{ empty($task['startTime']) ? '?' : $task['startTime'] }} sampai {{ empty($task['endTime']) ? '?' : $task['endTime'] }} melaksanakan pekerjaan
-                                        </div>
-                                        <div style="border-bottom: 1px dashed #000; min-height: 20px; line-height: 1.6; margin-top: 4px;">
-                                            {{ nl2br(e($task['description'])) }}
-                                        </div>
-                                        <div style="border-bottom: 1px dashed #000; min-height: 20px; margin-top: 4px;"></div>
+                                        @else
+                                            Jam --:-- sampai --:-- melaksanakan pekerjaan
+                                        @endif
                                     </div>
-                                @endif
+                                    <div style="border-bottom: 1px dashed #000; min-height: 16px; line-height: 1.5; margin-top: 4px;">
+                                        @if($isFilled)
+                                            {{ nl2br(e($task['description'])) }}
+                                        @endif
+                                    </div>
+                                    <div style="border-bottom: 1px dashed #000; min-height: 16px; margin-top: 4px;"></div>
+                                </div>
                             @endfor
                         </td>
                     </tr>
@@ -679,7 +684,7 @@
 
             <!-- SIGNATURE BOX -->
             <div style="position: absolute; bottom: 20px; left: 20px; right: 20px;">
-                <table width="100%" cellpadding="16" cellspacing="0" style="border: 1px solid #000;">
+                <table width="100%" cellpadding="10" cellspacing="0" style="border: 1px solid #000;">
                     <tr>
                         <td>
                             <table width="100%" style="text-align: center;">
@@ -687,24 +692,24 @@
                                     <td width="50%" valign="top">
                                         <div>Disetujui,</div>
                                         <div>&nbsp;</div>
-                                        <div style="height: 80px;"></div>
+                                        <div style="height: 55px;"></div>
                                         <div>( <span style="display:inline-block; border-bottom:1px solid #000; width: 220px;"></span> )</div>
-                                        <div style="font-size: 11px; margin-top: 6px;">Atasan Langsung</div>
+                                        <div style="font-size: 11px; margin-top: 4px;">Atasan Langsung</div>
                                     </td>
                                     <td width="50%" valign="top">
                                         <div>..........................., {{ $shortDate }}</div>
                                         <div>Yang melaksanakan</div>
-                                        <div style="height: 80px;"></div>
+                                        <div style="height: 55px;"></div>
                                         <div>( <span style="display:inline-block; border-bottom:1px solid #000; width: 220px; font-weight:bold;">{{ $userName }}</span> )</div>
-                                        <div style="font-size: 11px; margin-top: 6px;">NPP .................../Jabatan</div>
+                                        <div style="font-size: 11px; margin-top: 4px;">NPP .................../Jabatan</div>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td colspan="2" valign="top" style="padding-top: 24px;">
+                                    <td colspan="2" valign="top" style="padding-top: 14px;">
                                         <div>Mengetahui</div>
-                                        <div style="height: 80px;"></div>
+                                        <div style="height: 55px;"></div>
                                         <div>( <span style="display:inline-block; border-bottom:1px solid #000; width: 220px;"></span> )</div>
-                                        <div style="font-size: 11px; margin-top: 6px;">Kepala Cabang</div>
+                                        <div style="font-size: 11px; margin-top: 4px;">Kepala Cabang</div>
                                     </td>
                                 </tr>
                             </table>
