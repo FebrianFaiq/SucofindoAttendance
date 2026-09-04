@@ -25,6 +25,7 @@ import {
     CheckCircle2,
     XCircle,
     FileSpreadsheet,
+    AlertTriangle,
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +38,7 @@ import {
     DialogTitle,
     DialogDescription,
     DialogFooter,
+    DialogClose,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import {
@@ -142,6 +144,11 @@ export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [selectedOvertime, setSelectedOvertime] = useState<any | null>(null);
 
+    // Modal state for approve/reject
+    const [isApproveOpen, setIsApproveOpen] = useState(false);
+    const [isRejectOpen, setIsRejectOpen] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+
     // Export modal state
     const [isExportOpen, setIsExportOpen] = useState(false);
     const now = new Date();
@@ -177,6 +184,36 @@ export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours
 
         window.open(url, '_blank');
         setIsExportOpen(false);
+    };
+
+    const handleApprove = () => {
+        if (!selectedOvertime) return;
+        setIsProcessing(true);
+        router.patch(`/admin/overtime/${selectedOvertime.id}/approve`, {}, {
+            onSuccess: () => {
+                setIsProcessing(false);
+                setIsApproveOpen(false);
+                setIsSheetOpen(false);
+            },
+            onError: () => {
+                setIsProcessing(false);
+            }
+        });
+    };
+
+    const handleReject = () => {
+        if (!selectedOvertime) return;
+        setIsProcessing(true);
+        router.patch(`/admin/overtime/${selectedOvertime.id}/reject`, {}, {
+            onSuccess: () => {
+                setIsProcessing(false);
+                setIsRejectOpen(false);
+                setIsSheetOpen(false);
+            },
+            onError: () => {
+                setIsProcessing(false);
+            }
+        });
     };
 
     // KPI counts
@@ -551,7 +588,7 @@ return false;
 
                 {/* ── Overtime Details Drawer ──────────────── */}
                 <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-                    <SheetContent side="right" className="w-[480px] sm:w-[520px] p-0 font-mulish overflow-y-auto border-l border-neutral-200 flex flex-col">
+                    <SheetContent side="right" className="w-[100vw] sm:max-w-[480px] sm:w-[480px] p-0 font-mulish overflow-x-hidden overflow-y-auto border-l border-neutral-200 flex flex-col">
                         {selectedOvertime && (() => {
                             const isIntern = selectedOvertime.employee.role === 'intern';
                             const assignmentName = isIntern
@@ -727,28 +764,16 @@ return false;
                                             <div className="flex gap-3">
                                                 <Button
                                                     type="button"
-                                                    onClick={() => {
-                                                        if (confirm('Yakin ingin membatalkan lembur ini?')) {
-                                                            router.patch(`/admin/overtime/${selectedOvertime.id}/reject`, {}, {
-                                                                onSuccess: () => setIsSheetOpen(false)
-                                                            });
-                                                        }
-                                                    }}
-                                                    className="flex-1 h-11 bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold text-sm rounded-lg flex items-center justify-center gap-2"
+                                                    onClick={() => setIsRejectOpen(true)}
+                                                    className="flex-1 h-10 bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold text-sm rounded-lg flex items-center justify-center gap-2"
                                                 >
                                                     <XCircle className="h-4 w-4" />
                                                     Batalkan Pengajuan
                                                 </Button>
                                                 <Button
                                                     type="button"
-                                                    onClick={() => {
-                                                        if (confirm('Yakin ingin menyetujui lembur ini?')) {
-                                                            router.patch(`/admin/overtime/${selectedOvertime.id}/approve`, {}, {
-                                                                onSuccess: () => setIsSheetOpen(false)
-                                                            });
-                                                        }
-                                                    }}
-                                                    className="flex-1 h-11 bg-[#166534] hover:bg-[#14532d] text-white font-bold text-sm rounded-lg flex items-center justify-center gap-2"
+                                                    onClick={() => setIsApproveOpen(true)}
+                                                    className="flex-1 h-10 bg-[#166534] hover:bg-[#14532d] text-white font-bold text-sm rounded-lg flex items-center justify-center gap-2"
                                                 >
                                                     <CheckCircle2 className="h-4 w-4" />
                                                     Tandai Sudah Di-review
@@ -758,7 +783,7 @@ return false;
                                             <Button
                                                 type="button"
                                                 disabled
-                                                className="w-full h-11 bg-neutral-400 text-white font-bold text-sm rounded-lg flex items-center justify-center gap-2 cursor-not-allowed"
+                                                className="w-full h-10 bg-neutral-400 text-white font-bold text-[13px] rounded-lg flex items-center justify-center gap-1.5 cursor-not-allowed"
                                             >
                                                 <CheckCircle2 className="h-4 w-4" />
                                                 Sudah Di-review
@@ -863,6 +888,64 @@ return false;
                                 <Download className="h-4 w-4" />
                                 Download Excel
                             </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* ── Approve Confirmation Modal ───────────────────────────────── */}
+                <Dialog open={isApproveOpen} onOpenChange={setIsApproveOpen}>
+                    <DialogContent className="sm:max-w-[420px] p-8 font-mulish text-center border-none">
+                        <DialogHeader className="flex flex-col items-center justify-center sm:text-center">
+                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 mb-4">
+                                <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+                            </div>
+                            <DialogTitle className="text-2xl font-bold text-[#1E293B]">Setujui Lembur?</DialogTitle>
+                            <DialogDescription className="text-[15px] font-medium text-[#64748B] mt-3 leading-relaxed text-center">
+                                Apakah Anda yakin ingin menyetujui pengajuan lembur ini? Data akan ditandai sebagai sudah di-review.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter className="flex flex-col sm:flex-col w-full gap-3 mt-6">
+                            <Button
+                                disabled={isProcessing}
+                                className="w-full bg-[#166534] hover:bg-[#14532d] text-white font-bold h-11 sm:w-full"
+                                onClick={handleApprove}
+                            >
+                                {isProcessing ? 'Memproses...' : 'Tandai Sudah Di-review'}
+                            </Button>
+                            <DialogClose asChild>
+                                <Button variant="outline" className="w-full border-neutral-300 font-bold text-neutral-700 h-11 hover:bg-neutral-50 sm:w-full sm:mt-0">
+                                    Batalkan
+                                </Button>
+                            </DialogClose>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* ── Reject Confirmation Modal ───────────────────────────────── */}
+                <Dialog open={isRejectOpen} onOpenChange={setIsRejectOpen}>
+                    <DialogContent className="sm:max-w-[420px] p-8 font-mulish text-center border-none">
+                        <DialogHeader className="flex flex-col items-center justify-center sm:text-center">
+                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-50 mb-4">
+                                <AlertTriangle className="h-8 w-8 text-red-600" />
+                            </div>
+                            <DialogTitle className="text-2xl font-bold text-[#1E293B]">Batalkan Pengajuan?</DialogTitle>
+                            <DialogDescription className="text-[15px] font-medium text-[#64748B] mt-3 leading-relaxed text-center">
+                                Apakah Anda yakin ingin menolak atau membatalkan pengajuan lembur ini?
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter className="flex flex-col sm:flex-col w-full gap-3 mt-6">
+                            <Button
+                                disabled={isProcessing}
+                                className="w-full bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold h-11 sm:w-full"
+                                onClick={handleReject}
+                            >
+                                {isProcessing ? 'Memproses...' : 'Batalkan Pengajuan'}
+                            </Button>
+                            <DialogClose asChild>
+                                <Button variant="outline" className="w-full border-neutral-300 font-bold text-neutral-700 h-11 hover:bg-neutral-50 sm:w-full sm:mt-0">
+                                    Kembali
+                                </Button>
+                            </DialogClose>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
