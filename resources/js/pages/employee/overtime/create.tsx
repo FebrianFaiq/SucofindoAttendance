@@ -1,8 +1,8 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { parseISO, format } from 'date-fns';
+import { Clock } from 'lucide-react';
 import React, { useState } from 'react';
-import AppLayout from '@/layouts/app-layout';
 import { DatePicker } from '@/components/ui/date-picker';
-import { TimePicker } from '@/components/ui/time-picker';
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -11,8 +11,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { parseISO, format } from 'date-fns';
-import { Clock } from 'lucide-react';
+import { TimePicker } from '@/components/ui/time-picker';
+import AppLayout from '@/layouts/app-layout';
 
 export default function OvertimeCreate() {
     const { auth, holidays = [] } = usePage().props as any;
@@ -36,20 +36,33 @@ export default function OvertimeCreate() {
 
     // ── Helper: hitung durasi per-task (menit) ──
     const getTaskDurationMinutes = (task: { startTime: string; endTime: string }) => {
-        if (!task.startTime || !task.endTime) return 0;
+        if (!task.startTime || !task.endTime) {
+return 0;
+}
+
         const [sh, sm] = task.startTime.split(':').map(Number);
         const [eh, em] = task.endTime.split(':').map(Number);
-        let start = sh * 60 + sm;
+        const start = sh * 60 + sm;
         let end = eh * 60 + em;
-        if (end < start) end += 24 * 60;
+
+        if (end < start) {
+end += 24 * 60;
+}
+
         return end - start;
     };
 
     // ── Helper: hitung maxEndTime per-task (clamp 4 jam = 240 menit) ──
     const getTaskMaxEndTime = (taskStartTime: string) => {
-        if (!taskStartTime) return endTime;
+        if (!taskStartTime) {
+return endTime;
+}
+
         const [sh, sm] = taskStartTime.split(':').map(Number);
-        if (isNaN(sh) || isNaN(sm)) return endTime;
+
+        if (isNaN(sh) || isNaN(sm)) {
+return endTime;
+}
 
         // 4 jam dari start task
         const maxMinutes = (sh * 60 + sm) + 240;
@@ -57,47 +70,70 @@ export default function OvertimeCreate() {
         const maxM = maxMinutes % 60;
         const fourHourLimit = `${maxH.toString().padStart(2, '0')}:${maxM.toString().padStart(2, '0')}`;
 
-        if (!endTime) return fourHourLimit;
+        if (!endTime) {
+return fourHourLimit;
+}
 
         // Bandingkan dengan overtime end time, ambil yang lebih awal
         const [oeh, oem] = endTime.split(':').map(Number);
-        if (isNaN(oeh) || isNaN(oem)) return fourHourLimit;
+
+        if (isNaN(oeh) || isNaN(oem)) {
+return fourHourLimit;
+}
 
         const taskStart = sh * 60 + sm;
         let overtimeEndMin = oeh * 60 + oem;
         let fourHourMax = maxMinutes;
 
         // Handle overnight (misal lembur 22:00 - 06:00)
-        if (overtimeEndMin < taskStart) overtimeEndMin += 24 * 60;
-        if (fourHourMax < taskStart) fourHourMax += 24 * 60;
+        if (overtimeEndMin < taskStart) {
+overtimeEndMin += 24 * 60;
+}
+
+        if (fourHourMax < taskStart) {
+fourHourMax += 24 * 60;
+}
 
         return fourHourMax <= overtimeEndMin ? fourHourLimit : endTime;
     };
 
     const durationMinutes = (() => {
-        if (!startTime || !endTime) return 0;
+        if (!startTime || !endTime) {
+return 0;
+}
+
         const [startHour, startMinute] = startTime.split(':').map(Number);
         const [endHour, endMinute] = endTime.split(':').map(Number);
         const start = startHour * 60 + startMinute;
         let end = endHour * 60 + endMinute;
-        if (end < start) end += 24 * 60;
+
+        if (end < start) {
+end += 24 * 60;
+}
+
         return end - start;
     })();
 
     const durationDisplay = (() => {
-        if (!startTime || !endTime) return '0 Jam 0 Menit';
+        if (!startTime || !endTime) {
+return '0 Jam 0 Menit';
+}
+
         const h = Math.floor(durationMinutes / 60);
         const m = durationMinutes % 60;
+
         return `${h} Jam ${m} Menit`;
     })();
 
     let warningMessage = '';
+
     if (durationMinutes > 0 && date) {
         const d = parseISO(date);
         const day = d.getDay(); // 0 is Sunday, 6 is Saturday
         const isWeekendDay = day === 0 || day === 6;
 
         const durationHours = durationMinutes / 60;
+
         if (isWeekendDay && durationHours > 9) {
             warningMessage = 'Melebihi batas durasi lembur yang telah ditetapkan';
         } else if (!isWeekendDay && durationHours > 3) {
@@ -110,22 +146,28 @@ export default function OvertimeCreate() {
 
         // Validasi: pastikan tidak ada task yang melebihi 4 jam
         const overLimitTask = tasks.find(t => {
-            if (!t.startTime || !t.endTime) return false;
+            if (!t.startTime || !t.endTime) {
+return false;
+}
+
             return getTaskDurationMinutes(t) > 240;
         });
+
         if (overLimitTask) {
             alert('Terdapat form deskripsi pekerjaan yang melebihi 4 jam. Silakan koreksi terlebih dahulu.');
+
             return;
         }
 
         setProcessing(true);
 
-        let taskListStr = tasks
+        const taskListStr = tasks
             .filter(t => t.description.trim() !== '')
             .map((t, i) => `${i + 1}. [${t.startTime || '?'} - ${t.endTime || '?'}] ${t.description}`)
             .join('\n');
 
         let finalDescription = taskListStr;
+
         if (location || client || orderNumber) {
             finalDescription = `[Lokasi: ${location || '-'} | Klien: ${client || '-'} | No Order: ${orderNumber || '-'}]\n\nPekerjaan:\n${taskListStr}`;
         } else if (taskListStr) {
@@ -274,11 +316,14 @@ export default function OvertimeCreate() {
                                                         onChange={(val) => {
                                                             const newTasks = [...tasks];
                                                             newTasks[index].endTime = val;
+
                                                             // Auto-fill startTime form berikutnya
                                                             if (val && index + 1 < newTasks.length && !newTasks[index + 1].startTime) {
                                                                 newTasks[index + 1].startTime = val;
                                                             }
+
                                                             setTasks(newTasks);
+
                                                             // Clear warning saat input valid
                                                             if (val) {
                                                                 const newWarnings = [...taskWarnings];
@@ -303,6 +348,7 @@ export default function OvertimeCreate() {
                                                 const dur = getTaskDurationMinutes(task);
                                                 const h = Math.floor(dur / 60);
                                                 const m = dur % 60;
+
                                                 return (
                                                     <div className="flex items-center gap-2 ml-9">
                                                         <span className="text-xs font-semibold text-neutral-500">

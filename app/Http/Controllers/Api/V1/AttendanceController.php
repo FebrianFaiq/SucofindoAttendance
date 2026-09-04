@@ -55,7 +55,7 @@ class AttendanceController extends Controller
         $targetPath = $targetDir.'/'.$fileName;
 
         // Compress and resize image using Intervention Image
-        $manager = new ImageManager(new Driver());
+        $manager = new ImageManager(new Driver);
         $image = $manager->decode($photo->getRealPath());
         $image->scaleDown(width: 800);
         $image->save($targetPath, 75);
@@ -111,7 +111,7 @@ class AttendanceController extends Controller
             $targetPath = $targetDir.'/'.$fileName;
 
             // Compress and resize image using Intervention Image
-            $manager = new ImageManager(new Driver());
+            $manager = new ImageManager(new Driver);
             $image = $manager->decode($photo->getRealPath());
             $image->scaleDown(width: 800);
             $image->save($targetPath, 75);

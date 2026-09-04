@@ -34,6 +34,7 @@ class OvertimePdfService
             $line = trim($line);
             if (str_starts_with($line, 'Pekerjaan:')) {
                 $isTaskSection = true;
+
                 continue;
             }
 
@@ -47,7 +48,7 @@ class OvertimePdfService
                     ];
                 } else {
                     if (count($tasks) > 0) {
-                        $tasks[count($tasks) - 1]['description'] .= "\n" . $line;
+                        $tasks[count($tasks) - 1]['description'] .= "\n".$line;
                     } else {
                         $tasks[] = [
                             'startTime' => '',

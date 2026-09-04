@@ -9,6 +9,7 @@ import {
     Filter,
 } from 'lucide-react';
 import React, { useState } from 'react';
+import { FlashMessage } from '@/components/flash-message';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -16,7 +17,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
-import { FlashMessage } from '@/components/flash-message';
 
 interface HolidayItem {
     id: number;
@@ -78,7 +78,10 @@ export default function HolidayIndex({ holidays, selectedYear, availableYears }:
 
     const handleEditHoliday = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!holidayToEdit) return;
+
+        if (!holidayToEdit) {
+return;
+}
 
         putHoliday(`/admin/holidays/${holidayToEdit.id}`, {
             onSuccess: () => {
@@ -90,7 +93,9 @@ export default function HolidayIndex({ holidays, selectedYear, availableYears }:
     };
 
     const handleDeleteHoliday = () => {
-        if (!holidayToDelete) return;
+        if (!holidayToDelete) {
+return;
+}
 
         router.delete(`/admin/holidays/${holidayToDelete.id}`, {
             onSuccess: () => {

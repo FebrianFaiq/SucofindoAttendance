@@ -11,8 +11,8 @@ import {
     User,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import InputError from '@/components/input-error';
 import { MapContainer, TileLayer, Marker, Circle, Popup } from 'react-leaflet';
+import InputError from '@/components/input-error';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -166,6 +166,7 @@ export default function CheckOut({
         if (!navigator.geolocation) {
             setLocationLoading(false);
             setLocationAddress('Browser tidak mendukung geolokasi.');
+
             return;
         }
 
@@ -189,6 +190,7 @@ export default function CheckOut({
 
                     if (response.ok) {
                         const data = await response.json();
+
                         if (data && data.display_name) {
                             setLocationAddress(data.display_name);
                         }
@@ -215,7 +217,10 @@ export default function CheckOut({
     }, [setData]);
 
     useEffect(() => {
-        if (!hasCheckedIn || alreadyCheckedOut) return;
+        if (!hasCheckedIn || alreadyCheckedOut) {
+return;
+}
+
         fetchLocation();
     }, [fetchLocation, hasCheckedIn, alreadyCheckedOut]);
 
@@ -223,6 +228,7 @@ export default function CheckOut({
     const startCamera = useCallback(async () => {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             alert('Browser Anda tidak mendukung akses kamera atau koneksi tidak aman (butuh HTTPS/localhost).');
+
             return;
         }
 

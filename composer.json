@@ -84,7 +84,6 @@
             "@php artisan test"
         ],
         "post-update-cmd": [
-            "@php artisan install:features --ansi",
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
         ],
         "post-root-package-install": [

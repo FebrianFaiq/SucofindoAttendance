@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Employee\OvertimeStoreRequest;
+use App\Models\Holiday;
 use App\Models\Overtime;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\URL;
 
 /**
  * Overtime API — Daftar & input lembur.
@@ -81,15 +83,15 @@ class OvertimeController extends Controller
         $count = Overtime::whereYear('date', $date->year)
             ->whereMonth('date', $date->month)
             ->count();
-            
+
         $sequence = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
-        
+
         $romanMonths = [
             1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI',
-            7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'
+            7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII',
         ];
         $romanMonth = $romanMonths[$date->month];
-        
+
         $spklNumber = "{$sequence}/SBA-{$romanMonth}/LEMBUR/{$date->year}";
 
         $overtime = Overtime::create([
@@ -120,7 +122,7 @@ class OvertimeController extends Controller
      */
     public function holidays(Request $request): JsonResponse
     {
-        $holidays = \App\Models\Holiday::select('date', 'name')
+        $holidays = Holiday::select('date', 'name')
             ->whereYear('date', '>=', now()->year)
             ->get()
             ->map(fn ($h) => [
@@ -134,22 +136,22 @@ class OvertimeController extends Controller
         ]);
     }
 
-    public function exportPdfUrl(\App\Models\Overtime $overtime)
+    public function exportPdfUrl(Overtime $overtime)
     {
         if ($overtime->employee->user_id !== auth()->id()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unauthorized'
+                'message' => 'Unauthorized',
             ], 403);
         }
 
-        $url = \Illuminate\Support\Facades\URL::signedRoute('export.spkl', ['overtime' => $overtime->id]);
+        $url = URL::signedRoute('export.spkl', ['overtime' => $overtime->id]);
 
         return response()->json([
             'status' => 'success',
             'data' => [
                 'url' => $url,
-            ]
+            ],
         ]);
     }
 }

@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Autentikasi Web (Admin & Employee) — session Laravel biasa (guard `web`).
@@ -24,7 +25,7 @@ class AuthController extends Controller
      *
      * GET /login
      */
-    public function create(): \Symfony\Component\HttpFoundation\Response
+    public function create(): Response
     {
         return Inertia::render('auth/login', [
             'canResetPassword' => true,

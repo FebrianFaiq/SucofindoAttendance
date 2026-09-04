@@ -1,5 +1,6 @@
 import { Form, Head } from '@inertiajs/react';
-import { motion, type Variants } from 'framer-motion';
+import { motion  } from 'framer-motion';
+import type {Variants} from 'framer-motion';
 import { Eye, EyeOff, KeyRound, Lock, Save } from 'lucide-react';
 import { useState } from 'react';
 import InputError from '@/components/input-error';

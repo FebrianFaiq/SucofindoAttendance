@@ -7,13 +7,12 @@ use App\Http\Requests\Employee\OvertimeStoreRequest;
 use App\Models\Holiday;
 use App\Models\Overtime;
 use App\Models\User;
+use App\Services\OvertimePdfService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
-use Barryvdh\DomPDF\Facade\Pdf;
-use App\Services\OvertimePdfService;
 use Inertia\Response;
 
 class OvertimeController extends Controller
@@ -185,6 +184,7 @@ class OvertimeController extends Controller
         ]);
 
         $spklName = $overtime->spkl_number ? str_replace(['/', '\\'], '-', $overtime->spkl_number) : $overtime->id;
-        return $pdf->stream('SPKL_' . $spklName . '.pdf');
+
+        return $pdf->stream('SPKL_'.$spklName.'.pdf');
     }
 }

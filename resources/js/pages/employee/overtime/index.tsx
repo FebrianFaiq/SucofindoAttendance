@@ -13,6 +13,7 @@ function getStatusBadge(status: string) {
             </span>
         );
     }
+
     if (status === 'Sudah Direview') {
         return (
             <span className="inline-flex items-center rounded-md bg-[#ECFDF5] px-2.5 py-1 text-xs font-bold text-[#059669]">
@@ -20,6 +21,7 @@ function getStatusBadge(status: string) {
             </span>
         );
     }
+
     if (status === 'Canceled') {
         return (
             <span className="inline-flex items-center rounded-md bg-[#FEF2F2] px-2.5 py-1 text-xs font-bold text-[#DC2626]">
@@ -27,6 +29,7 @@ function getStatusBadge(status: string) {
             </span>
         );
     }
+
     return null;
 }
 
@@ -39,6 +42,7 @@ export default function OvertimeIndex({ overtimes, totalDurationMtd, lastStatus 
     const handlePrint = (item: any) => {
         window.open(`/employee/overtime/${item.id}/export-spkl`, '_blank');
     };
+
     return (
         <>
             <Head title="Lembur" />

@@ -80,7 +80,10 @@ function getStatusBadge(status: OvertimeStatus) {
 }
 
 function getInitials(name: string) {
-    if (!name) return 'EM';
+    if (!name) {
+return 'EM';
+}
+
     return name
         .split(' ')
         .map((n) => n[0])
@@ -92,6 +95,7 @@ function getInitials(name: string) {
 function formatDate(dateStr: string): string {
     try {
         const date = parseISO(dateStr);
+
         return format(date, 'd MMM yyyy');
     } catch {
         return dateStr;
@@ -166,6 +170,7 @@ export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours
         const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
 
         let url = `/admin/reports/overtime-export-excel?start_date=${startDate}&end_date=${endDate}`;
+
         if (exportProject && exportProject !== 'all') {
             url += `&project_id=${exportProject}`;
         }
@@ -181,9 +186,13 @@ export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours
 
     // Filter data
     const filteredData = overtimes.data.filter((item: any) => {
-        if (statusFilter !== 'all' && item.status !== statusFilter) return false;
+        if (statusFilter !== 'all' && item.status !== statusFilter) {
+return false;
+}
+
         if (searchTerm) {
             const search = searchTerm.toLowerCase();
+
             if (
                 !item.employee.name.toLowerCase().includes(search) &&
                 !item.employee.nik.toLowerCase().includes(search)
@@ -191,9 +200,19 @@ export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours
                 return false;
             }
         }
-        if (projectFilter && item.project !== projectFilter) return false;
-        if (startDate && item.date < startDate) return false;
-        if (endDate && item.date > endDate) return false;
+
+        if (projectFilter && item.project !== projectFilter) {
+return false;
+}
+
+        if (startDate && item.date < startDate) {
+return false;
+}
+
+        if (endDate && item.date > endDate) {
+return false;
+}
+
         return true;
     });
 

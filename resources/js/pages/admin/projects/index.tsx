@@ -1,4 +1,3 @@
-import AdminLayout from '@/layouts/admin-layout';
 import { Head, Link, router } from '@inertiajs/react';
 import { Plus, Search } from 'lucide-react';
 import { useState } from 'react';
@@ -11,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import AdminLayout from '@/layouts/admin-layout';
 
 type Project = {
     id: number;
@@ -42,9 +42,13 @@ type Props = {
 };
 
 const formatDate = (dateString: string) => {
-    if (!dateString) return '';
+    if (!dateString) {
+return '';
+}
+
     const date = new Date(dateString);
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
     return `${months[date.getMonth()]} ${date.getFullYear()}`;
 };
 
@@ -63,8 +67,13 @@ export default function ProjectsIndex({ projects, filters }: Props) {
     };
 
     const handleFilterChange = (key: string, value: string) => {
-        if (key === 'status') setStatusFilter(value);
-        if (key === 'duration') setDurationFilter(value);
+        if (key === 'status') {
+setStatusFilter(value);
+}
+
+        if (key === 'duration') {
+setDurationFilter(value);
+}
         
         router.get(
             '/admin/projects',

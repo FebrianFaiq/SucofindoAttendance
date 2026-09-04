@@ -1,5 +1,4 @@
 import { Head, router } from '@inertiajs/react';
-import React, { useEffect, useState } from 'react';
 import {
     Building2,
     CalendarCheck,
@@ -13,6 +12,7 @@ import {
     UserPlus,
     Users,
 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import {
     Area,
     AreaChart,
@@ -103,6 +103,7 @@ export default function AdminDashboard(props: AdminDashboardProps) {
         eventSource.onmessage = (event) => {
             try {
                 const newData = JSON.parse(event.data);
+
                 if (newData && newData.kpi) {
                     setLiveData((prev) => ({
                         ...prev,

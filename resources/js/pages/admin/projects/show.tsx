@@ -1,9 +1,10 @@
-import AdminLayout from '@/layouts/admin-layout';
 import { Head, Link, useForm, router } from '@inertiajs/react';
+import { format, differenceInDays } from 'date-fns';
+import { id } from 'date-fns/locale';
+import { Edit2, Search, UserPlus, Calendar, Clock, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
@@ -11,9 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Edit2, Search, UserPlus, Calendar, Clock, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { format, differenceInDays } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { Input } from '@/components/ui/input';
+import AdminLayout from '@/layouts/admin-layout';
 
 type Employee = {
     id: number;
@@ -72,6 +72,7 @@ export default function ProjectShow({ project, availableEmployees = [] }: Props)
         const nameMatch = emp.user?.name.toLowerCase().includes(term) ?? false;
         const nikMatch = emp.nik.toLowerCase().includes(term);
         const emailMatch = emp.user?.email.toLowerCase().includes(term) ?? false;
+
         return nameMatch || nikMatch || emailMatch;
     });
 
@@ -84,12 +85,18 @@ export default function ProjectShow({ project, availableEmployees = [] }: Props)
 
     // Helpers
     const getInitials = (name?: string) => {
-        if (!name) return 'UN';
+        if (!name) {
+return 'UN';
+}
+
         return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
     };
 
     const formatDate = (dateString: string) => {
-        if (!dateString) return '';
+        if (!dateString) {
+return '';
+}
+
         return format(new Date(dateString), 'dd MMM yyyy', { locale: id });
     };
 
@@ -142,6 +149,7 @@ export default function ProjectShow({ project, availableEmployees = [] }: Props)
         const term = assignSearchTerm.toLowerCase();
         const nameMatch = emp.user?.name.toLowerCase().includes(term) ?? false;
         const nikMatch = emp.nik.toLowerCase().includes(term);
+
         return nameMatch || nikMatch;
     });
 
@@ -155,6 +163,7 @@ export default function ProjectShow({ project, availableEmployees = [] }: Props)
 
     const handleToggleEmployee = (empId: number) => {
         const current = assignData.employee_ids;
+
         if (current.includes(empId)) {
             setAssignData('employee_ids', current.filter(id => id !== empId));
         } else {
