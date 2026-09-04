@@ -17,9 +17,19 @@ interface DatePickerProps {
     setDate: (date?: Date) => void;
     placeholder?: string;
     className?: string;
+    holidays?: { date: string; name: string }[];
 }
 
-export function DatePicker({ date, setDate, placeholder = "Pilih tanggal", className }: DatePickerProps) {
+export function DatePicker({ date, setDate, placeholder = "Pilih tanggal", className, holidays = [] }: DatePickerProps) {
+  // Convert holiday strings to Date objects for react-day-picker modifiers
+  const holidayDates = React.useMemo(
+    () => holidays.map(h => new Date(h.date + 'T00:00:00')),
+    [holidays]
+  );
+
+  // Weekend matcher: Saturday (6) and Sunday (0)
+  const weekendMatcher = { dayOfWeek: [0, 6] };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -42,6 +52,10 @@ export function DatePicker({ date, setDate, placeholder = "Pilih tanggal", class
           onSelect={setDate}
           autoFocus
           locale={id}
+          modifiers={{
+            holiday: holidayDates,
+            weekend: weekendMatcher,
+          }}
         />
       </PopoverContent>
     </Popover>

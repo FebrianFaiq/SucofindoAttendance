@@ -56,4 +56,46 @@ class OvertimeService {
       return {'success': false, 'message': 'Terjadi kesalahan jaringan: $e'};
     }
   }
+
+  static Future<Map<String, dynamic>> getHolidays() async {
+    try {
+      final token = await AuthService.getToken();
+      if (token == null) return {'success': false, 'message': 'Tidak ada sesi aktif'};
+
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/overtime/holidays'),
+        headers: ApiConfig.authHeaders(token),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['status'] == 'success') {
+        return {'success': true, 'data': data['data']};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Gagal memuat hari libur'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Terjadi kesalahan jaringan: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getExportPdfUrl(int overtimeId) async {
+    try {
+      final token = await AuthService.getToken();
+      if (token == null) return {'success': false, 'message': 'Tidak ada sesi aktif'};
+
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/overtime/$overtimeId/export-pdf-url'),
+        headers: ApiConfig.authHeaders(token),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['status'] == 'success') {
+        return {'success': true, 'url': data['data']['url']};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Gagal mendapatkan link PDF'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Terjadi kesalahan jaringan: $e'};
+    }
+  }
 }

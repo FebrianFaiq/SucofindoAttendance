@@ -52,6 +52,10 @@ Route::prefix('v1')
             ->name('api.overtime.index');
         Route::post('overtime', [V1\OvertimeController::class, 'store'])
             ->name('api.overtime.store');
+        Route::get('overtime/holidays', [V1\OvertimeController::class, 'holidays'])
+            ->name('api.overtime.holidays');
+        Route::get('overtime/{overtime}/export-pdf-url', [V1\OvertimeController::class, 'exportPdfUrl'])
+            ->name('api.overtime.export-pdf-url');
 
         // Profile
         Route::get('profile', [V1\ProfileController::class, 'show'])

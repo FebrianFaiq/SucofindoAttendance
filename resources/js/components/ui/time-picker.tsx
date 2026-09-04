@@ -7,13 +7,14 @@ import { cn } from '@/lib/utils';
 export interface TimePickerProps {
     value?: string;
     onChange?: (value: string) => void;
+    onReject?: () => void;
     className?: string;
     placeholder?: string;
     minTime?: string;
     maxTime?: string;
 }
 
-export function TimePicker({ value, onChange, className, placeholder = "Pilih Waktu", minTime, maxTime }: TimePickerProps) {
+export function TimePicker({ value, onChange, onReject, className, placeholder = "Pilih Waktu", minTime, maxTime }: TimePickerProps) {
     const [open, setOpen] = useState(false);
     
     const [hour, setHour] = useState<string>('');
@@ -64,6 +65,7 @@ export function TimePicker({ value, onChange, className, placeholder = "Pilih Wa
                 const valid = t >= startLimit && t <= endLimit;
                 if (!valid) {
                     if (onChange) onChange('');
+                    if (onReject) onReject();
                 }
             }
         }
@@ -184,6 +186,8 @@ export function TimePicker({ value, onChange, className, placeholder = "Pilih Wa
                  setHour(h.padStart(2, '0'));
                  setMinute(m);
                  if (onChange) onChange(`${h.padStart(2, '0')}:${m}`);
+            } else {
+                 if (onReject) onReject();
             }
         } else if (val === '') {
             setHour('');
@@ -205,7 +209,7 @@ export function TimePicker({ value, onChange, className, placeholder = "Pilih Wa
                     value={inputValue}
                     onChange={handleInputChange}
                     onBlur={handleInputBlur}
-                    placeholder="--:--"
+                    placeholder={placeholder}
                     className={cn(
                         "border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent flex-1 text-center font-medium",
                         className

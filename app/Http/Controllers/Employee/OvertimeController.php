@@ -4,12 +4,16 @@ namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Employee\OvertimeStoreRequest;
+use App\Models\Holiday;
 use App\Models\Overtime;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\OvertimePdfService;
 use Inertia\Response;
 
 class OvertimeController extends Controller
@@ -107,7 +111,17 @@ class OvertimeController extends Controller
             abort(403, 'Magang tidak diizinkan mengajukan lembur.');
         }
 
-        return Inertia::render('employee/overtime/create');
+        $holidays = Holiday::select('date', 'name')
+            ->whereYear('date', '>=', now()->year)
+            ->get()
+            ->map(fn ($h) => [
+                'date' => $h->date->format('Y-m-d'),
+                'name' => $h->name,
+            ]);
+
+        return Inertia::render('employee/overtime/create', [
+            'holidays' => $holidays,
+        ]);
     }
 
     /**
@@ -149,5 +163,28 @@ class OvertimeController extends Controller
 
         return redirect()->route('employee.overtime.index')
             ->with('success', 'Entri lembur berhasil disimpan.');
+    }
+
+    public function exportSpkl(Overtime $overtime)
+    {
+        // Load relationships
+        $overtime->load('employee.user');
+
+        $parsed = OvertimePdfService::parseDescription($overtime->description);
+
+        $pdf = Pdf::loadView('exports.spkl', [
+            'date' => $overtime->date ?? $overtime->raw_date,
+            'startTime' => $overtime->start_time,
+            'endTime' => $overtime->end_time,
+            'location' => $parsed['location'] ?? $overtime->location,
+            'client' => $parsed['client'] ?? $overtime->client,
+            'orderNumber' => $parsed['orderNumber'] ?? '',
+            'spklNumber' => $overtime->spkl_number ?? '',
+            'tasks' => $parsed['tasks'] ?? [],
+            'user' => $overtime->employee?->user,
+        ]);
+
+        $spklName = $overtime->spkl_number ? str_replace(['/', '\\'], '-', $overtime->spkl_number) : $overtime->id;
+        return $pdf->stream('SPKL_' . $spklName . '.pdf');
     }
 }

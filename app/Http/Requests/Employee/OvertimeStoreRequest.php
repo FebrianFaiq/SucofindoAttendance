@@ -24,7 +24,7 @@ class OvertimeStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'date' => ['required', 'date', 'before_or_equal:today'],
+            'date' => ['required', 'date'],
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
             'description' => ['required', 'string', 'min:10'],
@@ -38,7 +38,6 @@ class OvertimeStoreRequest extends FormRequest
     {
         return [
             'date.required' => 'Tanggal lembur wajib diisi.',
-            'date.before_or_equal' => 'Tanggal lembur tidak boleh di masa depan.',
             'start_time.required' => 'Jam mulai lembur wajib diisi.',
             'start_time.date_format' => 'Format jam mulai harus HH:MM.',
             'end_time.required' => 'Jam selesai lembur wajib diisi.',
