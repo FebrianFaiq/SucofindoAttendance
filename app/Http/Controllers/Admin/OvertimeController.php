@@ -26,6 +26,9 @@ class OvertimeController extends Controller
     {
         $query = Overtime::with(['employee.user', 'employee.projects', 'employee.salaries']);
 
+        // Tentukan apakah ini request filter eksplisit dari user
+        $isFiltered = $request->has('filtered');
+
         if ($request->filled('status') && $request->input('status') !== 'all') {
             $statusInput = $request->input('status');
             if ($statusInput === 'canceled') {
@@ -34,15 +37,41 @@ class OvertimeController extends Controller
             $query->where('status', $statusInput);
         }
 
-        // Filter tanggal
-        if ($request->filled('date_from')) {
-            $query->where('date', '>=', $request->input('date_from'));
-        }
-        if ($request->filled('date_to')) {
-            $query->where('date', '<=', $request->input('date_to'));
+        // Filter tanggal: default bulan berjalan, atau sesuai filter user
+        if (!$isFiltered) {
+            // Default: tampilkan hanya data bulan ini
+            $query->whereMonth('date', now()->month)
+                  ->whereYear('date', now()->year);
+        } else {
+            // Filter eksplisit dari user
+            if ($request->filled('date_from')) {
+                $query->where('date', '>=', $request->input('date_from'));
+            }
+            if ($request->filled('date_to')) {
+                $query->where('date', '<=', $request->input('date_to'));
+            }
         }
 
-        $overtimes = $query->orderByDesc('date')->paginate(20);
+        // Filter nama/nik karyawan (server-side)
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->whereHas('employee', function ($q) use ($search) {
+                $q->where('nik', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($q2) use ($search) {
+                      $q2->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Filter proyek (server-side)
+        if ($request->filled('project_filter')) {
+            $projectName = $request->input('project_filter');
+            $query->whereHas('employee.projects', function ($q) use ($projectName) {
+                $q->where('name', $projectName);
+            });
+        }
+
+        $overtimes = $query->orderByDesc('date')->paginate(50);
 
         // Format data untuk disesuaikan dengan FE
         $overtimes->getCollection()->transform(function ($overtime) {
@@ -84,23 +113,39 @@ class OvertimeController extends Controller
             ];
         });
 
-        $kpiQuery = clone $query;
-        // Hapus filter pagination & batasan limit
-        $kpiQuery->getQuery()->orders = []; // Hilangkan order untuk count
-
         // Ambil threshold dari settings
         $thresholdHours = Setting::getValue('overtime_threshold_hours', 3);
         $projects = Project::orderBy('name')->get();
 
-        // Total count tanpa pagination, tapi dengan filter date & project
-        // Note: $query sudah difilter status. Jika kita ingin melihat TOTAL (semua status),
-        // kita perlu query ulang hanya dengan filter tanggal & project.
+        // KPI: scope sama dengan data yang ditampilkan
         $totalQuery = Overtime::query();
-        if ($request->filled('date_from')) {
-            $totalQuery->where('date', '>=', $request->input('date_from'));
+        if (!$isFiltered) {
+            $totalQuery->whereMonth('date', now()->month)
+                       ->whereYear('date', now()->year);
+        } else {
+            if ($request->filled('date_from')) {
+                $totalQuery->where('date', '>=', $request->input('date_from'));
+            }
+            if ($request->filled('date_to')) {
+                $totalQuery->where('date', '<=', $request->input('date_to'));
+            }
         }
-        if ($request->filled('date_to')) {
-            $totalQuery->where('date', '<=', $request->input('date_to'));
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $totalQuery->whereHas('employee', function ($q) use ($search) {
+                $q->where('nik', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($q2) use ($search) {
+                      $q2->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($request->filled('project_filter')) {
+            $projectName = $request->input('project_filter');
+            $totalQuery->whereHas('employee.projects', function ($q) use ($projectName) {
+                $q->where('name', $projectName);
+            });
         }
 
         $kpi = [
@@ -114,7 +159,8 @@ class OvertimeController extends Controller
             'projects' => $projects,
             'kpi' => $kpi,
             'thresholdHours' => (float) $thresholdHours,
-            'filters' => $request->only(['status', 'date_from', 'date_to', 'project_filter']),
+            'filters' => $request->only(['status', 'date_from', 'date_to', 'project_filter', 'search', 'filtered']),
+            'isFiltered' => $isFiltered,
         ]);
     }
 
