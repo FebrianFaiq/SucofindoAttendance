@@ -126,13 +126,7 @@ class OvertimeExportService
             $jenisHari = $isHoliday ? 'Libur' : 'Normal';
 
             $duration = $this->calcService->calculateDuration($overtime->start_time, $overtime->end_time);
-            $rate = $this->calcService->getRate($isHoliday);
-            $salary = $employee->activeSalary()?->base_salary ?? 0;
 
-            $upahLembur = 0;
-            if ($overtime->status === 'approved') {
-                $upahLembur = $this->calcService->calculatePay($salary, $rate, $duration);
-            }
 
             // Fill Detail
             $sheet->setCellValue('A'.$row, $no++);
@@ -154,6 +148,7 @@ class OvertimeExportService
             $sheet->getStyle('H'.$row.':I'.$row)->getNumberFormat()->setFormatCode('@');
 
             $sheet->setCellValue('J'.$row, $duration);
+            $sheet->getStyle('J'.$row)->getNumberFormat()->setFormatCode('0.00');
 
             $sheet->setCellValue('K'.$row, $overtime->spkl_number ?? '-');
 
@@ -166,16 +161,10 @@ class OvertimeExportService
             $sheet->setCellValue('L'.$row, $statusLabel);
 
             $sheet->setCellValue('M'.$row, $jenisHari);
-            $sheet->setCellValue('N'.$row, $salary);
-            $sheet->setCellValue('O'.$row, $rate);
-            $sheet->setCellValue('P'.$row, $upahLembur);
 
-            $ratePercent = $rate * 100;
-            $rincian = 'Rp'.number_format($salary, 0, ',', '.')." x {$ratePercent}% x {$duration} jam = Rp".number_format($upahLembur, 0, ',', '.');
-            if ($overtime->status !== 'approved') {
-                $rincian = "Tidak Dihitung (Status: {$statusLabel})";
-            }
-            $sheet->setCellValue('Q'.$row, $rincian);
+            // Kolom Gaji
+            $salary = $employee->activeSalary()?->base_salary ?? 0;
+            $sheet->setCellValue('N'.$row, $salary);
 
             // Copy styling if needed or rely on template's entire column style
 
@@ -187,17 +176,13 @@ class OvertimeExportService
                         'name' => $user->name,
                         'normal_hours' => 0,
                         'holiday_hours' => 0,
-                        'normal_pay' => 0,
-                        'holiday_pay' => 0,
                     ];
                 }
 
                 if ($isHoliday) {
                     $rekapData[$employee->id]['holiday_hours'] += $duration;
-                    $rekapData[$employee->id]['holiday_pay'] += $upahLembur;
                 } else {
                     $rekapData[$employee->id]['normal_hours'] += $duration;
-                    $rekapData[$employee->id]['normal_pay'] += $upahLembur;
                 }
             }
 
@@ -215,27 +200,16 @@ class OvertimeExportService
 
         $row = 5;
         $no = 1;
-        $grandTotal = 0;
 
         foreach ($rekapData as $data) {
-            $totalPay = $data['normal_pay'] + $data['holiday_pay'];
-
             $sheet->setCellValue('A'.$row, $no++);
             $sheet->setCellValue('B'.$row, $data['nik']);
             $sheet->setCellValue('C'.$row, $data['name']);
             $sheet->setCellValue('D'.$row, $data['normal_hours']);
+            $sheet->getStyle('D'.$row)->getNumberFormat()->setFormatCode('0.00');
             $sheet->setCellValue('E'.$row, $data['holiday_hours']);
-            $sheet->setCellValue('F'.$row, $data['normal_pay']);
-            $sheet->setCellValue('G'.$row, $data['holiday_pay']);
-            $sheet->setCellValue('H'.$row, $totalPay);
-
-            $grandTotal += $totalPay;
+            $sheet->getStyle('E'.$row)->getNumberFormat()->setFormatCode('0.00');
             $row++;
         }
-
-        // Add Grand Total row
-        $sheet->setCellValue('G'.($row + 1), 'GRAND TOTAL PENDANAAN LEMBUR');
-        $sheet->setCellValue('H'.($row + 1), $grandTotal);
-        $sheet->getStyle('G'.($row + 1).':H'.($row + 1))->getFont()->setBold(true);
     }
 }
