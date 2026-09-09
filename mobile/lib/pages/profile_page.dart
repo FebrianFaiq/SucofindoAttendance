@@ -23,6 +23,15 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  String _getInitials(String name) {
+    if (name.isEmpty || name == 'Loading...') return '';
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.length > 1) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return name.substring(0, math.min(2, name.length)).toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
@@ -44,7 +53,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 final name = user?['name'] ?? 'Loading...';
                 final email = user?['email'] ?? '';
                 String role = user?['role'] ?? '';
-                if (role == 'employee') role = 'PTT Proyek';
+                if (role == 'employee') role = 'Karyawan PTT';
                 if (role == 'intern') role = 'Magang';
 
                 return Container(
@@ -52,28 +61,46 @@ class _ProfilePageState extends State<ProfilePage> {
                   padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border, width: 1.2),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.08),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
                   child: Column(
                     children: [
-                      // Avatar with dashed border
-                      CustomPaint(
-                        painter: _ProfileDashedCirclePainter(
-                          color: AppColors.primaryDark,
-                          strokeWidth: 2,
-                          dashes: 30,
-                          gapSize: 4,
-                        ),
-                        child: Container(
-                          width: 120,
-                          height: 120,
-                          margin: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Color(0xFFC4C4C4), // Grey placeholder
+                      // Avatar
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                            colors: [AppColors.primary, AppColors.primaryDark],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                          child: const Icon(Icons.person, size: 64, color: Colors.white),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withOpacity(0.3),
+                              blurRadius: 16,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            _getInitials(name),
+                            style: GoogleFonts.mulish(
+                              fontSize: 36,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              letterSpacing: 1,
+                            ),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -81,28 +108,19 @@ class _ProfilePageState extends State<ProfilePage> {
                       // Name
                       Text(
                         name,
+                        textAlign: TextAlign.center,
                         style: GoogleFonts.mulish(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      
-                      // Email
-                      Text(
-                        email,
-                        style: GoogleFonts.mulish(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
                       
                       // Role Badge
-                      if (role.isNotEmpty)
+                      if (role.isNotEmpty) ...[
+                        const SizedBox(height: 12),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                           decoration: BoxDecoration(
                             color: AppColors.primary.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
@@ -111,10 +129,30 @@ class _ProfilePageState extends State<ProfilePage> {
                             role,
                             style: GoogleFonts.mulish(
                               fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.primaryDark,
                             ),
                           ),
+                        ),
+                      ],
+                      
+                      const SizedBox(height: 20),
+                      // Email
+                      if (email.isNotEmpty)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.email_outlined, size: 16, color: AppColors.textSecondary),
+                            const SizedBox(width: 8),
+                            Text(
+                              email,
+                              style: GoogleFonts.mulish(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
                         ),
                     ],
                   ),
@@ -126,22 +164,22 @@ class _ProfilePageState extends State<ProfilePage> {
             // Logout Button
             SizedBox(
               width: double.infinity,
-              height: 50,
+              height: 52,
               child: OutlinedButton.icon(
                 onPressed: _handleLogout,
                 icon: const Icon(Icons.logout_rounded, size: 20, color: AppColors.danger),
                 label: Text(
                   'Logout',
                   style: GoogleFonts.mulish(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
                     color: AppColors.danger,
                   ),
                 ),
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.danger, width: 1.2),
+                  side: const BorderSide(color: AppColors.danger, width: 1.5),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                 ),
               ),
@@ -151,51 +189,4 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
-
-
-}
-
-class _ProfileDashedCirclePainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
-  final int dashes;
-  final double gapSize;
-
-  _ProfileDashedCirclePainter({
-    required this.color,
-    this.strokeWidth = 2.0,
-    this.dashes = 36,
-    this.gapSize = 3.0,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final double radius = size.width / 2;
-    final Paint paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final double circumference = 2 * math.pi * radius;
-    final double dashLength = (circumference - (dashes * gapSize)) / dashes;
-    final double sweepAngle = dashLength / radius;
-    final double gapAngle = gapSize / radius;
-
-    double startAngle = -math.pi / 2;
-
-    for (int i = 0; i < dashes; i++) {
-      canvas.drawArc(
-        Rect.fromCircle(center: Offset(radius, radius), radius: radius),
-        startAngle,
-        sweepAngle,
-        false,
-        paint,
-      );
-      startAngle += sweepAngle + gapAngle;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

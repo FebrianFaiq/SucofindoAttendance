@@ -25,6 +25,7 @@ import {
     CheckCircle2,
     XCircle,
     FileSpreadsheet,
+    AlertTriangle,
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +38,7 @@ import {
     DialogTitle,
     DialogDescription,
     DialogFooter,
+    DialogClose,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import {
@@ -81,8 +83,8 @@ function getStatusBadge(status: OvertimeStatus) {
 
 function getInitials(name: string) {
     if (!name) {
-return 'EM';
-}
+        return 'EM';
+    }
 
     return name
         .split(' ')
@@ -131,16 +133,21 @@ function getDrawerStatusBadge(status: OvertimeStatus) {
 
 // ─── Component ─────────────────────────────────────────────────────────────
 
-export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours, kpi }: any) {
-    // Filter states
-    const [searchTerm, setSearchTerm] = useState('');
-    const [projectFilter, setProjectFilter] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours, kpi, isFiltered, filters }: any) {
+    // Filter states — initialize from backend filters (for preserving state after Inertia visit)
+    const [searchTerm, setSearchTerm] = useState(filters?.search || '');
+    const [projectFilter, setProjectFilter] = useState(filters?.project_filter || '');
+    const [startDate, setStartDate] = useState(filters?.date_from || '');
+    const [endDate, setEndDate] = useState(filters?.date_to || '');
     const [statusFilter, setStatusFilter] = useState<OvertimeStatus | 'all'>('all');
 
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [selectedOvertime, setSelectedOvertime] = useState<any | null>(null);
+
+    // Modal state for approve/reject
+    const [isApproveOpen, setIsApproveOpen] = useState(false);
+    const [isRejectOpen, setIsRejectOpen] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     // Export modal state
     const [isExportOpen, setIsExportOpen] = useState(false);
@@ -179,48 +186,72 @@ export default function AdminOvertimeIndex({ overtimes, projects, thresholdHours
         setIsExportOpen(false);
     };
 
+    const handleApprove = () => {
+        if (!selectedOvertime) return;
+        setIsProcessing(true);
+        router.patch(`/admin/overtime/${selectedOvertime.id}/approve`, {}, {
+            onSuccess: () => {
+                setIsProcessing(false);
+                setIsApproveOpen(false);
+                setIsSheetOpen(false);
+            },
+            onError: () => {
+                setIsProcessing(false);
+            }
+        });
+    };
+
+    const handleReject = () => {
+        if (!selectedOvertime) return;
+        setIsProcessing(true);
+        router.patch(`/admin/overtime/${selectedOvertime.id}/reject`, {}, {
+            onSuccess: () => {
+                setIsProcessing(false);
+                setIsRejectOpen(false);
+                setIsSheetOpen(false);
+            },
+            onError: () => {
+                setIsProcessing(false);
+            }
+        });
+    };
+
     // KPI counts
     const pendingCount = kpi?.pending || 0;
     const approvedCount = kpi?.approved || 0;
     const canceledCount = kpi?.canceled || 0;
 
-    // Filter data
+    // Current month name for indicator
+    const currentMonthLabel = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(new Date());
+
+    // Filter data — only status filter client-side, rest is server-side
     const filteredData = overtimes.data.filter((item: any) => {
         if (statusFilter !== 'all' && item.status !== statusFilter) {
-return false;
-}
-
-        if (searchTerm) {
-            const search = searchTerm.toLowerCase();
-
-            if (
-                !item.employee.name.toLowerCase().includes(search) &&
-                !item.employee.nik.toLowerCase().includes(search)
-            ) {
-                return false;
-            }
+            return false;
         }
-
-        if (projectFilter && item.project !== projectFilter) {
-return false;
-}
-
-        if (startDate && item.date < startDate) {
-return false;
-}
-
-        if (endDate && item.date > endDate) {
-return false;
-}
-
         return true;
     });
 
+    // Terapkan Filter — send Inertia request with all filter params
+    const handleApplyFilter = () => {
+        const params: Record<string, string> = { filtered: '1' };
+        if (searchTerm) params.search = searchTerm;
+        if (projectFilter) params.project_filter = projectFilter;
+        if (startDate) params.date_from = startDate;
+        if (endDate) params.date_to = endDate;
+
+        router.get('/admin/overtime', params, {
+            preserveState: false,
+            preserveScroll: false,
+        });
+    };
+
+    // Reset Filter — go back to default (current month)
     const handleReset = () => {
-        setSearchTerm('');
-        setProjectFilter('');
-        setStartDate('');
-        setEndDate('');
+        router.get('/admin/overtime', {}, {
+            preserveState: false,
+            preserveScroll: false,
+        });
     };
 
     const openDetails = (item: any) => {
@@ -239,7 +270,7 @@ return false;
                             Lembur Karyawan
                         </h1>
                         <p className="text-neutral-500 font-medium mt-1">
-                            Monitoring dan Persetujuan Lembur Hari Ini
+                            Monitoring dan Persetujuan Lembur Bulan Ini
                         </p>
                     </div>
                 </div>
@@ -250,11 +281,10 @@ return false;
                     <button
                         type="button"
                         onClick={() => setStatusFilter(statusFilter === 'pending' ? 'all' : 'pending')}
-                        className={`group relative overflow-hidden rounded-2xl border bg-white p-5 shadow-sm flex items-center justify-between transition-all hover:-translate-y-0.5 hover:shadow-md text-left cursor-pointer ${
-                            statusFilter === 'pending'
-                                ? 'border-amber-400 ring-2 ring-amber-200 bg-amber-50/30'
-                                : 'border-neutral-200 hover:border-amber-300'
-                        }`}
+                        className={`group relative overflow-hidden rounded-2xl border bg-white p-5 shadow-sm flex items-center justify-between transition-all hover:-translate-y-0.5 hover:shadow-md text-left cursor-pointer ${statusFilter === 'pending'
+                            ? 'border-amber-400 ring-2 ring-amber-200 bg-amber-50/30'
+                            : 'border-neutral-200 hover:border-amber-300'
+                            }`}
                     >
                         <div className="flex flex-col relative z-10">
                             <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Belum Di-review</span>
@@ -273,17 +303,16 @@ return false;
                     <button
                         type="button"
                         onClick={() => setStatusFilter(statusFilter === 'approved' ? 'all' : 'approved')}
-                        className={`group relative overflow-hidden rounded-2xl border bg-white p-5 shadow-sm flex items-center justify-between transition-all hover:-translate-y-0.5 hover:shadow-md text-left cursor-pointer ${
-                            statusFilter === 'approved'
-                                ? 'border-emerald-400 ring-2 ring-emerald-200 bg-emerald-50/30'
-                                : 'border-neutral-200 hover:border-emerald-300'
-                        }`}
+                        className={`group relative overflow-hidden rounded-2xl border bg-white p-5 shadow-sm flex items-center justify-between transition-all hover:-translate-y-0.5 hover:shadow-md text-left cursor-pointer ${statusFilter === 'approved'
+                            ? 'border-emerald-400 ring-2 ring-emerald-200 bg-emerald-50/30'
+                            : 'border-neutral-200 hover:border-emerald-300'
+                            }`}
                     >
                         <div className="flex flex-col relative z-10">
                             <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Sudah Di-review</span>
                             <span className="text-3xl font-black text-emerald-600 mt-1">{approvedCount}</span>
                             <span className="text-xs font-semibold text-emerald-600 mt-2 flex items-center gap-1">
-                                Lembur hari ini →
+                                Lembur bulan ini →
                             </span>
                         </div>
                         <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br from-emerald-200/60 to-emerald-300/40" />
@@ -296,11 +325,10 @@ return false;
                     <button
                         type="button"
                         onClick={() => setStatusFilter(statusFilter === 'canceled' ? 'all' : 'canceled')}
-                        className={`group relative overflow-hidden rounded-2xl border bg-white p-5 shadow-sm flex items-center justify-between transition-all hover:-translate-y-0.5 hover:shadow-md text-left cursor-pointer ${
-                            statusFilter === 'canceled'
-                                ? 'border-red-400 ring-2 ring-red-200 bg-red-50/30'
-                                : 'border-neutral-200 hover:border-red-300'
-                        }`}
+                        className={`group relative overflow-hidden rounded-2xl border bg-white p-5 shadow-sm flex items-center justify-between transition-all hover:-translate-y-0.5 hover:shadow-md text-left cursor-pointer ${statusFilter === 'canceled'
+                            ? 'border-red-400 ring-2 ring-red-200 bg-red-50/30'
+                            : 'border-neutral-200 hover:border-red-300'
+                            }`}
                     >
                         <div className="flex flex-col relative z-10">
                             <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Canceled</span>
@@ -319,7 +347,7 @@ return false;
                 {/* ── Filter Bar ────────────────────────────── */}
                 <div className="rounded-xl border border-neutral-200 bg-white px-6 py-5 shadow-sm">
                     <form
-                        onSubmit={(e) => e.preventDefault()}
+                        onSubmit={(e) => { e.preventDefault(); handleApplyFilter(); }}
                         className="flex flex-col lg:flex-row lg:flex-wrap lg:items-end gap-4 lg:gap-5"
                     >
                         {/* Karyawan */}
@@ -390,7 +418,8 @@ return false;
                                 Reset Filter
                             </Button>
                             <Button
-                                type="submit"
+                                type="button"
+                                onClick={handleApplyFilter}
                                 className="h-[42px] min-w-[90px] rounded-lg bg-[#035EA9] font-bold text-white shadow-sm hover:bg-[#035EA9]/90 text-center text-xs leading-[1.3] px-4 py-1"
                             >
                                 Terapkan Filter
@@ -402,7 +431,20 @@ return false;
                 {/* ── Table Container ───────────────────────────────── */}
                 <div className="flex-1 rounded-xl border border-neutral-200 bg-white shadow-sm overflow-hidden flex flex-col">
                     <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
-                        <h2 className="text-xl font-bold text-neutral-900 tracking-tight">Data Karyawan Lembur</h2>
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-xl font-bold text-neutral-900 tracking-tight">Data Karyawan Lembur</h2>
+                            {!isFiltered ? (
+                                <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#E5F0F9] px-3 py-1 text-xs font-bold text-[#035EA9]">
+                                    <Calendar className="h-3.5 w-3.5" />
+                                    {currentMonthLabel}
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
+                                    <ListFilter className="h-3.5 w-3.5" />
+                                    Hasil Filter
+                                </span>
+                            )}
+                        </div>
                         <div className="flex gap-2">
                             <Button
                                 type="button"
@@ -551,13 +593,13 @@ return false;
 
                 {/* ── Overtime Details Drawer ──────────────── */}
                 <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-                    <SheetContent side="right" className="w-[480px] sm:w-[520px] p-0 font-mulish overflow-y-auto border-l border-neutral-200 flex flex-col">
+                    <SheetContent side="right" className="w-[100vw] sm:max-w-[480px] sm:w-[480px] p-0 font-mulish overflow-x-hidden overflow-y-auto border-l border-neutral-200 flex flex-col">
                         {selectedOvertime && (() => {
                             const isIntern = selectedOvertime.employee.role === 'intern';
                             const assignmentName = isIntern
                                 ? (selectedOvertime.employee.division || '—')
                                 : (selectedOvertime.project ?? 'Belum Ditugaskan');
-                            
+
                             // Salary calculation removed per user request
 
                             const durationH = Math.floor(selectedOvertime.duration_hours);
@@ -686,28 +728,16 @@ return false;
                                             <div className="flex gap-3">
                                                 <Button
                                                     type="button"
-                                                    onClick={() => {
-                                                        if (confirm('Yakin ingin membatalkan lembur ini?')) {
-                                                            router.patch(`/admin/overtime/${selectedOvertime.id}/reject`, {}, {
-                                                                onSuccess: () => setIsSheetOpen(false)
-                                                            });
-                                                        }
-                                                    }}
-                                                    className="flex-1 h-11 bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold text-sm rounded-lg flex items-center justify-center gap-2"
+                                                    onClick={() => setIsRejectOpen(true)}
+                                                    className="flex-1 h-10 bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold text-sm rounded-lg flex items-center justify-center gap-2"
                                                 >
                                                     <XCircle className="h-4 w-4" />
                                                     Batalkan Pengajuan
                                                 </Button>
                                                 <Button
                                                     type="button"
-                                                    onClick={() => {
-                                                        if (confirm('Yakin ingin menyetujui lembur ini?')) {
-                                                            router.patch(`/admin/overtime/${selectedOvertime.id}/approve`, {}, {
-                                                                onSuccess: () => setIsSheetOpen(false)
-                                                            });
-                                                        }
-                                                    }}
-                                                    className="flex-1 h-11 bg-[#166534] hover:bg-[#14532d] text-white font-bold text-sm rounded-lg flex items-center justify-center gap-2"
+                                                    onClick={() => setIsApproveOpen(true)}
+                                                    className="flex-1 h-10 bg-[#166534] hover:bg-[#14532d] text-white font-bold text-sm rounded-lg flex items-center justify-center gap-2"
                                                 >
                                                     <CheckCircle2 className="h-4 w-4" />
                                                     Tandai Sudah Di-review
@@ -717,7 +747,7 @@ return false;
                                             <Button
                                                 type="button"
                                                 disabled
-                                                className="w-full h-11 bg-neutral-400 text-white font-bold text-sm rounded-lg flex items-center justify-center gap-2 cursor-not-allowed"
+                                                className="w-full h-10 bg-neutral-400 text-white font-bold text-[13px] rounded-lg flex items-center justify-center gap-1.5 cursor-not-allowed"
                                             >
                                                 <CheckCircle2 className="h-4 w-4" />
                                                 Sudah Di-review
@@ -822,6 +852,64 @@ return false;
                                 <Download className="h-4 w-4" />
                                 Download Excel
                             </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* ── Approve Confirmation Modal ───────────────────────────────── */}
+                <Dialog open={isApproveOpen} onOpenChange={setIsApproveOpen}>
+                    <DialogContent className="sm:max-w-[420px] p-8 font-mulish text-center border-none">
+                        <DialogHeader className="flex flex-col items-center justify-center sm:text-center">
+                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 mb-4">
+                                <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+                            </div>
+                            <DialogTitle className="text-2xl font-bold text-[#1E293B]">Setujui Lembur?</DialogTitle>
+                            <DialogDescription className="text-[15px] font-medium text-[#64748B] mt-3 leading-relaxed text-center">
+                                Apakah Anda yakin ingin menyetujui pengajuan lembur ini? Data akan ditandai sebagai sudah di-review.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter className="flex flex-col sm:flex-col w-full gap-3 mt-6">
+                            <Button
+                                disabled={isProcessing}
+                                className="w-full bg-[#166534] hover:bg-[#14532d] text-white font-bold h-11 sm:w-full"
+                                onClick={handleApprove}
+                            >
+                                {isProcessing ? 'Memproses...' : 'Tandai Sudah Di-review'}
+                            </Button>
+                            <DialogClose asChild>
+                                <Button variant="outline" className="w-full border-neutral-300 font-bold text-neutral-700 h-11 hover:bg-neutral-50 sm:w-full sm:mt-0">
+                                    Batalkan
+                                </Button>
+                            </DialogClose>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* ── Reject Confirmation Modal ───────────────────────────────── */}
+                <Dialog open={isRejectOpen} onOpenChange={setIsRejectOpen}>
+                    <DialogContent className="sm:max-w-[420px] p-8 font-mulish text-center border-none">
+                        <DialogHeader className="flex flex-col items-center justify-center sm:text-center">
+                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-50 mb-4">
+                                <AlertTriangle className="h-8 w-8 text-red-600" />
+                            </div>
+                            <DialogTitle className="text-2xl font-bold text-[#1E293B]">Batalkan Pengajuan?</DialogTitle>
+                            <DialogDescription className="text-[15px] font-medium text-[#64748B] mt-3 leading-relaxed text-center">
+                                Apakah Anda yakin ingin menolak atau membatalkan pengajuan lembur ini?
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter className="flex flex-col sm:flex-col w-full gap-3 mt-6">
+                            <Button
+                                disabled={isProcessing}
+                                className="w-full bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold h-11 sm:w-full"
+                                onClick={handleReject}
+                            >
+                                {isProcessing ? 'Memproses...' : 'Batalkan Pengajuan'}
+                            </Button>
+                            <DialogClose asChild>
+                                <Button variant="outline" className="w-full border-neutral-300 font-bold text-neutral-700 h-11 hover:bg-neutral-50 sm:w-full sm:mt-0">
+                                    Kembali
+                                </Button>
+                            </DialogClose>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>

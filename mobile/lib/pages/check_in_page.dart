@@ -8,6 +8,9 @@ import '../widgets/custom_app_bar.dart';
 import '../widgets/inline_camera_widget.dart';
 import '../services/attendance_service.dart';
 import '../services/location_service.dart';
+import '../services/api_config.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 class CheckInPage extends StatefulWidget {
   const CheckInPage({super.key});
@@ -116,6 +119,26 @@ class _CheckInPageState extends State<CheckInPage> {
         ),
       );
       return;
+    }
+
+    if (_workMode == 'WFO') {
+      final distance = LocationService.calculateDistance(
+        _latitude!, _longitude!, ApiConfig.officeLat, ApiConfig.officeLng
+      );
+      if (distance > ApiConfig.radiusLimit) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Anda berada di luar radius kantor (${distance.toStringAsFixed(1)}m). Jarak maksimal ${ApiConfig.radiusLimit}m.',
+              style: GoogleFonts.mulish(fontWeight: FontWeight.w600),
+            ),
+            backgroundColor: AppColors.danger,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+        return;
+      }
     }
 
     setState(() => _isSubmitting = true);
@@ -467,38 +490,59 @@ class _CheckInPageState extends State<CheckInPage> {
                   child: Stack(
                     children: [
                       Positioned.fill(
-                        child: GridView.builder(
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: 18, // 6 columns × 3 rows
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 6,
-                              ),
-                          itemBuilder: (ctx, i) => Icon(
-                            Icons.map,
-                            size: 40,
-                            color: Colors.blue.withOpacity(0.05),
-                          ),
-                        ),
-                      ),
-                      Center(
-                        child: _locationFetched
-                            ? const Icon(
-                                Icons.location_on,
-                                size: 40,
-                                color: AppColors.primaryDark,
-                              )
-                            : _locationError
-                                ? const Icon(
-                                    Icons.location_off,
-                                    size: 40,
-                                    color: AppColors.danger,
-                                  )
-                                : const SizedBox(
-                                    width: 30,
-                                    height: 30,
-                                    child: CircularProgressIndicator(strokeWidth: 3),
+                        child: _locationFetched && _latitude != null && _longitude != null
+                            ? FlutterMap(
+                                options: MapOptions(
+                                  initialCenter: LatLng(_latitude!, _longitude!),
+                                  initialZoom: 16.0,
+                                ),
+                                children: [
+                                  TileLayer(
+                                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                    userAgentPackageName: 'com.sucofindo.mobile',
                                   ),
+                                  if (_workMode == 'WFO')
+                                    CircleLayer(
+                                      circles: [
+                                        CircleMarker(
+                                          point: LatLng(ApiConfig.officeLat, ApiConfig.officeLng),
+                                          color: Colors.blue.withOpacity(0.2),
+                                          borderColor: Colors.blue,
+                                          borderStrokeWidth: 2,
+                                          useRadiusInMeter: true,
+                                          radius: ApiConfig.radiusLimit,
+                                        ),
+                                      ],
+                                    ),
+                                  MarkerLayer(
+                                    markers: [
+                                      Marker(
+                                        point: LatLng(_latitude!, _longitude!),
+                                        width: 40,
+                                        height: 40,
+                                        child: const Icon(
+                                          Icons.location_on,
+                                          color: AppColors.danger,
+                                          size: 40,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              )
+                            : Center(
+                                child: _locationError
+                                  ? const Icon(
+                                      Icons.location_off,
+                                      size: 40,
+                                      color: AppColors.danger,
+                                    )
+                                  : const SizedBox(
+                                      width: 30,
+                                      height: 30,
+                                      child: CircularProgressIndicator(strokeWidth: 3),
+                                    ),
+                              ),
                       ),
                     ],
                   ),
@@ -536,6 +580,38 @@ class _CheckInPageState extends State<CheckInPage> {
                                 color: AppColors.textSecondary,
                               ),
                             ),
+                            if (_workMode == 'WFO' && LocationService.calculateDistance(_latitude!, _longitude!, ApiConfig.officeLat, ApiConfig.officeLng) > ApiConfig.radiusLimit) ...[
+                              const SizedBox(height: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: AppColors.danger.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 6,
+                                      height: 6,
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.danger,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'LUAR RADIUS KANTOR',
+                                      style: GoogleFonts.mulish(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppColors.danger,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ],
                         ],
                       ),
