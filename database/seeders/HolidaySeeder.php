@@ -4,14 +4,12 @@ namespace Database\Seeders;
 
 use App\Models\Holiday;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class HolidaySeeder extends Seeder
 {
     /**
      * Seed master hari libur nasional.
-     * Menggunakan data resmi SKB 3 Menteri dengan opsi auto-sync API jika tersedia.
+     * Menggunakan data resmi SKB 3 Menteri.
      */
     public function run(): void
     {
@@ -41,29 +39,6 @@ class HolidaySeeder extends Seeder
             ['date' => "{$year}-12-26", 'name' => 'Cuti Bersama Hari Raya Natal', 'is_national' => true],
         ];
 
-        // Coba sync via API jika ada koneksi
-        try {
-            $response = Http::timeout(3)->get("https://api-harilibur.vercel.app/api?year={$year}");
-            if ($response->successful() && is_array($response->json())) {
-                $apiHolidays = $response->json();
-                foreach ($apiHolidays as $item) {
-                    if (! empty($item['holiday_date']) && ! empty($item['holiday_name']) && ! empty($item['is_national_holiday'])) {
-                        Holiday::updateOrCreate(
-                            ['date' => $item['holiday_date']],
-                            [
-                                'name' => $item['holiday_name'],
-                                'is_national' => (bool) $item['is_national_holiday'],
-                                'description' => 'Disinkronkan otomatis dari API Hari Libur Nasional',
-                            ]
-                        );
-                    }
-                }
-
-                return;
-            }
-        } catch (\Throwable $e) {
-            Log::info("HolidaySeeder: Menggunakan data fallback SKB 3 Menteri ({$e->getMessage()})");
-        }
 
         // Fallback default
         foreach ($defaultHolidays as $holiday) {

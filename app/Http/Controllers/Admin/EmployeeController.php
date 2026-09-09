@@ -297,7 +297,7 @@ class EmployeeController extends Controller
     /**
      * Proses import pegawai dari file Excel.
      */
-    public function importStore(Request $request, EmployeeImportService $service): RedirectResponse
+    public function importStore(Request $request, EmployeeImportService $service)
     {
         $request->validate([
             'file' => 'required|file|mimes:xlsx,xls|max:5120',
@@ -307,25 +307,23 @@ class EmployeeController extends Controller
             'file.max' => 'Ukuran file maksimal 5MB.',
         ]);
 
-        $result = $service->import($request->file('file'));
+        $isDryRun = $request->query('dry_run') == '1';
+        $result = $service->import($request->file('file'), $isDryRun);
 
-        $message = "Berhasil mengimpor {$result['success']} pegawai.";
-        if (count($result['errors']) > 0) {
-            $errorMessages = implode(' | ', $result['errors']);
-            $message .= " Terdapat ".count($result['errors'])." error: {$errorMessages}";
+        if ($isDryRun) {
+            return response()->json($result);
         }
 
-        if ($result['success'] > 0 && count($result['errors']) === 0) {
+        $totalSuccess = $result['new_count'] + $result['restore_count'];
+        
+        $message = "Berhasil mengimpor {$totalSuccess} pegawai ({$result['new_count']} Baru, {$result['restore_count']} Restore).";
+        
+        if ($totalSuccess > 0) {
             return redirect()->route('admin.employees.index')
                 ->with('success', $message.' (Password default: '.User::DEFAULT_PASSWORD.')');
         }
 
-        if ($result['success'] > 0 && count($result['errors']) > 0) {
-            return redirect()->route('admin.employees.index')
-                ->with('warning', $message);
-        }
-
         return redirect()->route('admin.employees.index')
-            ->with('error', 'Tidak ada data yang berhasil diimpor. '.$message);
+            ->with('error', 'Tidak ada data yang berhasil diimpor.');
     }
 }

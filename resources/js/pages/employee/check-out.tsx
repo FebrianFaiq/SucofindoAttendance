@@ -1,4 +1,4 @@
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import {
     ArrowLeft,
     Clock,
@@ -132,6 +132,11 @@ export default function CheckOut({
 
         return () => clearInterval(interval);
     }, [todayAttendance]);
+
+    // Force refresh data on mount (prevents stale form when using browser Back button)
+    useEffect(() => {
+        router.reload({ only: ['alreadyCheckedOut', 'hasCheckedIn', 'todayAttendance'] });
+    }, []);
 
     // Form
     const { data, setData, post, processing, errors } = useForm<{

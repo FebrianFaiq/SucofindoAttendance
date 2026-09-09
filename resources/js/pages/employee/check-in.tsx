@@ -1,4 +1,4 @@
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import {
     ArrowLeft,
     Calendar,
@@ -88,6 +88,11 @@ export default function CheckIn({ alreadyCheckedIn }: CheckInProps) {
         }, 1000);
 
         return () => clearInterval(interval);
+    }, []);
+
+    // Force refresh data on mount (prevents stale form when using browser Back button)
+    useEffect(() => {
+        router.reload({ only: ['alreadyCheckedIn', 'todayAttendance'] });
     }, []);
 
     // Form state
