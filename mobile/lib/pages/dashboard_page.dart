@@ -25,6 +25,7 @@ class DashboardPageState extends State<DashboardPage> {
   bool _hasCheckedOut = false;
   String? _clockInTime;
   String? _clockOutTime;
+  String? _workMode;
   String _totalDuration = '0j 0m';
   List<dynamic> _recentAttendances = [];
   bool _isLoading = true;
@@ -45,6 +46,7 @@ class DashboardPageState extends State<DashboardPage> {
         _hasCheckedOut = data['has_checked_out'];
         _clockInTime = data['clock_in_time'];
         _clockOutTime = data['clock_out_time'];
+        _workMode = data['today_attendance']?['type'];
         _totalDuration = data['total_duration'];
         _recentAttendances = data['recent_attendances'] ?? [];
       });
@@ -74,7 +76,10 @@ class DashboardPageState extends State<DashboardPage> {
     } else if (!_hasCheckedOut) {
       final result = await Navigator.of(context).push<bool>(
         MaterialPageRoute(
-          builder: (_) => CheckOutPage(clockInTime: _clockInTime ?? '--:--'),
+          builder: (_) => CheckOutPage(
+            clockInTime: _clockInTime ?? '--:--',
+            workMode: _workMode ?? 'WFO',
+          ),
         ),
       );
       if (result == true) {

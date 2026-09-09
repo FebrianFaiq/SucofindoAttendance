@@ -111,6 +111,10 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
                       firstDay: DateTime(2020),
                       lastDay: DateTime(2030),
                       focusedDay: focusedDay,
+                      headerStyle: const HeaderStyle(
+                        formatButtonVisible: false,
+                        titleCentered: true,
+                      ),
                       selectedDayPredicate: (day) =>
                           isSameDay(tempSelectedDay, day),
                       onDaySelected: (selected, focused) {
@@ -412,6 +416,7 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9FF),
+      resizeToAvoidBottomInset: false,
       appBar: const CustomAppBar(),
       body: Column(
         children: [

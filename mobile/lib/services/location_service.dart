@@ -57,5 +57,10 @@ class LocationService {
     }
     return 'Lat: $lat, Lng: $lng';
   }
+
+  /// Calculate distance between two coordinates in meters
+  static double calculateDistance(double startLat, double startLng, double endLat, double endLng) {
+    return Geolocator.distanceBetween(startLat, startLng, endLat, endLng);
+  }
 }
 

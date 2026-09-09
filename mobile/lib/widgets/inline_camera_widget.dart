@@ -145,9 +145,9 @@ class _InlineCameraWidgetState extends State<InlineCameraWidget>
   }
 
   void _retakePhoto() {
+    _initCamera();
     setState(() {
       _capturedPhoto = null;
-      _isCameraActive = true;
     });
     widget.onPhotoCleared?.call();
   }
@@ -382,14 +382,17 @@ class _InlineCameraWidgetState extends State<InlineCameraWidget>
         width: double.infinity,
         child: ElevatedButton.icon(
           onPressed: _retakePhoto,
-          icon: const Icon(Icons.camera_alt_outlined, size: 18),
+          icon: const Icon(Icons.camera_alt_outlined, size: 18, color: Colors.white),
           label: Text(
             'Ambil Ulang',
-            style: GoogleFonts.mulish(fontWeight: FontWeight.w700),
+            style: GoogleFonts.mulish(
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFE2E8F0),
-            foregroundColor: AppColors.textSecondary,
+            backgroundColor: AppColors.primaryDark,
+            foregroundColor: Colors.white,
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
@@ -437,14 +440,17 @@ class _InlineCameraWidgetState extends State<InlineCameraWidget>
                 height: 18,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
-            : const Icon(Icons.camera_alt_outlined, size: 18),
+            : const Icon(Icons.camera_alt_outlined, size: 18, color: Colors.white),
         label: Text(
           _isInitializing ? 'Memuat...' : 'Buka Kamera',
-          style: GoogleFonts.mulish(fontWeight: FontWeight.w700),
+          style: GoogleFonts.mulish(
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFE2E8F0),
-          foregroundColor: AppColors.textSecondary,
+          backgroundColor: AppColors.primaryDark,
+          foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
