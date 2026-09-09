@@ -69,7 +69,7 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
   }
 
   String _formatTime(TimeOfDay? time) {
-    if (time == null) return '--:--';
+    if (time == null) return 'Pilih Waktu';
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
   }
 
@@ -78,15 +78,37 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
   }
 
-  String _getDuration() {
-    if (_startTime == null || _endTime == null) return '0 Jam 0 Menit';
+  int _getDurationMinutes() {
+    if (_startTime == null || _endTime == null) return 0;
     final startMinutes = _startTime!.hour * 60 + _startTime!.minute;
     final endMinutes = _endTime!.hour * 60 + _endTime!.minute;
     int diff = endMinutes - startMinutes;
     if (diff < 0) diff += 24 * 60; // handle overnight
+    return diff;
+  }
+
+  String _getDuration() {
+    if (_startTime == null || _endTime == null) return '0 Jam 0 Menit';
+    final diff = _getDurationMinutes();
     final hours = diff ~/ 60;
     final minutes = diff % 60;
     return '$hours Jam $minutes Menit';
+  }
+
+  String? _getWarningMessage() {
+    if (_selectedDate == null) return null;
+    final dateStr = '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}';
+    final isWeekendOrHoliday = _selectedDate!.weekday == DateTime.saturday || 
+                               _selectedDate!.weekday == DateTime.sunday || 
+                               _holidayDates.contains(dateStr);
+    final durationHours = _getDurationMinutes() / 60.0;
+
+    if (isWeekendOrHoliday && durationHours > 9) {
+      return 'Melebihi batas durasi lembur pada hari libur (9 jam)';
+    } else if (!isWeekendOrHoliday && durationHours > 3) {
+      return 'Melebihi batas durasi lembur pada hari kerja (3 jam)';
+    }
+    return null;
   }
 
   Future<void> _pickDate() async {
@@ -193,6 +215,27 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
 
     TimeOfDay? picked = initial;
 
+    DateTime? minDate;
+    DateTime? maxDate;
+
+    if (taskIndex != null) {
+      if (_startTime != null) {
+        minDate = DateTime(2020, 1, 1, _startTime!.hour, _startTime!.minute);
+      }
+      if (_endTime != null) {
+        maxDate = DateTime(2020, 1, 1, _endTime!.hour, _endTime!.minute);
+      }
+      
+      if (!isStart && _tasks[taskIndex]['startTime'] != null) {
+        final tStart = _tasks[taskIndex]['startTime'] as TimeOfDay;
+        minDate = DateTime(2020, 1, 1, tStart.hour, tStart.minute);
+      }
+    }
+
+    DateTime initDt = DateTime(2020, 1, 1, initial.hour, initial.minute);
+    if (minDate != null && initDt.isBefore(minDate)) initDt = minDate;
+    if (maxDate != null && initDt.isAfter(maxDate)) initDt = maxDate;
+
     await showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -205,7 +248,10 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
           child: Column(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: const BoxDecoration(
                   border: Border(bottom: BorderSide(color: AppColors.border)),
                 ),
@@ -219,12 +265,18 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
                       },
                       child: Text(
                         'Batal',
-                        style: GoogleFonts.mulish(color: AppColors.textSecondary),
+                        style: GoogleFonts.mulish(
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ),
                     Text(
                       isStart ? 'Jam Mulai' : 'Jam Selesai',
-                      style: GoogleFonts.mulish(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary),
+                      style: GoogleFonts.mulish(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                     TextButton(
                       onPressed: () {
@@ -232,7 +284,10 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
                       },
                       child: Text(
                         'Selesai',
-                        style: GoogleFonts.mulish(color: AppColors.primary, fontWeight: FontWeight.bold),
+                        style: GoogleFonts.mulish(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -250,8 +305,11 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
                   ),
                   child: CupertinoDatePicker(
                     mode: CupertinoDatePickerMode.time,
-                    initialDateTime: DateTime(2020, 1, 1, initial.hour, initial.minute),
-                    use24hFormat: true, // Ubah jadi false jika ingin format AM/PM
+                    minimumDate: minDate,
+                    maximumDate: maxDate,
+                    initialDateTime: initDt,
+                    use24hFormat:
+                        true, // Ubah jadi false jika ingin format AM/PM
                     onDateTimeChanged: (DateTime newDateTime) {
                       picked = TimeOfDay.fromDateTime(newDateTime);
                     },
@@ -293,6 +351,16 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Lengkapi tanggal dan jam mulai/selesai lembur utama!'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+      return;
+    }
+
+    if (_tempatController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tempat Kerja Lembur wajib diisi!'),
           backgroundColor: AppColors.danger,
         ),
       );
@@ -468,6 +536,17 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
                   const SizedBox(height: 8),
                   _buildDurationField(),
                   const SizedBox(height: 4),
+                  if (_getWarningMessage() != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4, bottom: 4),
+                      child: Text(
+                        _getWarningMessage()!,
+                        style: GoogleFonts.mulish(
+                          fontSize: 12,
+                          color: AppColors.danger,
+                        ),
+                      ),
+                    ),
                   Text(
                     'Durasi keseluruhan lembur yang diajukan.',
                     style: GoogleFonts.mulish(
@@ -479,11 +558,11 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
                   const Divider(color: AppColors.divider, thickness: 1),
                   const SizedBox(height: 20),
 
-                  _buildLabel('Tempat Kerja Lembur'),
+                  _buildLabel('Tempat Kerja Lembur', isRequired: true),
                   const SizedBox(height: 8),
                   _buildInputField(
                     controller: _tempatController,
-                    hint: 'Masukkan tempat kerja lembur',
+                    hint: 'Contoh: Kantor Pusat, Site Bekasi, dsb.',
                     icon: Icons.location_on_outlined,
                   ),
                   const SizedBox(height: 20),
@@ -508,7 +587,9 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
                   const Divider(color: AppColors.divider, thickness: 1),
                   const SizedBox(height: 20),
 
-                  _buildLabel('Rincian Pekerjaan (Maks. 4 Jam per tugas)'),
+                  _buildLabel(
+                    'Untuk Pelaksanaan Pekerjaan (Ditulis secara rinci dan wajib diisi)',
+                  ),
                   const SizedBox(height: 16),
                   ...List.generate(4, (index) => _buildTaskItem(index)),
                   const SizedBox(height: 24),
@@ -524,6 +605,23 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
 
   Widget _buildTaskItem(int index) {
     final task = _tasks[index];
+    
+    String startTimeStr = 'Mulai';
+    if (task['startTime'] != null) {
+      startTimeStr = _formatTimeOnly24h(task['startTime']);
+    }
+
+    String endTimeStr = 'Selesai';
+    if (task['endTime'] != null) {
+      endTimeStr = _formatTimeOnly24h(task['endTime']);
+    } else if (task['startTime'] != null) {
+      final st = task['startTime'] as TimeOfDay;
+      int maxH = st.hour + 4;
+      int maxM = st.minute;
+      if (maxH >= 24) maxH -= 24;
+      endTimeStr = 'Maks. ${maxH.toString().padLeft(2, '0')}:${maxM.toString().padLeft(2, '0')}';
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -535,19 +633,21 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Tugas ${index + 1}',
-            style: GoogleFonts.mulish(
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
-            ),
-          ),
-          const SizedBox(height: 12),
           Row(
             children: [
+              SizedBox(
+                width: 30,
+                child: Text(
+                  '#${index + 1}',
+                  style: GoogleFonts.mulish(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
               Expanded(
                 child: _buildTimeField(
-                  value: _formatTimeOnly24h(task['startTime']),
+                  value: startTimeStr,
                   onTap: () => _pickTime(isStart: true, taskIndex: index),
                 ),
               ),
@@ -557,7 +657,7 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
               ),
               Expanded(
                 child: _buildTimeField(
-                  value: _formatTimeOnly24h(task['endTime']),
+                  value: endTimeStr,
                   onTap: () => _pickTime(isStart: false, taskIndex: index),
                 ),
               ),
@@ -569,7 +669,7 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
             maxLines: 2,
             style: GoogleFonts.mulish(fontSize: 14),
             decoration: InputDecoration(
-              hintText: 'Deskripsi pekerjaan...',
+              hintText: 'Deskripsi pekerjaan ${index + 1}...',
               hintStyle: GoogleFonts.mulish(
                 fontSize: 14,
                 color: AppColors.textMuted,
@@ -587,13 +687,23 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
     );
   }
 
-  Widget _buildLabel(String text) {
-    return Text(
-      text,
-      style: GoogleFonts.mulish(
-        fontSize: 14,
-        fontWeight: FontWeight.w700,
-        color: AppColors.textPrimary,
+  Widget _buildLabel(String text, {bool isRequired = false}) {
+    return RichText(
+      text: TextSpan(
+        text: text,
+        style: GoogleFonts.mulish(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textPrimary,
+        ),
+        children: isRequired
+            ? [
+                const TextSpan(
+                  text: ' *',
+                  style: TextStyle(color: AppColors.danger),
+                ),
+              ]
+            : [],
       ),
     );
   }
@@ -631,32 +741,34 @@ class _OvertimeFormPageState extends State<OvertimeFormPage> {
   }
 
   Widget _buildTimeField({required String value, required VoidCallback onTap}) {
-    final hasValue = !value.contains('--');
+    final hasValue = !value.contains('--') && !value.contains('Mulai') && !value.contains('Selesai') && !value.contains('Maks.') && !value.contains('Pilih Waktu');
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: AppColors.border),
         ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(
-              Icons.access_time_outlined,
-              size: 20,
-              color: hasValue ? AppColors.textPrimary : AppColors.textMuted,
-            ),
-            const SizedBox(width: 8),
             Expanded(
               child: Text(
                 value,
+                textAlign: TextAlign.center,
                 style: GoogleFonts.mulish(
                   fontSize: 14,
                   color: hasValue ? AppColors.textPrimary : AppColors.textMuted,
                 ),
               ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.access_time_outlined,
+              size: 18,
+              color: hasValue ? AppColors.textPrimary : AppColors.textMuted,
             ),
           ],
         ),

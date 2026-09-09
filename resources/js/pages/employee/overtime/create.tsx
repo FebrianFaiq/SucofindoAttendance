@@ -37,8 +37,8 @@ export default function OvertimeCreate() {
     // ── Helper: hitung durasi per-task (menit) ──
     const getTaskDurationMinutes = (task: { startTime: string; endTime: string }) => {
         if (!task.startTime || !task.endTime) {
-return 0;
-}
+            return 0;
+        }
 
         const [sh, sm] = task.startTime.split(':').map(Number);
         const [eh, em] = task.endTime.split(':').map(Number);
@@ -46,8 +46,8 @@ return 0;
         let end = eh * 60 + em;
 
         if (end < start) {
-end += 24 * 60;
-}
+            end += 24 * 60;
+        }
 
         return end - start;
     };
@@ -55,14 +55,14 @@ end += 24 * 60;
     // ── Helper: hitung maxEndTime per-task (clamp 4 jam = 240 menit) ──
     const getTaskMaxEndTime = (taskStartTime: string) => {
         if (!taskStartTime) {
-return endTime;
-}
+            return endTime;
+        }
 
         const [sh, sm] = taskStartTime.split(':').map(Number);
 
         if (isNaN(sh) || isNaN(sm)) {
-return endTime;
-}
+            return endTime;
+        }
 
         // 4 jam dari start task
         const maxMinutes = (sh * 60 + sm) + 240;
@@ -71,15 +71,15 @@ return endTime;
         const fourHourLimit = `${maxH.toString().padStart(2, '0')}:${maxM.toString().padStart(2, '0')}`;
 
         if (!endTime) {
-return fourHourLimit;
-}
+            return fourHourLimit;
+        }
 
         // Bandingkan dengan overtime end time, ambil yang lebih awal
         const [oeh, oem] = endTime.split(':').map(Number);
 
         if (isNaN(oeh) || isNaN(oem)) {
-return fourHourLimit;
-}
+            return fourHourLimit;
+        }
 
         const taskStart = sh * 60 + sm;
         let overtimeEndMin = oeh * 60 + oem;
@@ -87,20 +87,20 @@ return fourHourLimit;
 
         // Handle overnight (misal lembur 22:00 - 06:00)
         if (overtimeEndMin < taskStart) {
-overtimeEndMin += 24 * 60;
-}
+            overtimeEndMin += 24 * 60;
+        }
 
         if (fourHourMax < taskStart) {
-fourHourMax += 24 * 60;
-}
+            fourHourMax += 24 * 60;
+        }
 
         return fourHourMax <= overtimeEndMin ? fourHourLimit : endTime;
     };
 
     const durationMinutes = (() => {
         if (!startTime || !endTime) {
-return 0;
-}
+            return 0;
+        }
 
         const [startHour, startMinute] = startTime.split(':').map(Number);
         const [endHour, endMinute] = endTime.split(':').map(Number);
@@ -108,16 +108,16 @@ return 0;
         let end = endHour * 60 + endMinute;
 
         if (end < start) {
-end += 24 * 60;
-}
+            end += 24 * 60;
+        }
 
         return end - start;
     })();
 
     const durationDisplay = (() => {
         if (!startTime || !endTime) {
-return '0 Jam 0 Menit';
-}
+            return '0 Jam 0 Menit';
+        }
 
         const h = Math.floor(durationMinutes / 60);
         const m = durationMinutes % 60;
@@ -135,9 +135,9 @@ return '0 Jam 0 Menit';
         const durationHours = durationMinutes / 60;
 
         if (isWeekendDay && durationHours > 9) {
-            warningMessage = 'Melebihi batas durasi lembur yang telah ditetapkan';
+            warningMessage = 'Melebihi batas durasi lembur pada hari libur (9 jam)';
         } else if (!isWeekendDay && durationHours > 3) {
-            warningMessage = 'Melebihi batas durasi lembur yang telah ditetapkan';
+            warningMessage = 'Melebihi batas durasi lembur pada hari kerja (3 jam)';
         }
     }
 
@@ -147,8 +147,8 @@ return '0 Jam 0 Menit';
         // Validasi: pastikan tidak ada task yang melebihi 4 jam
         const overLimitTask = tasks.find(t => {
             if (!t.startTime || !t.endTime) {
-return false;
-}
+                return false;
+            }
 
             return getTaskDurationMinutes(t) > 240;
         });
