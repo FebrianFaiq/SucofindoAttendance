@@ -440,26 +440,4 @@ export function handlePrintExport(data: PrintData) {
     setTimeout(() => {
         printWindow.print();
     }, 1000);
-}`;
-
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-    if (!printWindow) {
-        alert('Popup diblokir oleh browser. Mohon izinkan popup untuk fitur ini.');
-        return;
-    }
-
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-
-    // Wait for content to load, then print
-    printWindow.onload = () => {
-        setTimeout(() => {
-            printWindow.print();
-        }, 300);
-    };
-
-    // Fallback if onload doesn't fire
-    setTimeout(() => {
-        printWindow.print();
-    }, 1000);
 }

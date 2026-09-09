@@ -930,13 +930,13 @@ return false;
                                         <SelectValue placeholder="Pilih Tipe" />
                                     </SelectTrigger>
                                     <SelectContent className="font-mulish">
-                                        <SelectItem value="employee" className="font-medium">Karyawan & PTT</SelectItem>
+                                        <SelectItem value="employee" className="font-medium">PTT Proyek</SelectItem>
                                         <SelectItem value="intern" className="font-medium">Magang</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
-                            {/* Proyek / Bidang */}
+                            {/* Proyek / Bidang */}         
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-sm font-semibold text-neutral-800">Proyek / Bidang (Opsional)</label>
                                 <Select value={expProject} onValueChange={setExpProject}>

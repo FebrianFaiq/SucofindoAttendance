@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\EmployeeImportService;
 
 class EmployeeController extends Controller
 {
@@ -281,5 +282,50 @@ class EmployeeController extends Controller
 
         return redirect()->route('admin.employees.index')
             ->with('success', 'Data karyawan berhasil dihapus.');
+    }
+
+    /**
+     * Download template Excel untuk import pegawai.
+     */
+    public function importTemplate(EmployeeImportService $service)
+    {
+        $tempFile = $service->generateTemplate();
+
+        return response()->download($tempFile, 'Template_Import_Pegawai.xlsx')->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Proses import pegawai dari file Excel.
+     */
+    public function importStore(Request $request, EmployeeImportService $service): RedirectResponse
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls|max:5120',
+        ], [
+            'file.required' => 'File Excel wajib diunggah.',
+            'file.mimes' => 'File harus berformat .xlsx atau .xls.',
+            'file.max' => 'Ukuran file maksimal 5MB.',
+        ]);
+
+        $result = $service->import($request->file('file'));
+
+        $message = "Berhasil mengimpor {$result['success']} pegawai.";
+        if (count($result['errors']) > 0) {
+            $errorMessages = implode(' | ', $result['errors']);
+            $message .= " Terdapat ".count($result['errors'])." error: {$errorMessages}";
+        }
+
+        if ($result['success'] > 0 && count($result['errors']) === 0) {
+            return redirect()->route('admin.employees.index')
+                ->with('success', $message.' (Password default: '.User::DEFAULT_PASSWORD.')');
+        }
+
+        if ($result['success'] > 0 && count($result['errors']) > 0) {
+            return redirect()->route('admin.employees.index')
+                ->with('warning', $message);
+        }
+
+        return redirect()->route('admin.employees.index')
+            ->with('error', 'Tidak ada data yang berhasil diimpor. '.$message);
     }
 }

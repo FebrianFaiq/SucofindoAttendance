@@ -35,6 +35,7 @@ class OvertimeController extends Controller
         $overtimes = Overtime::forEmployee($employee->id)
             ->with(['employee.projects'])
             ->orderByDesc('date')
+            ->orderByDesc('created_at')
             ->paginate(15);
 
         $statusMap = [

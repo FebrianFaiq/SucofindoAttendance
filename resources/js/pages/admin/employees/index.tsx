@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Search, Plus, ChevronLeft, ChevronRight, IdCard, ClipboardList, Pen, RotateCcw, Trash2, LayoutGrid, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import React, { useState } from 'react';
+import { Search, Plus, ChevronLeft, ChevronRight, IdCard, ClipboardList, Pen, RotateCcw, Trash2, LayoutGrid, AlertTriangle, CheckCircle2, Upload, Download, FileSpreadsheet } from 'lucide-react';
+import React, { useState, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
@@ -74,6 +74,12 @@ export default function EmployeesIndex({ employees, filters }: EmployeesIndexPro
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
 
+    // Import states
+    const [isImportOpen, setIsImportOpen] = useState(false);
+    const [importFile, setImportFile] = useState<File | null>(null);
+    const [isImporting, setIsImporting] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     const openEmployeeDetails = (emp: EmployeeItem) => {
         setSelectedEmployee(emp);
         setIsSheetOpen(true);
@@ -146,6 +152,26 @@ return 'EM';
             .toUpperCase();
     };
 
+    const handleImportSubmit = () => {
+        if (!importFile) return;
+
+        setIsImporting(true);
+        const formData = new FormData();
+        formData.append('file', importFile);
+
+        router.post('/admin/employees/import', formData, {
+            forceFormData: true,
+            onSuccess: () => {
+                setIsImporting(false);
+                setIsImportOpen(false);
+                setImportFile(null);
+            },
+            onError: () => {
+                setIsImporting(false);
+            },
+        });
+    };
+
     return (
         <>
             <Head title="Karyawan" />
@@ -170,6 +196,14 @@ return 'EM';
                                 className="pl-10 h-10 border-neutral-300 bg-white shadow-sm focus-visible:ring-[#035EA9]"
                             />
                         </form>
+                        <Button
+                            type="button"
+                            onClick={() => setIsImportOpen(true)}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-11 px-5 flex items-center gap-2 shadow-sm rounded-xl text-xs sm:w-auto justify-center w-full whitespace-nowrap shrink-0"
+                        >
+                            <Upload className="h-4 w-4 shrink-0" />
+                            Import Excel
+                        </Button>
                         <Link href="/admin/employees/create" className="bg-[#035EA9] hover:bg-[#035EA9]/90 text-white font-bold h-11 px-5 flex items-center gap-2 shadow-sm rounded-xl text-xs sm:w-auto justify-center w-full whitespace-nowrap shrink-0">
                             <Plus className="h-4 w-4 shrink-0" />
                             Tambah Karyawan
@@ -588,6 +622,97 @@ return 'EM';
                                 </Button>
                             </DialogClose>
                         </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* 4. Import Excel Dialog */}
+                <Dialog open={isImportOpen} onOpenChange={(open) => { setIsImportOpen(open); if (!open) { setImportFile(null); } }}>
+                    <DialogContent className="sm:max-w-[520px] p-0 font-mulish border-none overflow-hidden">
+                        <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-8 py-6">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20">
+                                    <FileSpreadsheet className="h-6 w-6 text-white" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-white">Import Data Pegawai</h2>
+                                    <p className="text-emerald-100 text-sm mt-0.5">Upload file Excel untuk menambahkan pegawai secara massal.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="px-8 py-6 space-y-5">
+                            {/* Step 1: Download Template */}
+                            <div className="rounded-xl border border-neutral-200 p-4">
+                                <div className="flex items-start gap-3">
+                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 font-bold text-sm">1</div>
+                                    <div className="flex-1">
+                                        <h3 className="font-bold text-neutral-900 text-sm">Download Template</h3>
+                                        <p className="text-xs text-neutral-500 mt-1">Download template Excel yang sudah berisi referensi ID Projek dari database.</p>
+                                        <a
+                                            href="/admin/employees/import/template"
+                                            className="mt-3 inline-flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition-colors"
+                                        >
+                                            <Download className="h-3.5 w-3.5" />
+                                            Download Template Excel
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Step 2: Upload File */}
+                            <div className="rounded-xl border border-neutral-200 p-4">
+                                <div className="flex items-start gap-3">
+                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 font-bold text-sm">2</div>
+                                    <div className="flex-1">
+                                        <h3 className="font-bold text-neutral-900 text-sm">Upload File Excel</h3>
+                                        <p className="text-xs text-neutral-500 mt-1">Upload file Excel yang sudah diisi dengan data pegawai. Pastikan format file .xlsx atau .xls.</p>
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept=".xlsx,.xls"
+                                            className="hidden"
+                                            onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className={`mt-3 w-full rounded-lg border-2 border-dashed p-4 text-center transition-colors ${
+                                                importFile
+                                                    ? 'border-emerald-300 bg-emerald-50'
+                                                    : 'border-neutral-300 hover:border-emerald-400 hover:bg-emerald-50/50'
+                                            }`}
+                                        >
+                                            {importFile ? (
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
+                                                    <span className="text-sm font-semibold text-emerald-700">{importFile.name}</span>
+                                                </div>
+                                            ) : (
+                                                <div>
+                                                    <Upload className="h-6 w-6 text-neutral-400 mx-auto" />
+                                                    <span className="text-xs text-neutral-500 mt-1 block">Klik untuk memilih file (.xlsx / .xls)</span>
+                                                </div>
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="border-t border-neutral-200 px-8 py-4 flex gap-3 justify-end bg-neutral-50">
+                            <DialogClose asChild>
+                                <Button variant="outline" className="font-bold border-neutral-300 text-neutral-700 h-10">
+                                    Batal
+                                </Button>
+                            </DialogClose>
+                            <Button
+                                onClick={handleImportSubmit}
+                                disabled={!importFile || isImporting}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 px-6"
+                            >
+                                {isImporting ? 'Mengimpor...' : 'Import Pegawai'}
+                            </Button>
+                        </div>
                     </DialogContent>
                 </Dialog>
 

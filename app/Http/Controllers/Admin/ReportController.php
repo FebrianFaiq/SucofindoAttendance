@@ -102,15 +102,25 @@ class ReportController extends Controller
         $sheetTitle = $role === 'intern' ? 'Rekap Magang' : 'Rekap Karyawan';
         $sheet->setTitle($sheetTitle);
 
-        // Header Row 1 (Tanggal)
-        $sheet->setCellValue('A1', 'NIK');
-        $sheet->setCellValue('B1', 'Nama');
-        $sheet->setCellValue('C1', $role === 'intern' ? 'Bidang' : 'Projek');
-        $sheet->setCellValue('D1', 'Tanggal');
-        $sheet->mergeCells('D1:'.Coordinate::stringFromColumnIndex($daysInMonth + 3).'1');
+        $offset = $role === 'intern' ? 2 : 3;
 
-        $colTotalKerja = $daysInMonth + 4;
-        $colTotalLibur = $daysInMonth + 5;
+        // Header Row 1 (Tanggal)
+        $sheet->setCellValue('A1', 'Nama');
+        if ($role === 'intern') {
+            $sheet->setCellValue('B1', 'Bidang');
+        } else {
+            $sheet->setCellValue('B1', 'Jabatan');
+            $sheet->setCellValue('C1', 'Projek');
+        }
+
+        $dateStartLetter = Coordinate::stringFromColumnIndex($offset + 1);
+        $dateEndLetter = Coordinate::stringFromColumnIndex($daysInMonth + $offset);
+        
+        $sheet->setCellValue($dateStartLetter.'1', 'Tanggal');
+        $sheet->mergeCells($dateStartLetter.'1:'.$dateEndLetter.'1');
+
+        $colTotalKerja = $daysInMonth + $offset + 1;
+        $colTotalLibur = $daysInMonth + $offset + 2;
         $sheet->setCellValue(Coordinate::stringFromColumnIndex($colTotalKerja).'1', 'Summary');
         $sheet->mergeCells(Coordinate::stringFromColumnIndex($colTotalKerja).'1:'.Coordinate::stringFromColumnIndex($colTotalLibur).'1');
 
@@ -124,13 +134,13 @@ class ReportController extends Controller
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
         ];
 
-        $sheet->getStyle('A1:C2')->applyFromArray($headerStyle);
-        $sheet->getStyle('D1:'.Coordinate::stringFromColumnIndex($daysInMonth + 3).'1')->applyFromArray($headerStyle);
+        $sheet->getStyle('A1:'.Coordinate::stringFromColumnIndex($offset).'2')->applyFromArray($headerStyle);
+        $sheet->getStyle($dateStartLetter.'1:'.$dateEndLetter.'1')->applyFromArray($headerStyle);
         $sheet->getStyle(Coordinate::stringFromColumnIndex($colTotalKerja).'1:'.Coordinate::stringFromColumnIndex($colTotalLibur).'1')->applyFromArray($headerStyle);
 
         // Header Row 2 (Angka Tanggal 1-31 & Summary)
         for ($day = 1; $day <= $daysInMonth; $day++) {
-            $colIndex = $day + 3; // Mulai dari kolom D (4)
+            $colIndex = $day + $offset;
             $colLetter = Coordinate::stringFromColumnIndex($colIndex);
             $sheet->setCellValue($colLetter.'2', $day);
 
@@ -161,22 +171,20 @@ class ReportController extends Controller
         // Isi Data
         $row = 3;
         foreach ($employees as $employee) {
-            $sheet->setCellValue('A'.$row, $employee->nik ?? '-');
-            $sheet->setCellValue('B'.$row, $employee->user->name ?? '-');
+            $sheet->setCellValue('A'.$row, $employee->user->name ?? '-');
 
-            // Menentukan Projek/Bidang
             if ($role === 'intern') {
-                $unitKerja = $employee->division ?? '-';
+                $sheet->setCellValue('B'.$row, $employee->division ?? '-');
             } else {
-                $unitKerja = $employee->activeProject()?->name ?? '-';
+                $sheet->setCellValue('B'.$row, $employee->jabatan ?? '-');
+                $sheet->setCellValue('C'.$row, $employee->activeProject()?->name ?? '-');
             }
-            $sheet->setCellValue('C'.$row, $unitKerja);
 
             $totalKerja = 0;
             $totalLibur = 0;
 
             for ($day = 1; $day <= $daysInMonth; $day++) {
-                $colLetter = Coordinate::stringFromColumnIndex($day + 3);
+                $colLetter = Coordinate::stringFromColumnIndex($day + $offset);
                 $key = $employee->id.'_'.$day;
 
                 $currentDate = Carbon::createFromDate($year, $month, $day);
@@ -207,7 +215,7 @@ class ReportController extends Controller
                 'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
             ]);
 
-            $sheet->getStyle('A'.$row.':C'.$row)->applyFromArray([
+            $sheet->getStyle('A'.$row.':'.Coordinate::stringFromColumnIndex($offset).$row)->applyFromArray([
                 'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
             ]);
 

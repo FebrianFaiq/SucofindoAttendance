@@ -100,6 +100,12 @@ Route::prefix('admin')
         Route::get('dashboard/stream', Admin\DashboardStreamController::class)
             ->name('admin.dashboard.stream');
 
+        // Import Karyawan via Excel (harus sebelum resource route)
+        Route::get('employees/import/template', [Admin\EmployeeController::class, 'importTemplate'])
+            ->name('admin.employees.import.template');
+        Route::post('employees/import', [Admin\EmployeeController::class, 'importStore'])
+            ->name('admin.employees.import');
+
         // Manajemen Karyawan (Employee Management)
         Route::resource('employees', Admin\EmployeeController::class)
             ->names('admin.employees');
