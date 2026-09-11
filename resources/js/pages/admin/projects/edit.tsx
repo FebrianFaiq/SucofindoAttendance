@@ -1,0 +1,266 @@
+import { Head, Link, useForm } from '@inertiajs/react';
+import { format } from 'date-fns';
+import { Save, FileText, Calculator, AlertTriangle } from 'lucide-react';
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import AdminLayout from '@/layouts/admin-layout';
+
+type Project = {
+    id: number;
+    name: string;
+    code: string | null;
+    description: string | null;
+    start_date: string;
+    end_date: string;
+    is_active: boolean;
+};
+
+export default function ProjectsEdit({ project }: { project: Project }) {
+    const { data, setData, put, processing, errors } = useForm({
+        name: project.name || '',
+        code: project.code || '',
+        description: project.description || '',
+        start_date: project.start_date || '',
+        end_date: project.end_date || '',
+        is_active: project.is_active,
+    });
+    
+    const [isConfirmOpen, setIsConfirmOpen] = React.useState(false);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        // Jika proyek yang asalnya aktif akan dinonaktifkan, tampilkan konfirmasi
+        if (project.is_active && !data.is_active) {
+            setIsConfirmOpen(true);
+        } else {
+            submitForm();
+        }
+    };
+
+    const submitForm = () => {
+        put(`/admin/projects/${project.id}`);
+        setIsConfirmOpen(false);
+    };
+
+    // Calculate duration in days if both dates are selected
+    const getDurationText = () => {
+        if (!data.start_date || !data.end_date) {
+            return 'Pilih tanggal mulai dan selesai untuk menghitung durasi.';
+        }
+        
+        const start = new Date(data.start_date);
+        const end = new Date(data.end_date);
+        
+        if (end < start) {
+            return 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.';
+        }
+        
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end days
+        
+        return `${diffDays} Hari`;
+    };
+
+    return (
+        <>
+            <Head title={`Edit Proyek - ${project.name}`} />
+            <div className="flex h-full flex-1 flex-col bg-[#F9F9FF] p-8 font-mulish">
+                
+                {/* ── Header ────────────────────────────────────────── */}
+                <div className="mb-6 flex flex-col">
+                    <h1 className="text-[32px] font-extrabold text-[#14141A] tracking-tight">
+                        Edit Proyek
+                    </h1>
+                    <p className="text-neutral-500 font-medium text-[15px] mt-1">
+                        Ubah detail proyek atau aktif/non-aktifkan proyek ini.
+                    </p>
+                </div>
+
+                {/* ── Form Card ─────────────────────────────────────── */}
+                <form onSubmit={handleSubmit} className="rounded-xl border border-neutral-200 bg-white flex flex-col w-full shadow-sm">
+                    <div className="p-8 flex flex-col gap-6">
+                        
+                        {/* Section Header */}
+                        <div className="flex items-center gap-3 border-b border-transparent pb-2">
+                            <FileText className="h-6 w-6 text-[#035EA9]" />
+                            <h2 className="text-[20px] font-bold text-[#14141A]">Informasi Proyek</h2>
+                        </div>
+                        
+                        {/* Grid Form Fields */}
+                        <div className="flex flex-col gap-6">
+                            
+                            {/* Row 1: Nama Proyek */}
+                            <div className="flex flex-col gap-2">
+                                <label className="text-[14px] font-bold text-[#14141A]">
+                                    Nama Proyek
+                                </label>
+                                <Input 
+                                    value={data.name}
+                                    onChange={(e) => setData('name', e.target.value)}
+                                    placeholder="Masukkan nama proyek" 
+                                    className="h-11 bg-white border-neutral-200 text-[#14141A] font-medium focus-visible:ring-[#035EA9]"
+                                />
+                                {errors.name && <p className="text-xs text-red-500 font-semibold">{errors.name}</p>}
+                            </div>
+                            
+                            {/* Row 2: Kode & Status */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-[14px] font-bold text-[#14141A]">
+                                        Kode Proyek
+                                    </label>
+                                    <Input 
+                                        value={data.code}
+                                        onChange={(e) => setData('code', e.target.value)}
+                                        placeholder="Contoh: PRJ-2023-001" 
+                                        className="h-11 bg-white border-neutral-200 text-[#14141A] font-medium focus-visible:ring-[#035EA9]"
+                                    />
+                                    {errors.code && <p className="text-xs text-red-500 font-semibold">{errors.code}</p>}
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-[14px] font-bold text-[#14141A]">
+                                        Status
+                                    </label>
+                                    <select
+                                        value={data.is_active ? "1" : "0"}
+                                        onChange={(e) => setData('is_active', e.target.value === "1")}
+                                        className="h-11 w-full rounded-md border border-neutral-200 bg-white px-3 font-medium text-[#14141A] shadow-sm focus:border-[#035EA9] focus:outline-none focus:ring-1 focus:ring-[#035EA9]"
+                                    >
+                                        <option value="1">Aktif</option>
+                                        <option value="0">Tidak Aktif</option>
+                                    </select>
+                                    {errors.is_active && <p className="text-xs text-red-500 font-semibold">{errors.is_active}</p>}
+                                </div>
+                            </div>
+
+                            {/* Row 3: Tanggal Mulai & Selesai */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-[14px] font-bold text-[#14141A]">
+                                        Tanggal Mulai
+                                    </label>
+                                    <DatePicker 
+                                        date={data.start_date ? new Date(data.start_date) : undefined}
+                                        setDate={(date) => setData('start_date', date ? format(date, 'yyyy-MM-dd') : '')}
+                                        placeholder="mm/dd/yyyy"
+                                        className="w-full h-11 border-neutral-200 bg-white shadow-sm hover:bg-neutral-50"
+                                    />
+                                    {errors.start_date && <p className="text-xs text-red-500 font-semibold">{errors.start_date}</p>}
+                                </div>
+
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-[14px] font-bold text-[#14141A]">
+                                        Tanggal Selesai (Estimasi)
+                                    </label>
+                                    <DatePicker 
+                                        date={data.end_date ? new Date(data.end_date) : undefined}
+                                        setDate={(date) => setData('end_date', date ? format(date, 'yyyy-MM-dd') : '')}
+                                        placeholder="mm/dd/yyyy"
+                                        className="w-full h-11 border-neutral-200 bg-white shadow-sm hover:bg-neutral-50"
+                                    />
+                                    {errors.end_date && <p className="text-xs text-red-500 font-semibold">{errors.end_date}</p>}
+                                </div>
+                            </div>
+
+                            {/* Row 4: Estimasi Durasi Proyek (Disabled/Calculated) */}
+                            <div className="flex flex-col gap-2">
+                                <label className="text-[14px] font-bold text-[#14141A]">
+                                    Estimasi Durasi Proyek
+                                </label>
+                                <div className="relative">
+                                    <Input 
+                                        value={getDurationText()}
+                                        disabled
+                                        className="h-11 bg-[#F8FAFC] border-neutral-200 border-dashed text-[#035EA9] font-semibold opacity-100 pr-10"
+                                    />
+                                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <Calculator className="h-5 w-5 text-neutral-400" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Row 5: Deskripsi Singkat */}
+                            <div className="flex flex-col gap-2">
+                                <label className="text-[14px] font-bold text-[#14141A]">
+                                    Deskripsi Singkat
+                                </label>
+                                <textarea
+                                    value={data.description}
+                                    onChange={(e) => setData('description', e.target.value)}
+                                    placeholder="Tambahkan catatan atau deskripsi proyek..."
+                                    className="w-full min-h-[100px] p-3 bg-white border border-neutral-200 rounded-md text-[#14141A] font-medium focus:outline-none focus:ring-1 focus:ring-[#035EA9] focus:border-[#035EA9]"
+                                />
+                                {errors.description && <p className="text-xs text-red-500 font-semibold">{errors.description}</p>}
+                            </div>
+
+                        </div>
+
+                        {/* Separator */}
+                        <div className="h-[1px] w-full bg-neutral-200 mt-4 mb-2"></div>
+
+                        {/* Form Actions */}
+                        <div className="flex justify-end gap-3">
+                            <Link href={`/admin/projects/${project.id}`} className="h-11 flex items-center justify-center px-6 rounded-lg border border-neutral-300 bg-white text-[#14141A] font-bold text-sm shadow-sm hover:bg-neutral-50 transition-colors">
+                                Batal
+                            </Link>
+                            <Button 
+                                type="submit" 
+                                disabled={processing}
+                                className="bg-[#035EA9] hover:bg-[#035EA9]/90 text-white font-bold h-11 px-6 rounded-lg flex items-center gap-2 text-sm shadow-sm"
+                            >
+                                {processing ? 'Menyimpan...' : (
+                                    <>
+                                        <Save className="h-4 w-4 shrink-0" />
+                                        Simpan Perubahan
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    </div>
+                </form>
+                
+                {/* ── Deactivation Confirmation Dialog ───────────────── */}
+                <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+                    <DialogContent className="sm:max-w-[420px] p-8 font-mulish text-center border-none">
+                        <DialogHeader className="flex flex-col items-center justify-center sm:text-center">
+                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-50 mb-4">
+                                <AlertTriangle className="h-8 w-8 text-amber-600" />
+                            </div>
+                            <DialogTitle className="text-2xl font-bold text-[#1E293B]">Nonaktifkan Proyek?</DialogTitle>
+                            <DialogDescription className="text-[15px] font-medium text-[#64748B] mt-3 leading-relaxed text-center">
+                                Anda akan menonaktifkan proyek ini. Semua karyawan yang saat ini ditugaskan pada proyek ini akan otomatis di-unassign. Lanjutkan?
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter className="flex flex-col sm:flex-col w-full gap-3 mt-6">
+                            <Button
+                                disabled={processing}
+                                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold h-11 sm:w-full"
+                                onClick={submitForm}
+                            >
+                                {processing ? 'Memproses...' : 'Ya, Nonaktifkan'}
+                            </Button>
+                            <DialogClose asChild>
+                                <Button variant="outline" className="w-full border-neutral-300 font-bold text-neutral-700 h-11 hover:bg-neutral-50 sm:w-full sm:mt-0">
+                                    Batal
+                                </Button>
+                            </DialogClose>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            </div>
+        </>
+    );
+}
+
+ProjectsEdit.layout = (page: React.ReactNode) => (
+    <AdminLayout breadcrumbs={[
+        { title: 'Proyek', href: '/admin/projects' },
+        { title: 'Edit Proyek', href: '#' }
+    ]}>
+        {page}
+    </AdminLayout>
+);

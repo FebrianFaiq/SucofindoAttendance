@@ -27,3 +27,7 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+docs/
+REKAP_UPDATE_HARIAN.md
+REKAP_*.md
+ANALISIS_*.md
