@@ -7,7 +7,12 @@ import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
 import EmployeeLayout from '@/layouts/employee-layout';
 
+import { registerGlobalErrorHandler } from '@/lib/inertia-error-handler';
+
 const appName = import.meta.env.VITE_APP_NAME || 'SUCOFINDO Absensi';
+
+// Register global error handler for network failures, 500s, expired sessions
+registerGlobalErrorHandler();
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),

@@ -9,6 +9,7 @@ import {
     Filter,
 } from 'lucide-react';
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 import { FlashMessage } from '@/components/flash-message';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -101,6 +102,9 @@ return;
             onSuccess: () => {
                 setHolidayToDelete(null);
                 setIsEditHolidayOpen(false);
+            },
+            onError: () => {
+                toast.error('Gagal menghapus hari libur. Silakan coba lagi.');
             },
         });
     };

@@ -1,6 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Search, Plus, ChevronLeft, ChevronRight, IdCard, ClipboardList, Pen, RotateCcw, Trash2, LayoutGrid, AlertTriangle, CheckCircle2, Upload, Download, FileSpreadsheet, XCircle, RefreshCw } from 'lucide-react';
 import React, { useState, useRef } from 'react';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
@@ -142,6 +143,7 @@ return;
                 },
                 onError: () => {
                     setIsProcessing(false);
+                    toast.error('Gagal mereset password. Silakan coba lagi.');
                 },
             }
         );
@@ -162,6 +164,7 @@ return;
             },
             onError: () => {
                 setIsProcessing(false);
+                toast.error('Gagal menghapus karyawan. Silakan coba lagi.');
             },
         });
     };
@@ -208,7 +211,7 @@ return 'EM';
             setIsImporting(false);
         } catch (error) {
             setIsImporting(false);
-            alert('Terjadi kesalahan saat membaca file.');
+            toast.error('Terjadi kesalahan saat membaca file. Periksa koneksi internet Anda.');
         }
     };
 
@@ -228,6 +231,7 @@ return 'EM';
             },
             onError: () => {
                 setIsImporting(false);
+                toast.error('Gagal mengimport data. Silakan coba lagi.');
             },
         });
     };
@@ -299,9 +303,9 @@ return 'EM';
 
                                         return (
                                             <tr key={emp.id} className="hover:bg-neutral-50/50 transition-colors">
-                                                <td className="px-6 py-4 min-w-[250px]">
+                                                <td className="px-6 py-4 min-w-62.5">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E5F0F9] font-bold text-[#035EA9] shrink-0">
+                                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E5F0F9] font-bold text-sucofindo-primary shrink-0">
                                                             {getInitials(emp.user?.name)}
                                                         </div>
                                                         <div className="flex flex-col">
@@ -552,7 +556,7 @@ return 'EM';
                                 {/* Active Projects Section */}
                                 {selectedEmployee.user?.role !== 'intern' && (
                                     <div className="flex flex-col gap-2">
-                                        <div className="flex items-center gap-1.5 text-[#035EA9]">
+                                        <div className="flex items-center gap-1.5 text-sucofindo-primary">
                                             <ClipboardList className="h-4 w-4" />
                                             <h3 className="font-bold text-neutral-900 text-sm">Projek yang sedang Berjalan</h3>
                                         </div>

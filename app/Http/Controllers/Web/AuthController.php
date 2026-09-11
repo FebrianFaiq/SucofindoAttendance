@@ -45,7 +45,7 @@ class AuthController extends Controller
      * 5. Regenerate session (security best practice)
      * 6. Redirect ke /dashboard
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request): Response
     {
         $request->authenticate();
 
@@ -56,10 +56,10 @@ class AuthController extends Controller
         $user->update(['last_login_at' => now()]);
 
         if ($user->isAdmin()) {
-            return redirect()->intended(route('admin.dashboard'));
+            return Inertia::location(route('admin.dashboard'));
         }
 
-        return redirect()->intended(route('employee.dashboard'));
+        return Inertia::location(route('employee.dashboard'));
     }
 
     /**
