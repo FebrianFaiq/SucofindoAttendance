@@ -13,6 +13,9 @@
 | `API_HOST_LAN` | IP lokal (`192.168.x.x`) | Domain server (misal `api.sucofindo.com`) |
 | `API_PORT` | `8000` | `443` (atau sesuai server) |
 | `USE_EMULATOR` | `true` / `false` | `false` |
+| `OFFICE_LAT` | `-7.254776` | Kordinat valid kantor yang dituju |
+| `OFFICE_LNG` | `112.717212` | Kordinat valid kantor yang dituju |
+| `RADIUS_LIMIT` | `200` | Sesuaikan batas radius (dalam meter) |
 
 Contoh `.env` production:
 ```env
@@ -23,6 +26,10 @@ API_HOST_LAN=api.sucofindo.com
 API_PORT=443
 API_PATH=/api/v1
 USE_EMULATOR=false
+
+OFFICE_LAT=-7.254776
+OFFICE_LNG=112.717212
+RADIUS_LIMIT=200
 ```
 
 - `[ ]` Update semua variable `.env` sesuai server production
