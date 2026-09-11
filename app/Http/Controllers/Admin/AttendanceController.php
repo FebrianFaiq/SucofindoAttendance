@@ -35,13 +35,13 @@ class AttendanceController extends Controller
         $singleDate = $request->input('date');
 
         if ($startDate && $endDate) {
-            $query->whereBetween('check_in_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+            $query->whereBetween('check_in_date', [$startDate, $endDate]);
         } elseif ($startDate) {
-            $query->whereDate('check_in_at', '>=', $startDate);
+            $query->where('check_in_date', '>=', $startDate);
         } elseif ($endDate) {
-            $query->whereDate('check_in_at', '<=', $endDate);
+            $query->where('check_in_date', '<=', $endDate);
         } elseif ($singleDate) {
-            $query->whereDate('check_in_at', $singleDate);
+            $query->where('check_in_date', $singleDate);
         }
 
         // Filter tipe WFO / WFA
@@ -105,9 +105,9 @@ class AttendanceController extends Controller
         $isTodayWeekend = $today->isWeekend();
 
         // 4. Quick Metrics
-        $todayAttendancesCount = Attendance::whereDate('check_in_at', $today)->count();
-        $todayClockInCount = Attendance::whereDate('check_in_at', $today)->whereNull('check_out_at')->count();
-        $todayClockOutCount = Attendance::whereDate('check_in_at', $today)->whereNotNull('check_out_at')->count();
+        $todayAttendancesCount = Attendance::where('check_in_date', $today->toDateString())->count();
+        $todayClockInCount = Attendance::where('check_in_date', $today->toDateString())->whereNull('check_out_at')->count();
+        $todayClockOutCount = Attendance::where('check_in_date', $today->toDateString())->whereNotNull('check_out_at')->count();
         $totalEmployees = User::whereIn('role', ['employee', 'intern'])->where('is_active', true)->count();
 
         // 5. Daftar Proyek

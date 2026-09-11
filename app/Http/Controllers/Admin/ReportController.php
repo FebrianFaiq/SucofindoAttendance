@@ -32,10 +32,10 @@ class ReportController extends Controller
 
         // Filter rentang tanggal
         if ($request->filled('date_from')) {
-            $query->whereDate('check_in_at', '>=', $request->input('date_from'));
+            $query->where('check_in_date', '>=', $request->input('date_from'));
         }
         if ($request->filled('date_to')) {
-            $query->whereDate('check_in_at', '<=', $request->input('date_to'));
+            $query->where('check_in_date', '<=', $request->input('date_to'));
         }
 
         // Filter karyawan

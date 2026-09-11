@@ -51,7 +51,6 @@ class AdminUserSeeder extends Seeder
             ['user_id' => $employeeUser1->id],
             [
                 'nik' => '3201123456780001',
-                'phone' => '081234567890',
                 'deleted_at' => null,
             ]
         );
@@ -69,7 +68,6 @@ class AdminUserSeeder extends Seeder
                 'name' => 'Siti Rahmawati',
                 'email' => 'siti.rahma@sucofindo.com',
                 'nik' => '3201123456780002',
-                'phone' => '081298765432',
                 'project_id' => $project2?->id,
                 'is_active' => true,
             ],
@@ -77,7 +75,6 @@ class AdminUserSeeder extends Seeder
                 'name' => 'Ahmad Fauzi',
                 'email' => 'ahmad.fauzi@sucofindo.com',
                 'nik' => '3201123456780003',
-                'phone' => '081311223344',
                 'project_id' => $project3?->id,
                 'is_active' => true,
             ],
@@ -85,7 +82,6 @@ class AdminUserSeeder extends Seeder
                 'name' => 'Dewi Lestari',
                 'email' => 'dewi.lestari@sucofindo.com',
                 'nik' => '3201123456780004',
-                'phone' => '081255667788',
                 'project_id' => $project1?->id,
                 'is_active' => true,
             ],
@@ -93,7 +89,6 @@ class AdminUserSeeder extends Seeder
                 'name' => 'Rizky Pratama',
                 'email' => 'rizky.pratama@sucofindo.com',
                 'nik' => '3201123456780005',
-                'phone' => '081299887766',
                 'role' => 'employee',
                 'project_id' => null,
                 'is_active' => false,
@@ -102,7 +97,6 @@ class AdminUserSeeder extends Seeder
                 'name' => 'Kevin Sanjaya (Magang)',
                 'email' => 'magang@sucofindo.com',
                 'nik' => '3201123456780006',
-                'phone' => '081233445566',
                 'role' => 'intern',
                 'division' => 'BIT',
                 'project_id' => null,
@@ -128,7 +122,6 @@ class AdminUserSeeder extends Seeder
                 [
                     'nik' => $dummy['nik'],
                     'division' => $dummy['division'] ?? null,
-                    'phone' => $dummy['phone'],
                     'deleted_at' => null,
                 ]
             );

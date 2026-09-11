@@ -2,7 +2,6 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -14,7 +13,7 @@ return new class extends Migration
      * Ref: BE Framework §4.2 — attendances
      *
      * TIDAK ada kolom project_id — proyek ditelusuri lewat employee_projects (§8.1).
-     * TIDAK ada kolom date — filter tanggal mengandalkan check_in_at + functional index.
+     * Filter tanggal memakai kolom generated check_in_date (sargable di MySQL & MariaDB).
      */
     public function up(): void
     {
@@ -24,6 +23,10 @@ return new class extends Migration
             $table->enum('type', ['WFO', 'WFA'])
                 ->comment('Ditentukan sekali saat check-in, berlaku untuk seluruh record hari itu');
             $table->dateTime('check_in_at')->nullable();
+            $table->date('check_in_date')
+                ->nullable()
+                ->storedAs('DATE(check_in_at)')
+                ->comment('Generated column: dasar unique 1x/hari per karyawan & filter tanggal sargable');
             $table->string('check_in_evidence', 255)
                 ->nullable()
                 ->comment('Path foto bukti check-in');
@@ -38,15 +41,12 @@ return new class extends Migration
                 ->nullable()
                 ->comment('Wajib diisi saat check-out (FR-ATT-02), divalidasi di Form Request');
             $table->timestamps();
-        });
 
-        // Functional unique index — MySQL 8.0.13+
-        // Proteksi 1 record/hari per karyawan di level database
-        // Juga dipakai untuk filter tanggal (sargable query)
-        DB::statement('
-            ALTER TABLE attendances
-            ADD UNIQUE INDEX uniq_employee_checkin_date (employee_id, (DATE(check_in_at)))
-        ');
+            // Proteksi 1 record/hari per karyawan di level database,
+            // lewat generated column (bukan functional key parts — syntax
+            // INDEX ((expr)) hanya MySQL 8.0.13+, tidak didukung MariaDB).
+            $table->unique(['employee_id', 'check_in_date'], 'uniq_employee_checkin_date');
+        });
     }
 
     /**
