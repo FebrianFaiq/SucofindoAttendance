@@ -66,7 +66,7 @@ class CheckOutController extends Controller
 
             // Compress and resize image using Intervention Image
             $manager = new ImageManager(new Driver);
-            $image = $manager->decode($photo->getRealPath());
+            $image = $manager->decode($photo->getContent());
             $image->scaleDown(width: 800);
             $image->save($targetPath, 75);
 

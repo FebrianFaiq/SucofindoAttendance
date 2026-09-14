@@ -56,7 +56,7 @@ class AttendanceController extends Controller
 
         // Compress and resize image using Intervention Image
         $manager = new ImageManager(new Driver);
-        $image = $manager->decode($photo->getRealPath());
+        $image = $manager->decode($photo->getContent());
         $image->scaleDown(width: 800);
         $image->save($targetPath, 75);
 
@@ -112,7 +112,9 @@ class AttendanceController extends Controller
 
             // Compress and resize image using Intervention Image
             $manager = new ImageManager(new Driver);
-            $image = $manager->decode($photo->getRealPath());
+            // Decode from contents: getRealPath() returns false on Windows
+            // FastCGI, where the upload temp dir denies directory listing
+            $image = $manager->decode($photo->getContent());
             $image->scaleDown(width: 800);
             $image->save($targetPath, 75);
 
