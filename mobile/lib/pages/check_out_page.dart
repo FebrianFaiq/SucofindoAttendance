@@ -670,6 +670,38 @@ class _CheckOutPageState extends State<CheckOutPage> {
                                 color: AppColors.textSecondary,
                               ),
                             ),
+                            if (widget.workMode == 'WFO' && LocationService.calculateDistance(_latitude!, _longitude!, ApiConfig.officeLat, ApiConfig.officeLng) <= ApiConfig.radiusLimit) ...[
+                              const SizedBox(height: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: AppColors.success.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 6,
+                                      height: 6,
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.success,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'DALAM RADIUS',
+                                      style: GoogleFonts.mulish(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppColors.success,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                             if (widget.workMode == 'WFO' && LocationService.calculateDistance(_latitude!, _longitude!, ApiConfig.officeLat, ApiConfig.officeLng) > ApiConfig.radiusLimit) ...[
                               const SizedBox(height: 12),
                               Container(
