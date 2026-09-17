@@ -23,11 +23,6 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Constants for Radius
-const SUCOFINDO_LAT = -7.254776;
-const SUCOFINDO_LNG = 112.717212;
-const RADIUS_LIMIT = 200; // in meters
-
 // Haversine formula to calculate distance between two coordinates in meters
 function getDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371e3; // metres
@@ -49,6 +44,7 @@ function getDistance(lat1: number, lon1: number, lat2: number, lon2: number): nu
 interface CheckInProps {
     alreadyCheckedIn: boolean;
     todayAttendance: unknown;
+    wfoLocation: { lat: number, lng: number, radius: number } | null;
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -64,7 +60,7 @@ function getTodayFormatted(): string {
 
 // ─── Component ─────────────────────────────────────────────────────────────
 
-export default function CheckIn({ alreadyCheckedIn }: CheckInProps) {
+export default function CheckIn({ alreadyCheckedIn, wfoLocation }: CheckInProps) {
     const page = usePage();
 
     // Live clock
@@ -139,9 +135,13 @@ export default function CheckIn({ alreadyCheckedIn }: CheckInProps) {
                 setData((prev) => ({ ...prev, gps_lat: lat.toString(), gps_lng: lng.toString() }));
                 setLocationLoading(false);
                 
-                // Calculate distance
-                const distance = getDistance(lat, lng, SUCOFINDO_LAT, SUCOFINDO_LNG);
-                setInRadius(distance <= RADIUS_LIMIT);
+                // Calculate distance based on wfoLocation props or fallback
+                const officeLat = wfoLocation?.lat ?? -7.254776;
+                const officeLng = wfoLocation?.lng ?? 112.717212;
+                const radiusLimit = wfoLocation?.radius ?? 200;
+                
+                const distance = getDistance(lat, lng, officeLat, officeLng);
+                setInRadius(distance <= radiusLimit);
                 
                 // Fallback coordinates first
                 setLocationAddress(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
@@ -340,7 +340,7 @@ return;
                                             : 'text-[#6B7280] hover:text-[#14141A]'
                                     }`}
                                 >
-                                    WFO
+                                    WFO/Site
                                 </button>
                                 <button
                                     type="button"
@@ -379,12 +379,12 @@ return;
                                             <Popup>Lokasi Anda</Popup>
                                         </Marker>
                                         <Circle 
-                                            center={[SUCOFINDO_LAT, SUCOFINDO_LNG]} 
-                                            radius={RADIUS_LIMIT} 
-                                            pathOptions={{ color: '#035EA9', fillColor: '#035EA9', fillOpacity: 0.1 }} 
+                                            center={[wfoLocation?.lat ?? -7.254776, wfoLocation?.lng ?? 112.717212]} 
+                                            pathOptions={{ fillColor: 'transparent', color: '#035EA9', weight: 2 }} 
+                                            radius={wfoLocation?.radius ?? 200} 
                                         />
-                                        <Marker position={[SUCOFINDO_LAT, SUCOFINDO_LNG]}>
-                                            <Popup>Graha Sucofindo</Popup>
+                                        <Marker position={[wfoLocation?.lat ?? -7.254776, wfoLocation?.lng ?? 112.717212]}>
+                                            <Popup>Kantor/Site Proyek</Popup>
                                         </Marker>
                                     </MapContainer>
                                 ) : (

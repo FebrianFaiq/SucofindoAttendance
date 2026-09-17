@@ -269,7 +269,7 @@ export default function EmployeesEdit({ employee, projects, activeSalary }: Empl
                                 {data.role === 'employee' && (
                                     <div className="flex flex-col gap-2">
                                         <label className="text-[14px] font-bold text-[#1E293B]">
-                                            Gaji Pokok (Bulanan) <span className="text-red-500">*</span>
+                                            Gaji Pokok (Bulanan)
                                         </label>
                                         <div className="relative">
                                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 font-semibold text-sm">Rp</span>

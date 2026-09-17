@@ -27,6 +27,7 @@ class DashboardPageState extends State<DashboardPage> {
   String? _clockOutTime;
   String? _workMode;
   String _totalDuration = '0j 0m';
+  Map<String, dynamic>? _wfoLocation;
   List<dynamic> _recentAttendances = [];
   bool _isLoading = true;
 
@@ -48,6 +49,7 @@ class DashboardPageState extends State<DashboardPage> {
         _clockOutTime = data['clock_out_time'];
         _workMode = data['today_attendance']?['type'];
         _totalDuration = data['total_duration'];
+        _wfoLocation = data['wfo_location'];
         _recentAttendances = data['recent_attendances'] ?? [];
       });
     }
@@ -69,7 +71,7 @@ class DashboardPageState extends State<DashboardPage> {
     if (!_hasCheckedIn) {
       final result = await Navigator.of(
         context,
-      ).push<bool>(MaterialPageRoute(builder: (_) => const CheckInPage()));
+      ).push<bool>(MaterialPageRoute(builder: (_) => CheckInPage(wfoLocation: _wfoLocation)));
       if (result == true) {
         loadDashboardData();
       }
@@ -79,6 +81,7 @@ class DashboardPageState extends State<DashboardPage> {
           builder: (_) => CheckOutPage(
             clockInTime: _clockInTime ?? '--:--',
             workMode: _workMode ?? 'WFO',
+            wfoLocation: _wfoLocation,
           ),
         ),
       );

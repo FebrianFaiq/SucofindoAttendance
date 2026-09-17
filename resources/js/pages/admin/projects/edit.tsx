@@ -1,12 +1,23 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { Save, FileText, Calculator, AlertTriangle } from 'lucide-react';
-import React from 'react';
+import { Save, FileText, Calculator, AlertTriangle, MapPin, Crosshair } from 'lucide-react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import AdminLayout from '@/layouts/admin-layout';
+import { MapContainer, TileLayer, Marker, Circle } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix leaflet default icon
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 type Project = {
     id: number;
@@ -16,6 +27,9 @@ type Project = {
     start_date: string;
     end_date: string;
     is_active: boolean;
+    site_latitude: string | null;
+    site_longitude: string | null;
+    site_radius: string | null;
 };
 
 export default function ProjectsEdit({ project }: { project: Project }) {
@@ -26,9 +40,39 @@ export default function ProjectsEdit({ project }: { project: Project }) {
         start_date: project.start_date || '',
         end_date: project.end_date || '',
         is_active: project.is_active,
+        site_latitude: project.site_latitude || '',
+        site_longitude: project.site_longitude || '',
+        site_radius: project.site_radius || '200',
     });
     
-    const [isConfirmOpen, setIsConfirmOpen] = React.useState(false);
+    const [locationLoading, setLocationLoading] = useState(false);
+
+    const handleGetLocation = () => {
+        setLocationLoading(true);
+        if (!navigator.geolocation) {
+            alert('Browser tidak mendukung geolokasi.');
+            setLocationLoading(false);
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                setData(prev => ({
+                    ...prev,
+                    site_latitude: position.coords.latitude.toString(),
+                    site_longitude: position.coords.longitude.toString()
+                }));
+                setLocationLoading(false);
+            },
+            (error) => {
+                alert('Gagal mendapatkan lokasi. Pastikan izin lokasi diberikan.');
+                setLocationLoading(false);
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    };
+
+    const [showInactiveConfirm, setShowInactiveConfirm] = React.useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -198,6 +242,84 @@ export default function ProjectsEdit({ project }: { project: Project }) {
                             </div>
 
                         </div>
+
+                        {/* Separator */}
+                        <div className="h-[1px] w-full bg-neutral-200 mt-4 mb-2"></div>
+
+                        {/* ── Section: Lokasi Site (Opsional) ── */}
+                        <div className="flex items-center gap-3 border-b border-transparent pb-2 mt-2">
+                            <MapPin className="h-6 w-6 text-[#035EA9]" />
+                            <h2 className="text-[20px] font-bold text-[#14141A]">Lokasi Site (Radius WFO)</h2>
+                        </div>
+                        
+                        <div className="text-sm text-neutral-500 font-medium mb-2">
+                            Opsional. Jika diisi, pegawai yang bertugas di proyek ini akan menggunakan koordinat ini untuk validasi radius kehadiran (WFO). Jika dikosongkan, pegawai akan menggunakan lokasi default (Kantor Surabaya).
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+                            <div className="flex flex-col gap-2">
+                                <label className="text-[14px] font-bold text-[#14141A]">Latitude</label>
+                                <Input 
+                                    type="number" step="any"
+                                    value={data.site_latitude}
+                                    onChange={(e) => setData('site_latitude', e.target.value)}
+                                    placeholder="-7.254776" 
+                                    className="h-11 border-neutral-200"
+                                />
+                                {errors.site_latitude && <p className="text-xs text-red-500 font-semibold">{errors.site_latitude}</p>}
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <label className="text-[14px] font-bold text-[#14141A]">Longitude</label>
+                                <Input 
+                                    type="number" step="any"
+                                    value={data.site_longitude}
+                                    onChange={(e) => setData('site_longitude', e.target.value)}
+                                    placeholder="112.717212" 
+                                    className="h-11 border-neutral-200"
+                                />
+                                {errors.site_longitude && <p className="text-xs text-red-500 font-semibold">{errors.site_longitude}</p>}
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <label className="text-[14px] font-bold text-[#14141A]">Radius (Meter)</label>
+                                <Input 
+                                    type="number"
+                                    value={data.site_radius}
+                                    onChange={(e) => setData('site_radius', e.target.value)}
+                                    placeholder="200" 
+                                    className="h-11 border-neutral-200"
+                                />
+                                {errors.site_radius && <p className="text-xs text-red-500 font-semibold">{errors.site_radius}</p>}
+                            </div>
+                        </div>
+
+                        <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={handleGetLocation}
+                            disabled={locationLoading}
+                            className="w-fit gap-2 border-[#035EA9] text-[#035EA9] hover:bg-[#F2F8FD]"
+                        >
+                            <Crosshair className="h-4 w-4" />
+                            {locationLoading ? 'Mendeteksi...' : 'Gunakan Lokasi Saat Ini'}
+                        </Button>
+
+                        {data.site_latitude && data.site_longitude && (
+                            <div className="mt-4 h-[300px] w-full rounded-xl overflow-hidden border border-neutral-200">
+                                <MapContainer
+                                    center={[parseFloat(data.site_latitude), parseFloat(data.site_longitude)]}
+                                    zoom={16}
+                                    style={{ height: '100%', width: '100%', zIndex: 1 }}
+                                >
+                                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                                    <Marker position={[parseFloat(data.site_latitude), parseFloat(data.site_longitude)]} />
+                                    <Circle
+                                        center={[parseFloat(data.site_latitude), parseFloat(data.site_longitude)]}
+                                        pathOptions={{ fillColor: '#035EA9', color: '#035EA9' }}
+                                        radius={data.site_radius ? parseInt(data.site_radius) : 200}
+                                    />
+                                </MapContainer>
+                            </div>
+                        )}
 
                         {/* Separator */}
                         <div className="h-[1px] w-full bg-neutral-200 mt-4 mb-2"></div>

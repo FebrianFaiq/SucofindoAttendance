@@ -13,7 +13,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 class CheckInPage extends StatefulWidget {
-  const CheckInPage({super.key});
+  final Map<String, dynamic>? wfoLocation;
+  const CheckInPage({super.key, this.wfoLocation});
 
   @override
   State<CheckInPage> createState() => _CheckInPageState();
@@ -123,13 +124,16 @@ class _CheckInPageState extends State<CheckInPage> {
 
     if (_workMode == 'WFO') {
       final distance = LocationService.calculateDistance(
-        _latitude!, _longitude!, ApiConfig.officeLat, ApiConfig.officeLng
+        _latitude!, _longitude!, 
+        (widget.wfoLocation?['lat'] ?? ApiConfig.officeLat).toDouble(), 
+        (widget.wfoLocation?['lng'] ?? ApiConfig.officeLng).toDouble()
       );
-      if (distance > ApiConfig.radiusLimit) {
+      final radiusLimit = (widget.wfoLocation?['radius'] ?? ApiConfig.radiusLimit).toDouble();
+      if (distance > radiusLimit) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Anda berada di luar radius kantor (${distance.toStringAsFixed(1)}m). Jarak maksimal ${ApiConfig.radiusLimit}m.',
+              'Anda berada di luar radius kantor (${distance.toStringAsFixed(1)}m). Jarak maksimal ${radiusLimit}m.',
               style: GoogleFonts.mulish(fontWeight: FontWeight.w600),
             ),
             backgroundColor: AppColors.danger,
@@ -361,8 +365,8 @@ class _CheckInPageState extends State<CheckInPage> {
           ),
           child: Row(
             children: [
-              _modeTab('WFO', _workMode == 'WFO'),
-              _modeTab('WFA', _workMode == 'WFA'),
+              _modeTab('WFO/Site', 'WFO', _workMode == 'WFO'),
+              _modeTab('WFA', 'WFA', _workMode == 'WFA'),
             ],
           ),
         ),
@@ -370,10 +374,10 @@ class _CheckInPageState extends State<CheckInPage> {
     );
   }
 
-  Widget _modeTab(String mode, bool isActive) {
+  Widget _modeTab(String title, String value, bool isActive) {
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _workMode = mode),
+        onTap: () => setState(() => _workMode = value),
         child: Container(
           margin: const EdgeInsets.all(4),
           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -382,7 +386,7 @@ class _CheckInPageState extends State<CheckInPage> {
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
-            mode,
+            title,
             textAlign: TextAlign.center,
             style: GoogleFonts.mulish(
               fontSize: 13,
@@ -505,17 +509,34 @@ class _CheckInPageState extends State<CheckInPage> {
                                     CircleLayer(
                                       circles: [
                                         CircleMarker(
-                                          point: LatLng(ApiConfig.officeLat, ApiConfig.officeLng),
+                                          point: LatLng(
+                                            (widget.wfoLocation?['lat'] ?? ApiConfig.officeLat).toDouble(), 
+                                            (widget.wfoLocation?['lng'] ?? ApiConfig.officeLng).toDouble()
+                                          ),
                                           color: Colors.blue.withOpacity(0.2),
                                           borderColor: Colors.blue,
                                           borderStrokeWidth: 2,
                                           useRadiusInMeter: true,
-                                          radius: ApiConfig.radiusLimit,
+                                          radius: (widget.wfoLocation?['radius'] ?? ApiConfig.radiusLimit).toDouble(),
                                         ),
                                       ],
                                     ),
                                   MarkerLayer(
                                     markers: [
+                                      if (_workMode == 'WFO')
+                                        Marker(
+                                          point: LatLng(
+                                            (widget.wfoLocation?['lat'] ?? ApiConfig.officeLat).toDouble(), 
+                                            (widget.wfoLocation?['lng'] ?? ApiConfig.officeLng).toDouble()
+                                          ),
+                                          width: 40,
+                                          height: 40,
+                                          child: const Icon(
+                                            Icons.location_on,
+                                            color: Colors.blue,
+                                            size: 40,
+                                          ),
+                                        ),
                                       Marker(
                                         point: LatLng(_latitude!, _longitude!),
                                         width: 40,
@@ -580,7 +601,7 @@ class _CheckInPageState extends State<CheckInPage> {
                                 color: AppColors.textSecondary,
                               ),
                             ),
-                            if (_workMode == 'WFO' && LocationService.calculateDistance(_latitude!, _longitude!, ApiConfig.officeLat, ApiConfig.officeLng) <= ApiConfig.radiusLimit) ...[
+                            if (_workMode == 'WFO' && LocationService.calculateDistance(_latitude!, _longitude!, (widget.wfoLocation?['lat'] ?? ApiConfig.officeLat).toDouble(), (widget.wfoLocation?['lng'] ?? ApiConfig.officeLng).toDouble()) <= (widget.wfoLocation?['radius'] ?? ApiConfig.radiusLimit).toDouble()) ...[
                               const SizedBox(height: 12),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -612,7 +633,7 @@ class _CheckInPageState extends State<CheckInPage> {
                                 ),
                               ),
                             ],
-                            if (_workMode == 'WFO' && LocationService.calculateDistance(_latitude!, _longitude!, ApiConfig.officeLat, ApiConfig.officeLng) > ApiConfig.radiusLimit) ...[
+                            if (_workMode == 'WFO' && LocationService.calculateDistance(_latitude!, _longitude!, (widget.wfoLocation?['lat'] ?? ApiConfig.officeLat).toDouble(), (widget.wfoLocation?['lng'] ?? ApiConfig.officeLng).toDouble()) > (widget.wfoLocation?['radius'] ?? ApiConfig.radiusLimit).toDouble()) ...[
                               const SizedBox(height: 12),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

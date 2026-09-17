@@ -31,6 +31,7 @@ class CheckInController extends Controller
         return Inertia::render('employee/check-in', [
             'alreadyCheckedIn' => $todayAttendance !== null,
             'todayAttendance' => $todayAttendance,
+            'wfoLocation' => $employee?->getWfoLocation(),
         ]);
     }
 

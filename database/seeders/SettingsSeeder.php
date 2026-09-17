@@ -38,6 +38,24 @@ class SettingsSeeder extends Seeder
                 'updated_by' => null,
                 'updated_at' => now(),
             ],
+            [
+                'key' => 'default_office_lat',
+                'value' => '-7.254776',
+                'updated_by' => null,
+                'updated_at' => now(),
+            ],
+            [
+                'key' => 'default_office_lng',
+                'value' => '112.717212',
+                'updated_by' => null,
+                'updated_at' => now(),
+            ],
+            [
+                'key' => 'default_office_radius',
+                'value' => '200',
+                'updated_by' => null,
+                'updated_at' => now(),
+            ],
         ];
 
         foreach ($settings as $setting) {

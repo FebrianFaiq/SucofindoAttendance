@@ -26,6 +26,9 @@ class StoreProjectRequest extends FormRequest
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after:start_date'],
             'is_active' => ['sometimes', 'boolean'],
+            'site_latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'site_longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'site_radius' => ['nullable', 'integer', 'min:50', 'max:10000'],
         ];
     }
 
