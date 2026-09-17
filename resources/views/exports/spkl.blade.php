@@ -48,474 +48,394 @@
     <!-- ============================================================
          PAGE 1: SURAT PERINTAH KERJA LEMBUR
     ============================================================ -->
-    <!-- ============================================================
-     PAGE 1: SURAT PERINTAH KERJA LEMBUR
-============================================================ -->
-<div class="page">
+    <div class="page">
 
-    <!-- LOGO PLACEHOLDER - UKURAN LOGO TIDAK DIUBAH -->
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 12px;">
-        <tr>
-            <td width="33%" align="left" valign="middle">
-                @if(!empty($logoLeft))
-                    <img src="{{ $logoLeft }}" style="height: 40px;">
-                @else
-                    <table cellpadding="0" cellspacing="0">
-                        <tr>
-                            <td align="center" valign="middle"
-                                style="border: 1px dashed #999; width: 65px; height: 40px; font-size: 8px; color: #999;">
-                                LOGO 1
-                            </td>
-                        </tr>
-                    </table>
-                @endif
-            </td>
+        <!-- HEADER -->
+        <table width="100%"
+               style="margin-bottom: 14px; font-weight: bold; font-size: 13px;">
+            <tr>
+                <td align="left" valign="top">
+                    PT SUCOFINDO(PERSERO)<br>
+                    UNIT KERJA : CABANG SURABAYA   
+                </td>
 
-            <td width="34%" align="center" valign="middle">
-                @if(!empty($logoCenter))
-                    <img src="{{ $logoCenter }}" style="height: 40px;">
-                @else
-                    <table cellpadding="0" cellspacing="0" style="margin: 0 auto;">
-                        <tr>
-                            <td align="center" valign="middle"
-                                style="border: 1px dashed #999; width: 65px; height: 40px; font-size: 8px; color: #999;">
-                                LOGO 2
-                            </td>
-                        </tr>
-                    </table>
-                @endif
-            </td>
-
-            <td width="33%" align="right" valign="middle">
-                @if(!empty($logoRight))
-                    <img src="{{ $logoRight }}" style="height: 40px;">
-                @else
-                    <table cellpadding="0" cellspacing="0" style="margin-left: auto;">
-                        <tr>
-                            <td align="center" valign="middle"
-                                style="border: 1px dashed #999; width: 65px; height: 40px; font-size: 8px; color: #999;">
-                                LOGO 3
-                            </td>
-                        </tr>
-                    </table>
-                @endif
-            </td>
-        </tr>
-    </table>
+                <td align="right" valign="top">
+                    Lampiran 1<br>
+                    <u>KD No. 16/KD/2017</u>
+                </td>
+            </tr>
+        </table>
 
 
-    <!-- HEADER -->
-    <table width="100%"
-           style="margin-bottom: 14px; font-weight: bold; font-size: 13px;">
-        <tr>
-            <td align="left" valign="top">
-                PT SUCOFINDO(PERSERO)<br>
-                UNIT KERJA : CABANG SURABAYA   
-            </td>
+        <!-- OUTER BORDER -->
+        <div style="border: 1px solid #000; padding: 16px;">
 
-            <td align="right" valign="top">
-                Lampiran 1<br>
-                <u>KD No. 16/KD/2017</u>
-            </td>
-        </tr>
-    </table>
-
-
-    <!-- OUTER BORDER -->
-    <div style="border: 1px solid #000; padding: 14px;">
-
-        <!-- TITLE BOX -->
-        <div style="
-            border: 1px solid #000;
-            padding: 12px;
-            margin-bottom: 14px;
-            text-align: center;
-            font-weight: bold;
-        ">
+            <!-- TITLE BOX -->
             <div style="
-                text-decoration: underline;
-                font-size: 15px;
-                margin-bottom: 5px;
-            ">
-                SURAT PERINTAH KERJA LEMBUR
-            </div>
-
-            <div>
-                No. : {{ $spklNumber }}
-            </div>
-        </div>
-
-
-        <!-- BODY BOX -->
-        <div style="
-            border: 1px solid #000;
-            padding: 16px;
-        ">
-
-            <!-- ================================
-                 DATA PEGAWAI
-            ================================= -->
-            <div style="
+                border: 1px solid #000;
+                padding: 14px;
+                margin-bottom: 16px;
+                text-align: center;
                 font-weight: bold;
-                margin-bottom: 7px;
             ">
-                Diperintahkan kepada :
+                <div style="
+                    text-decoration: underline;
+                    font-size: 15px;
+                    margin-bottom: 5px;
+                ">
+                    SURAT PERINTAH KERJA LEMBUR
+                </div>
+
+                <div>
+                    No. : {{ $spklNumber }}
+                </div>
             </div>
 
-            <table width="100%"
-                   cellpadding="7"
-                   cellspacing="0"
-                   style="margin-bottom: 17px;">
 
-                <tr>
-                    <td width="200">Nama / NPP</td>
-                    <td width="10">:</td>
-                    <td style="
-                        border-bottom: 1px solid #000;
-                        font-weight: bold;
-                    ">
-                        {{ $userName }}
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>Status Pegawai</td>
-                    <td>:</td>
-                    <td style="border-bottom: 1px solid #000;">
-                        {{ $userStatus }}
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>Strata (Grade)</td>
-                    <td>:</td>
-                    <td style="border-bottom: 1px solid #000;">
-                    </td>
-                </tr>
-
-            </table>
-
-
-            <!-- ================================
-                 WAKTU LEMBUR
-            ================================= -->
+            <!-- BODY BOX -->
             <div style="
-                font-weight: bold;
-                margin-bottom: 7px;
+                border: 1px solid #000;
+                padding: 20px;
             ">
-                Untuk melaksanakan kerja lembur pada :
-            </div>
 
-            <table width="100%"
-                   cellpadding="7"
-                   cellspacing="0"
-                   style="margin-bottom: 17px;">
+                <!-- ================================
+                     DATA PEGAWAI
+                ================================= -->
+                <div style="
+                    font-weight: bold;
+                    margin-bottom: 10px;
+                ">
+                    Diperintahkan kepada :
+                </div>
 
-                <tr>
-                    <td width="200">Hari / Tanggal</td>
-                    <td width="10">:</td>
-                    <td style="border-bottom: 1px solid #000;">
-                        {{ $formattedDate }}
-                    </td>
-                </tr>
+                <table width="100%"
+                       cellpadding="10"
+                       cellspacing="0"
+                       style="margin-bottom: 22px;">
 
-                <tr>
-                    <td style="padding-top: 9px;">Waktu</td>
-
-                    <td style="padding-top: 9px;">:</td>
-
-                    <td style="padding-top: 9px;">
-
-                        <span style="
+                    <tr>
+                        <td width="200">Nama / NPP</td>
+                        <td width="10">:</td>
+                        <td style="
                             border-bottom: 1px solid #000;
-                            display: inline-block;
-                            width: 100px;
-                            text-align: center;
+                            font-weight: bold;
                         ">
-                            {{ empty($startTime) ? '......' : $startTime }}
-                        </span>
+                            {{ $userName }}
+                        </td>
+                    </tr>
 
-                        &nbsp;&nbsp;s/d&nbsp;&nbsp;
+                    <tr>
+                        <td>Status Pegawai</td>
+                        <td>:</td>
+                        <td style="border-bottom: 1px solid #000;">
+                            {{ $userStatus }}
+                        </td>
+                    </tr>
 
-                        <span style="
-                            border-bottom: 1px solid #000;
-                            display: inline-block;
-                            width: 100px;
-                            text-align: center;
-                        ">
-                            {{ empty($endTime) ? '......' : $endTime }}
-                        </span>
+                    <tr>
+                        <td>Strata (Grade)</td>
+                        <td>:</td>
+                        <td style="border-bottom: 1px solid #000;">
+                        </td>
+                    </tr>
 
-                    </td>
-                </tr>
-
-            </table>
+                </table>
 
 
-            <!-- ================================
-                 DETAIL PEKERJAAN
-            ================================= -->
-            <table width="100%"
-                   cellpadding="0"
-                   cellspacing="0"
-                   style="margin-bottom: 17px;">
+                <!-- ================================
+                     WAKTU LEMBUR
+                ================================= -->
+                <div style="
+                    font-weight: bold;
+                    margin-bottom: 10px;
+                ">
+                    Untuk melaksanakan kerja lembur pada :
+                </div>
 
-                <tr>
+                <table width="100%"
+                       cellpadding="10"
+                       cellspacing="0"
+                       style="margin-bottom: 22px;">
 
-                    <td width="200" valign="top">
-                        <div>
-                            Untuk pelaksanaan pekerjaan<br>
-                            <span style="font-size: 12px;">
-                                (Ditulis secara rinci dan wajib<br>
-                                diisi)
+                    <tr>
+                        <td width="200">Hari / Tanggal</td>
+                        <td width="10">:</td>
+                        <td style="border-bottom: 1px solid #000;">
+                            {{ $formattedDate }}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding-top: 9px;">Waktu</td>
+
+                        <td style="padding-top: 9px;">:</td>
+
+                        <td style="padding-top: 9px;">
+
+                            <span style="
+                                border-bottom: 1px solid #000;
+                                display: inline-block;
+                                width: 100px;
+                                text-align: center;
+                            ">
+                                {{ empty($startTime) ? '......' : $startTime }}
                             </span>
-                        </div>
-                    </td>
 
-                    <td width="10"
-                        valign="top"
-                        style="padding-top: 2px;">
-                        :
-                    </td>
+                            &nbsp;&nbsp;s/d&nbsp;&nbsp;
 
-                    <td valign="top">
+                            <span style="
+                                border-bottom: 1px solid #000;
+                                display: inline-block;
+                                width: 100px;
+                                text-align: center;
+                            ">
+                                {{ empty($endTime) ? '......' : $endTime }}
+                            </span>
 
-                        @for ($i = 0; $i < 4; $i++)
+                        </td>
+                    </tr>
 
-                            @php
-                                $task = $tasks[$i] ?? null;
-                                $isFilled = $task && !empty(trim($task['description']));
-                            @endphp
+                </table>
 
-                            <div style="margin-bottom: 13px;">
 
-                                <div style="margin-bottom: 4px;">
+                <!-- ================================
+                     DETAIL PEKERJAAN
+                ================================= -->
+                <table width="100%"
+                       cellpadding="0"
+                       cellspacing="0"
+                       style="margin-bottom: 22px;">
 
-                                    @if($isFilled)
+                    <tr>
 
-                                        Jam {{ empty($task['startTime']) ? '?' : $task['startTime'] }}
-                                        sampai
-                                        {{ empty($task['endTime']) ? '?' : $task['endTime'] }}
-                                        melaksanakan pekerjaan
+                        <td width="200" valign="top">
+                            <div>
+                                Untuk pelaksanaan pekerjaan<br>
+                                <span style="font-size: 12px;">
+                                    (Ditulis secara rinci dan wajib<br>
+                                    diisi)
+                                </span>
+                            </div>
+                        </td>
 
-                                    @else
+                        <td width="10"
+                            valign="top"
+                            style="padding-top: 2px;">
+                            :
+                        </td>
 
-                                        Jam --:-- sampai --:-- melaksanakan pekerjaan
+                        <td valign="top">
 
-                                    @endif
+                            @for ($i = 0; $i < 4; $i++)
+
+                                @php
+                                    $task = $tasks[$i] ?? null;
+                                    $isFilled = $task && !empty(trim($task['description']));
+                                @endphp
+
+                                <div style="margin-bottom: 16px;">
+
+                                    <div style="margin-bottom: 4px;">
+
+                                        @if($isFilled)
+
+                                            Jam {{ empty($task['startTime']) ? '?' : $task['startTime'] }}
+                                            sampai
+                                            {{ empty($task['endTime']) ? '?' : $task['endTime'] }}
+                                            melaksanakan pekerjaan
+
+                                        @else
+
+                                            Jam --:-- sampai --:-- melaksanakan pekerjaan
+
+                                        @endif
+
+                                    </div>
+
+
+                                    <div style="
+                                        border-bottom: 1px dashed #000;
+                                        min-height: 20px;
+                                        line-height: 1.5;
+                                        margin-top: 4px;
+                                    ">
+                                        @if($isFilled)
+                                            {{ nl2br(e($task['description'])) }}
+                                        @endif
+                                    </div>
+
+
+                                    <div style="
+                                        border-bottom: 1px dashed #000;
+                                        min-height: 20px;
+                                        margin-top: 4px;
+                                    ">
+                                    </div>
 
                                 </div>
 
+                            @endfor
 
-                                <div style="
-                                    border-bottom: 1px dashed #000;
-                                    min-height: 17px;
-                                    line-height: 1.5;
-                                    margin-top: 4px;
-                                ">
-                                    @if($isFilled)
-                                        {{ nl2br(e($task['description'])) }}
-                                    @endif
-                                </div>
-
-
-                                <div style="
-                                    border-bottom: 1px dashed #000;
-                                    min-height: 17px;
-                                    margin-top: 4px;
-                                ">
-                                </div>
-
+                            <div style="margin-top: 7px;">
+                                dan seterusnya
                             </div>
 
-                        @endfor
+                        </td>
 
-                        <div style="margin-top: 7px;">
-                            dan seterusnya
-                        </div>
+                    </tr>
 
-                    </td>
-
-                </tr>
-
-            </table>
+                </table>
 
 
-            <!-- ================================
-                 BOTTOM FIELDS
-            ================================= -->
-            <table width="100%"
-                   cellpadding="7"
-                   cellspacing="0"
-                   style="margin-bottom: 17px;">
+                <!-- ================================
+                     BOTTOM FIELDS
+                ================================= -->
+                <table width="100%"
+                       cellpadding="10"
+                       cellspacing="0"
+                       style="margin-bottom: 22px;">
 
-                <tr>
-                    <td width="200">
-                        Tempat kerja lembur
-                    </td>
+                    <tr>
+                        <td width="200">
+                            Tempat kerja lembur
+                        </td>
 
-                    <td width="10">:</td>
+                        <td width="10">:</td>
 
-                    <td style="border-bottom: 1px solid #000;">
-                        {{ $location }}
-                    </td>
-                </tr>
+                        <td style="border-bottom: 1px solid #000;">
+                            {{ $location }}
+                        </td>
+                    </tr>
 
-                <tr>
-                    <td>
-                        Nama Pelanggan (Jika ada)
-                    </td>
+                    <tr>
+                        <td>
+                            Nama Pelanggan (Jika ada)
+                        </td>
 
-                    <td>:</td>
+                        <td>:</td>
 
-                    <td style="border-bottom: 1px solid #000;">
-                        {{ $client }}
-                    </td>
-                </tr>
+                        <td style="border-bottom: 1px solid #000;">
+                            {{ $client }}
+                        </td>
+                    </tr>
 
-                <tr>
-                    <td>
-                        Nomor Order (Jika ada)
-                    </td>
+                    <tr>
+                        <td>
+                            Nomor Order (Jika ada)
+                        </td>
 
-                    <td>:</td>
+                        <td>:</td>
 
-                    <td style="border-bottom: 1px solid #000;">
-                        {{ $orderNumber }}
-                    </td>
-                </tr>
+                        <td style="border-bottom: 1px solid #000;">
+                            {{ $orderNumber }}
+                        </td>
+                    </tr>
 
-            </table>
+                </table>
 
 
-            <!-- ================================
-                 SIGNATURE BOX
-            ================================= -->
-            <table width="100%"
-       cellpadding="16"
-       cellspacing="0"
-       style="border: 1px solid #000;">
+                <!-- ================================
+                     SIGNATURE BOX
+                ================================= -->
+                <table width="100%"
+           cellpadding="16"
+           cellspacing="0"
+           style="border: 1px solid #000;">
 
-    <tr>
-        <td>
+        <tr>
+            <td>
 
-            <table width="100%"
-                   cellpadding="0"
-                   cellspacing="0"
-                   style="text-align: center;">
+                <table width="100%"
+                       cellpadding="0"
+                       cellspacing="0"
+                       style="text-align: center;">
 
-                <tr>
+                    <tr>
 
-                    <!-- YANG DIPERINTAH -->
-                    <td width="50%" valign="top">
+                        <!-- YANG DIPERINTAH -->
+                        <td width="50%" valign="top">
 
-                        <div>
-                            Menyetujui,
-                        </div>
+                            <div>
+                                Menyetujui,
+                            </div>
 
-                        <div>
-                            Yang diperintah,
-                        </div>
+                            <div>
+                                Yang diperintah,
+                            </div>
 
-                        <!-- RUANG TANDA TANGAN -->
-                        <div style="height: 80px;"></div>
+                            <!-- RUANG TANDA TANGAN -->
+                            <div style="height: 80px;"></div>
 
-                        <div>
-                            (
-                            <span style="
-                                display: inline-block;
-                                border-bottom: 1px solid #000;
-                                width: 220px;
-                                font-weight: bold;
+                            <div>
+                                (
+                                <span style="
+                                    display: inline-block;
+                                    border-bottom: 1px solid #000;
+                                    width: 220px;
+                                    font-weight: bold;
+                                ">
+                                    {{ $userName }}
+                                </span>
+                                )
+                            </div>
+
+                        </td>
+
+
+                        <!-- YANG MEMERINTAH -->
+                        <td width="50%" valign="top">
+
+                            <div>
+                                ..........................., {{ $shortDate }}
+                            </div>
+
+                            <div>
+                                Yang memerintahkan
+                            </div>
+
+                            <!-- RUANG TANDA TANGAN -->
+                            <div style="height: 80px;"></div>
+
+                            <div>
+                                (
+                                <span style="
+                                    display: inline-block;
+                                    border-bottom: 1px solid #000;
+                                    width: 220px;
+                                ">
+                                </span>
+                                )
+                            </div>
+
+                            <div style="
+                                font-size: 11px;
+                                margin-top: 6px;
                             ">
-                                {{ $userName }}
-                            </span>
-                            )
-                        </div>
+                                Atasan Langsung
+                            </div>
 
-                    </td>
+                        </td>
 
+                    </tr>
 
-                    <!-- YANG MEMERINTAH -->
-                    <td width="50%" valign="top">
+                </table>
 
-                        <div>
-                            ..........................., {{ $shortDate }}
-                        </div>
+            </td>
+        </tr>
 
-                        <div>
-                            Yang memerintahkan
-                        </div>
+    </table>
 
-                        <!-- RUANG TANDA TANGAN -->
-                        <div style="height: 80px;"></div>
-
-                        <div>
-                            (
-                            <span style="
-                                display: inline-block;
-                                border-bottom: 1px solid #000;
-                                width: 220px;
-                            ">
-                            </span>
-                            )
-                        </div>
-
-                        <div style="
-                            font-size: 11px;
-                            margin-top: 6px;
-                        ">
-                            Atasan Langsung
-                        </div>
-
-                    </td>
-
-                </tr>
-
-            </table>
-
-        </td>
-    </tr>
-
-</table>
+            </div>
 
         </div>
 
     </div>
-
-</div>
 
 
     <!-- ============================================================
          PAGE 2: LAPORAN HASIL KERJA LEMBUR
     ============================================================ -->
     <div class="page">
-    <!-- LOGO PLACEHOLDER (3 logo sejajar kiri-tengah-kanan) -->
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 10px;">
-        <tr>
-            <td width="33%" align="left" valign="middle">
-                @if(!empty($logoLeft))
-                    <img src="{{ $logoLeft }}" style="height: 45px;">
-                @else
-                    <table cellpadding="0" cellspacing="0"><tr><td align="center" valign="middle" style="border: 1px dashed #999; width: 70px; height: 45px; font-size: 8px; color: #999;">LOGO 1</td></tr></table>
-                @endif
-            </td>
-            <td width="34%" align="center" valign="middle">
-                @if(!empty($logoCenter))
-                    <img src="{{ $logoCenter }}" style="height: 45px;">
-                @else
-                    <table cellpadding="0" cellspacing="0" style="margin: 0 auto;"><tr><td align="center" valign="middle" style="border: 1px dashed #999; width: 70px; height: 45px; font-size: 8px; color: #999;">LOGO 2</td></tr></table>
-                @endif
-            </td>
-            <td width="33%" align="right" valign="middle">
-                @if(!empty($logoRight))
-                    <img src="{{ $logoRight }}" style="height: 45px;">
-                @else
-                    <table cellpadding="0" cellspacing="0" style="margin-left: auto;"><tr><td align="center" valign="middle" style="border: 1px dashed #999; width: 70px; height: 45px; font-size: 8px; color: #999;">LOGO 3</td></tr></table>
-                @endif
-            </td>
-        </tr>
-    </table>
 
     <!-- HEADER -->
     <table width="100%" style="margin-bottom: 14px; font-weight: bold; font-size: 13px;">
@@ -541,7 +461,7 @@
         </div>
 
         <!-- BODY BOX -->
-        <div style="border: 1px solid #000; padding: 20px; position: relative; height: 198mm;">
+        <div style="border: 1px solid #000; padding: 20px; position: relative; height: 210mm;">
 
             <div style="padding-bottom: 320px;">
                 <!-- ================================
@@ -692,14 +612,14 @@
                                     <td width="50%" valign="top">
                                         <div>Disetujui,</div>
                                         <div>&nbsp;</div>
-                                        <div style="height: 55px;"></div>
+                                        <div style="height: 80px;"></div>
                                         <div>( <span style="display:inline-block; border-bottom:1px solid #000; width: 220px;"></span> )</div>
                                         <div style="font-size: 11px; margin-top: 4px;">Atasan Langsung</div>
                                     </td>
                                     <td width="50%" valign="top">
                                         <div>..........................., {{ $shortDate }}</div>
                                         <div>Yang melaksanakan</div>
-                                        <div style="height: 55px;"></div>
+                                        <div style="height: 80px;"></div>
                                         <div>( <span style="display:inline-block; border-bottom:1px solid #000; width: 220px; font-weight:bold;">{{ $userName }}</span> )</div>
                                         <div style="font-size: 11px; margin-top: 4px;">NPP .................../Jabatan</div>
                                     </td>
@@ -707,7 +627,7 @@
                                 <tr>
                                     <td colspan="2" valign="top" style="padding-top: 14px;">
                                         <div>Mengetahui</div>
-                                        <div style="height: 55px;"></div>
+                                        <div style="height: 80px;"></div>
                                         <div>( <span style="display:inline-block; border-bottom:1px solid #000; width: 220px;"></span> )</div>
                                         <div style="font-size: 11px; margin-top: 4px;">Kepala Cabang</div>
                                     </td>
