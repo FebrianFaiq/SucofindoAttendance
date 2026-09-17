@@ -14,6 +14,18 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from '@/components/ui/input';
 import AdminLayout from '@/layouts/admin-layout';
+import { MapContainer, TileLayer, Marker, Circle } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import { MapPin } from 'lucide-react';
+
+// Fix leaflet default icon
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 type Employee = {
     id: number;
@@ -53,6 +65,9 @@ type Project = {
     start_date: string;
     end_date: string;
     is_active: boolean;
+    site_latitude: string | null;
+    site_longitude: string | null;
+    site_radius: string | null;
     employees?: Employee[];
 };
 
@@ -259,6 +274,53 @@ return '';
                         </div>
                     </div>
                 </div>
+
+                {/* ── Section: Peta Lokasi Site ──────────────────── */}
+                {project.site_latitude && project.site_longitude && (
+                    <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm flex flex-col overflow-hidden mb-8">
+                        <div className="p-6 border-b border-neutral-100 flex items-center gap-3">
+                            <MapPin className="h-6 w-6 text-[#035EA9]" />
+                            <div>
+                                <h2 className="text-[20px] font-bold text-[#14141A]">Lokasi Site Proyek</h2>
+                                <p className="text-[14px] text-neutral-500 font-medium">Pegawai di proyek ini menggunakan lokasi berikut untuk validasi check-in/out.</p>
+                            </div>
+                        </div>
+                        <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="md:col-span-1 flex flex-col gap-4">
+                                <div>
+                                    <span className="text-[11px] font-bold tracking-widest text-neutral-500 uppercase block mb-1">Koordinat</span>
+                                    <div className="font-bold text-[#14141A] text-[15px]">
+                                        {project.site_latitude}, {project.site_longitude}
+                                    </div>
+                                </div>
+                                <div>
+                                    <span className="text-[11px] font-bold tracking-widest text-neutral-500 uppercase block mb-1">Radius Absen</span>
+                                    <div className="font-bold text-[#14141A] text-[15px] flex items-center gap-2">
+                                        <Badge variant="outline" className="bg-blue-50 text-[#035EA9] font-bold border-[#035EA9]/20 shadow-none px-3 py-1">
+                                            {project.site_radius || 200} Meter
+                                        </Badge>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="md:col-span-2 h-[250px] rounded-xl overflow-hidden border border-neutral-200 relative z-0">
+                                <MapContainer
+                                    center={[parseFloat(project.site_latitude), parseFloat(project.site_longitude)]}
+                                    zoom={16}
+                                    style={{ height: '100%', width: '100%' }}
+                                    zoomControl={true}
+                                >
+                                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                                    <Marker position={[parseFloat(project.site_latitude), parseFloat(project.site_longitude)]} />
+                                    <Circle
+                                        center={[parseFloat(project.site_latitude), parseFloat(project.site_longitude)]}
+                                        pathOptions={{ fillColor: '#035EA9', color: '#035EA9' }}
+                                        radius={project.site_radius ? parseInt(project.site_radius) : 200}
+                                    />
+                                </MapContainer>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* ── Table Karyawan dalam Proyek ──────────────────── */}
                 <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm flex flex-col flex-1 overflow-hidden">

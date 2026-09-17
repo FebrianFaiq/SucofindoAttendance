@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,7 @@ type Project = {
     start_date: string;
     end_date: string;
     is_active: boolean;
+    site_latitude: string | null;
     employees_count: number;
 };
 
@@ -173,8 +174,14 @@ setDurationFilter(value);
                                 ) : (
                                     projects.data.map((project) => (
                                         <tr key={project.id} className="hover:bg-neutral-50/50 transition-colors">
-                                            <td className="px-6 py-4 font-bold text-[#035EA9]">
+                                            <td className="px-6 py-4 font-bold text-[#035EA9] flex items-center gap-2">
                                                 {project.name}
+                                                {project.site_latitude && (
+                                                    <Badge variant="outline" className="h-5 px-1.5 bg-blue-50/50 border-blue-200 text-blue-600 flex items-center gap-1">
+                                                        <MapPin className="h-3 w-3" />
+                                                        <span className="text-[10px]">Site</span>
+                                                    </Badge>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 font-semibold text-neutral-600">
                                                 {project.code || '—'}

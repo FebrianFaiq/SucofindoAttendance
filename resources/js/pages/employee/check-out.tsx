@@ -24,11 +24,6 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Constants for Radius
-const SUCOFINDO_LAT = -7.254776;
-const SUCOFINDO_LNG = 112.717212;
-const RADIUS_LIMIT = 200; // in meters
-
 // Haversine formula to calculate distance between two coordinates in meters
 function getDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371e3; // metres
@@ -96,6 +91,7 @@ export default function CheckOut({
     hasCheckedIn,
     alreadyCheckedOut,
     todayAttendance,
+    wfoLocation,
 }: CheckOutProps) {
     const page = usePage();
 
@@ -182,9 +178,8 @@ export default function CheckOut({
                 setData((prev) => ({ ...prev, gps_lat: lat.toString(), gps_lng: lng.toString() }));
                 setLocationLoading(false);
                 
-                // Calculate distance
-                const distance = getDistance(lat, lng, SUCOFINDO_LAT, SUCOFINDO_LNG);
-                setInRadius(distance <= RADIUS_LIMIT);
+                // Removed radius check for check-out
+                setInRadius(true);
                 
                 // Fallback coordinates first
                 setLocationAddress(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
@@ -469,14 +464,6 @@ return;
                                         <Marker position={[Number(data.gps_lat), Number(data.gps_lng)]}>
                                             <Popup>Lokasi Anda</Popup>
                                         </Marker>
-                                        <Circle 
-                                            center={[SUCOFINDO_LAT, SUCOFINDO_LNG]} 
-                                            radius={RADIUS_LIMIT} 
-                                            pathOptions={{ color: '#035EA9', fillColor: '#035EA9', fillOpacity: 0.1 }} 
-                                        />
-                                        <Marker position={[SUCOFINDO_LAT, SUCOFINDO_LNG]}>
-                                            <Popup>Graha Sucofindo</Popup>
-                                        </Marker>
                                     </MapContainer>
                                 ) : (
                                     <div className="flex h-full items-center justify-center">
@@ -513,21 +500,7 @@ return;
                                 </div>
                             </div>
 
-                            {data.gps_lat && todayAttendance?.type === 'WFO' && (
-                                <div className="mt-3">
-                                    {inRadius ? (
-                                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#D1FAE5] px-3 py-1 text-xs font-semibold text-[#059669]">
-                                            <span className="h-1.5 w-1.5 rounded-full bg-[#059669]" />
-                                            DALAM RADIUS
-                                        </span>
-                                    ) : (
-                                        <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-600">
-                                            <span className="h-1.5 w-1.5 rounded-full bg-red-600" />
-                                            LUAR RADIUS KANTOR
-                                        </span>
-                                    )}
-                                </div>
-                            )}
+
                             {todayAttendance?.type === 'WFA' && (
                                 <div className="mt-3">
                                     <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-[#035EA9]">

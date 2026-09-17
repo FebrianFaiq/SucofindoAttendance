@@ -23,6 +23,9 @@ class ProjectSeeder extends Seeder
                 'start_date' => '2026-07-01',
                 'end_date' => '2026-12-31',
                 'is_active' => true,
+                'site_latitude' => -1.265386, // Balikpapan roughly
+                'site_longitude' => 116.831200,
+                'site_radius' => 500,
                 'created_at' => $now,
                 'updated_at' => $now,
                 'deleted_at' => null,
@@ -34,6 +37,9 @@ class ProjectSeeder extends Seeder
                 'start_date' => '2026-08-01',
                 'end_date' => '2027-01-31',
                 'is_active' => true,
+                'site_latitude' => -7.254776, // Surabaya (Default Sucofindo)
+                'site_longitude' => 112.717212,
+                'site_radius' => 200,
                 'created_at' => $now,
                 'updated_at' => $now,
                 'deleted_at' => null,
@@ -45,6 +51,9 @@ class ProjectSeeder extends Seeder
                 'start_date' => '2026-06-15',
                 'end_date' => '2026-09-30',
                 'is_active' => true,
+                'site_latitude' => -6.208763, // Jakarta roughly
+                'site_longitude' => 106.845599,
+                'site_radius' => 300,
                 'created_at' => $now,
                 'updated_at' => $now,
                 'deleted_at' => null,

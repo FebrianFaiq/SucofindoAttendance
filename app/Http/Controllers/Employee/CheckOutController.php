@@ -36,6 +36,7 @@ class CheckOutController extends Controller
                 'check_in_at' => $todayAttendance->check_in_at?->toIso8601String(),
                 'check_out_at' => $todayAttendance->check_out_at?->toIso8601String(),
             ] : null,
+            'wfoLocation' => $employee?->getWfoLocation(),
         ]);
     }
 

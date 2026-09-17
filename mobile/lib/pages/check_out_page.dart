@@ -16,7 +16,9 @@ class CheckOutPage extends StatefulWidget {
   final String clockInTime;
   final String workMode;
 
-  const CheckOutPage({super.key, required this.clockInTime, required this.workMode});
+  final Map<String, dynamic>? wfoLocation;
+
+  const CheckOutPage({super.key, required this.clockInTime, required this.workMode, this.wfoLocation});
 
   @override
   State<CheckOutPage> createState() => _CheckOutPageState();
@@ -157,23 +159,7 @@ class _CheckOutPageState extends State<CheckOutPage> {
     }
 
     if (widget.workMode == 'WFO') {
-      final distance = LocationService.calculateDistance(
-        _latitude!, _longitude!, ApiConfig.officeLat, ApiConfig.officeLng
-      );
-      if (distance > ApiConfig.radiusLimit) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Anda berada di luar radius kantor (${distance.toStringAsFixed(1)}m). Jarak maksimal ${ApiConfig.radiusLimit}m.',
-              style: GoogleFonts.mulish(fontWeight: FontWeight.w600),
-            ),
-            backgroundColor: AppColors.danger,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-        );
-        return;
-      }
+      // Radius check removed for Check Out
     }
 
     setState(() => _isSubmitting = true);
@@ -591,19 +577,6 @@ class _CheckOutPageState extends State<CheckOutPage> {
                                     urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                                     userAgentPackageName: 'com.sucofindo.mobile',
                                   ),
-                                  if (widget.workMode == 'WFO')
-                                    CircleLayer(
-                                      circles: [
-                                        CircleMarker(
-                                          point: LatLng(ApiConfig.officeLat, ApiConfig.officeLng),
-                                          color: Colors.blue.withOpacity(0.2),
-                                          borderColor: Colors.blue,
-                                          borderStrokeWidth: 2,
-                                          useRadiusInMeter: true,
-                                          radius: ApiConfig.radiusLimit,
-                                        ),
-                                      ],
-                                    ),
                                   MarkerLayer(
                                     markers: [
                                       Marker(
@@ -670,38 +643,6 @@ class _CheckOutPageState extends State<CheckOutPage> {
                                 color: AppColors.textSecondary,
                               ),
                             ),
-                            if (widget.workMode == 'WFO' && LocationService.calculateDistance(_latitude!, _longitude!, ApiConfig.officeLat, ApiConfig.officeLng) > ApiConfig.radiusLimit) ...[
-                              const SizedBox(height: 12),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: AppColors.danger.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(
-                                      width: 6,
-                                      height: 6,
-                                      decoration: const BoxDecoration(
-                                        color: AppColors.danger,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      'LUAR RADIUS KANTOR',
-                                      style: GoogleFonts.mulish(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w800,
-                                        color: AppColors.danger,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
                           ],
                         ],
                       ),

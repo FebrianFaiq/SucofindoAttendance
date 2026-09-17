@@ -126,4 +126,34 @@ class Employee extends Model
     {
         return $this->salaries()->active()->latest('effective_date')->first();
     }
+
+    /**
+     * Dapatkan lokasi WFO saat ini.
+     * Prioritas: Lokasi Proyek Aktif > Setting Default Kantor > Hardcoded Fallback SBY.
+     *
+     * @return array{lat: float, lng: float, radius: int}
+     */
+    public function getWfoLocation(): array
+    {
+        $project = $this->activeProject();
+        
+        if ($project && $project->site_latitude !== null && $project->site_longitude !== null) {
+            return [
+                'lat' => (float) $project->site_latitude,
+                'lng' => (float) $project->site_longitude,
+                'radius' => (int) ($project->site_radius ?? 200),
+            ];
+        }
+
+        // Fallback to settings table
+        $lat = \Illuminate\Support\Facades\DB::table('settings')->where('key', 'default_office_lat')->value('value');
+        $lng = \Illuminate\Support\Facades\DB::table('settings')->where('key', 'default_office_lng')->value('value');
+        $radius = \Illuminate\Support\Facades\DB::table('settings')->where('key', 'default_office_radius')->value('value');
+
+        return [
+            'lat' => $lat !== null ? (float) $lat : -7.254776,
+            'lng' => $lng !== null ? (float) $lng : 112.717212,
+            'radius' => $radius !== null ? (int) $radius : 200,
+        ];
+    }
 }

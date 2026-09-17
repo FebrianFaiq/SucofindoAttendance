@@ -105,6 +105,7 @@ class DashboardController extends Controller
                     'name' => $activeProject->name,
                     'code' => $activeProject->code ?? null,
                 ] : null,
+                'wfo_location' => $employee->getWfoLocation(),
                 'recent_attendances' => $recentAttendances,
             ],
         ]);

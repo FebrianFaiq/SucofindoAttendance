@@ -38,6 +38,9 @@ class Project extends Model
         'start_date',
         'end_date',
         'is_active',
+        'site_latitude',
+        'site_longitude',
+        'site_radius',
     ];
 
     /**
@@ -49,6 +52,9 @@ class Project extends Model
             'start_date' => 'date',
             'end_date' => 'date',
             'is_active' => 'boolean',
+            'site_latitude' => 'decimal:7',
+            'site_longitude' => 'decimal:7',
+            'site_radius' => 'integer',
         ];
     }
 
