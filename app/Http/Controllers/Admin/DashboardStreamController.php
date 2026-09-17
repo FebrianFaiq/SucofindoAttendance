@@ -68,7 +68,7 @@ class DashboardStreamController extends Controller
         $trendData = [];
         for ($i = 4; $i >= 0; $i--) {
             $date = today()->subDays($i);
-            $count = Attendance::whereDate('check_in_at', $date)->count();
+            $count = Attendance::where('check_in_date', $date->toDateString())->count();
             $trendData[] = [
                 'day' => $date->format('D'),
                 'value' => $count,

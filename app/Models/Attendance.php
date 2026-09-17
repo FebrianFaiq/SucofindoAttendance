@@ -87,7 +87,7 @@ class Attendance extends Model
      */
     public function scopeToday($query)
     {
-        return $query->whereDate('check_in_at', today());
+        return $query->where('check_in_date', today()->toDateString());
     }
 
     /**

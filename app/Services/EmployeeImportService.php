@@ -151,7 +151,7 @@ class EmployeeImportService
      */
     public function import(UploadedFile $file, bool $dryRun = false): array
     {
-        $spreadsheet = IOFactory::load($file->getRealPath());
+        $spreadsheet = IOFactory::load($file->getRealPath() ?: $file->getPathname());
         $sheet = $spreadsheet->getActiveSheet();
         $rows = $sheet->toArray(null, true, true, true);
 
